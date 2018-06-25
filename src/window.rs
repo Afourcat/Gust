@@ -1,12 +1,10 @@
-/*
-** Alexandre Fourcat 2018
-** window.rs
-** Description:
-**
-*/
-//!  Window
+//!  Window module
+// Alexandre Fourcat 2018
+// window.rs
+// Description:
+//
 
-static TEST: [f32; 9] = [
+pub static TEST: [f32; 9] = [
     -0.5, -0.5, 0.0,
      0.5, -0.5, 0.0,
      0.0,  0.5, 0.0
@@ -25,6 +23,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use event::*;
 use glfw::Context;
+use std::ops::Drop;
+use shader::Shader;
 
 /// Window struct
 /// Define a struct by many thing in glfw
@@ -36,6 +36,7 @@ pub struct Window {
     clear_color: Color,
     glf_window: glfw::Glfw,
     already_init: bool,
+    pub shaders: Vec<Box<Shader>>,
 }
 
 /// Window structure implementation
@@ -43,17 +44,35 @@ impl<'a> Window {
 
     /// Create a new window by default
     pub fn new(height: usize, width: usize, name: &str) -> Window {
-        let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+        // Init the glfw system
+        let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
+        glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
+        glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
+
+        // Create window from Glfw method create_window
+        // Return the glfw::WindowEvent enum and a window
+        // That we are trying to wrap in this code
         let (mut win, evt) = glfw.create_window(
             height as u32, width as u32,
             name,
             glfw::WindowMode::Windowed
             ).unwrap();
 
+        // Make this window usable
         win.make_current();
 
+        // Load all the gl function from the uer configuration
         gl::load_with(|s| win.get_proc_address(s) as *const _);
+
+        // Goto: 133
+        Window::init_gl();
+
+        // Box all the shader to allocate them in the heap
+        // then push them to a vector to make them affordable for the user
+        // and for the renderer
+        let shader = Shader::new("shr/shader.vert", "shr/shader.frag").unwrap();
+        let boxed_shader: Box<Shader> = Box::new(shader);
 
         Window {
             height: height,
@@ -63,6 +82,7 @@ impl<'a> Window {
             clear_color: Color::new(1.0, 1.0, 1.0),
             glf_window: glfw,
             already_init: true,
+            shaders: vec![boxed_shader],
         }
     }
 
@@ -116,10 +136,11 @@ impl<'a> Window {
     }
 
     /// Draw on actual target
-    pub fn draw<T: Drawable>(&self, drawable: T) {
-        T::draw(self);
+    pub fn draw<T: Drawable>(&mut self, drawable: &T) {
+        drawable.draw(self);
     }
 
+    /// Init basic gl modules
     fn init_gl() {
         unsafe {
             gl::Enable(gl::DEPTH_TEST);
@@ -127,22 +148,41 @@ impl<'a> Window {
     }
 }
 
+impl Drop for Window {
+    fn drop(&mut self) {
+        println!("Dropped");
+    }
+}
+
 /// Default trait implementation for window
 impl Default for Window {
     fn default() -> Window {
-        let glf_window = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+        let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
-        let (tmp_win, evt) = glf_window.create_window(800, 600, "Window", glfw::WindowMode::Windowed)
-            .unwrap();
+        let (mut win, evt) = glfw.create_window(
+            800, 600,
+            "RustGl",
+            glfw::WindowMode::Windowed
+            ).unwrap();
+
+        win.make_current();
+
+        gl::load_with(|s| win.get_proc_address(s) as *const _);
+
+        Window::init_gl();
+
+        let shader = Shader::new("shr/shader.vert", "shr/shader.frag").unwrap();
+        let boxed_shader = Box::new(shader);
 
         Window {
             height: 800,
             width: 600,
-            win: tmp_win,
+            win: win,
             event: Rc::new(evt),
-            clear_color: Color::new(0.0, 0.0, 0.0),
-            glf_window: glf_window,
+            clear_color: Color::new(1.0, 1.0, 1.0),
+            glf_window: glfw,
             already_init: true,
+            shaders: vec![boxed_shader],
         }
     }
 }
