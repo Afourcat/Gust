@@ -11,6 +11,7 @@ use std;
 use drawable::Drawable;
 use window::Window;
 use std::ptr;
+use std::os::raw::c_void;
 
 /// Vertex Buffer structure
 #[derive(Debug)]
@@ -21,7 +22,7 @@ pub struct VertexBuffer {
 
 impl VertexBuffer {
 	/// Create new Vertex Buffer for vertices
-	pub fn new<T>(vertice: &[T]) -> VertexBuffer {
+	pub fn new(vertice: &[f32]) -> VertexBuffer {
 		let mut buffer_id: u32 = 0;
 		let mut array_id: u32 = 0;
 		unsafe {
@@ -32,8 +33,8 @@ impl VertexBuffer {
 			// TODO REFACTOR
 			gl::BufferData(
 				gl::ARRAY_BUFFER,
-				(std::mem::size_of::<T>() * vertice.len()) as GLsizeiptr,
-				mem::transmute(&vertice[0]),
+				(std::mem::size_of::<GLfloat>() * vertice.len()) as GLsizeiptr,
+				&vertice[0] as *const f32 as *const c_void,
 				gl::STATIC_DRAW
 			);
 			// TODO: Refactor
@@ -42,8 +43,8 @@ impl VertexBuffer {
 						3,
 						gl::FLOAT,
 						gl::FALSE,
-						(3 * mem::size_of::<T>()) as i32,
-						0 as *const _
+						(3 * mem::size_of::<GLfloat>()) as GLsizei,
+						ptr::null()
 			);
 			gl::EnableVertexAttribArray(0);
 			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
@@ -58,11 +59,11 @@ impl VertexBuffer {
 
 impl Drawable for VertexBuffer {
 	fn draw(&self, window: &mut Window) {
-		window.shaders[0].activate();
+		window.shaders.activate();
 		unsafe {
 			gl::BindVertexArray(self.array);
 			gl::DrawArrays(gl::TRIANGLES, 0, 3);
-			//gl::BindVertexArray(0);
+			gl::BindVertexArray(0);
 		}
 	}
 }

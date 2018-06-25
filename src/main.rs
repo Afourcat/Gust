@@ -35,7 +35,6 @@ fn main()
 
     window.set_clear_color(Color::new(0.6, 0.0, 1.0));
     window.set_key_polling(true);
-    let mut color = 0.0;
     while window.is_open() {
         window.poll_events();
 
@@ -43,14 +42,6 @@ fn main()
             event_handling(&mut window, event);
         }
 
-
-        window.set_clear_color(Color::new(color, 0.5, 0.1));
-
-        if color >= 1.0 {
-            color = 0.0;
-        } else {
-            color += 0.01;
-        }
         window.clear();
         window.draw(&vbo);
         window.display();

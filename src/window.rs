@@ -36,7 +36,7 @@ pub struct Window {
     clear_color: Color,
     glf_window: glfw::Glfw,
     already_init: bool,
-    pub shaders: Vec<Box<Shader>>,
+    pub shaders: Shader,
 }
 
 /// Window structure implementation
@@ -72,7 +72,6 @@ impl<'a> Window {
         // then push them to a vector to make them affordable for the user
         // and for the renderer
         let shader = Shader::new("shr/shader.vert", "shr/shader.frag").unwrap();
-        let boxed_shader: Box<Shader> = Box::new(shader);
 
         Window {
             height: height,
@@ -82,7 +81,7 @@ impl<'a> Window {
             clear_color: Color::new(1.0, 1.0, 1.0),
             glf_window: glfw,
             already_init: true,
-            shaders: vec![boxed_shader],
+            shaders: shader,
         }
     }
 
@@ -143,7 +142,7 @@ impl<'a> Window {
     /// Init basic gl modules
     fn init_gl() {
         unsafe {
-            gl::Enable(gl::DEPTH_TEST);
+          //  gl::Enable(gl::DEPTH_TEST);
         }
     }
 }
@@ -172,7 +171,6 @@ impl Default for Window {
         Window::init_gl();
 
         let shader = Shader::new("shr/shader.vert", "shr/shader.frag").unwrap();
-        let boxed_shader = Box::new(shader);
 
         Window {
             height: 800,
@@ -182,7 +180,7 @@ impl Default for Window {
             clear_color: Color::new(1.0, 1.0, 1.0),
             glf_window: glfw,
             already_init: true,
-            shaders: vec![boxed_shader],
+            shaders: shader,
         }
     }
 }
