@@ -16,7 +16,9 @@ mod drawable;
 mod texture;
 mod event;
 mod shader;
+mod sprite;
 
+use sprite::Sprite;
 use gl::types::*;
 use glfw::{Action, Context, Key};
 use window::Window;
@@ -34,6 +36,7 @@ fn main()
     let mut window = Window::new(HEIGHT, WIDTH, "Hello");
     let vbo = VertexBuffer::new(&window::TEST);
     let tex = Texture::new("texture/Z.png");
+    let sprite = Sprite::new_from_texture(Rc::new(tex));
 
     window.set_clear_color(Color::new(0.6, 0.0, 1.0));
     window.set_key_polling(true);
