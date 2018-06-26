@@ -71,7 +71,7 @@ impl<'a> Window {
         // Box all the shader to allocate them in the heap
         // then push them to a vector to make them affordable for the user
         // and for the renderer
-        let shader = Shader::new("shr/shader.vert", "shr/shader.frag").unwrap();
+        let shader = Shader::default();
 
         Window {
             height: height,
