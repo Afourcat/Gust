@@ -1,5 +1,5 @@
-//
-//
+// Alexanre Fourcat 2018
+// Rust_gl 
 //
 //
 //
@@ -9,11 +9,12 @@ extern crate image;
 use self::image::{GenericImage, DynamicImage, ImageBuffer, Pixel};
 use gl::types::*;
 use gl;
+use std::rc::Rc;
 
 /// Texture structure
 #[derive(Debug,Clone)]
 pub struct Texture {
-	id: u32,
+	pub id: u32,
 }
 
 impl Texture {
@@ -41,6 +42,13 @@ impl Texture {
 			id: id,
 		}
 	}
+
+    pub fn active(&mut self, num: i32) {
+        unsafe {
+            gl::ActiveTexture(gl::TEXTURE0 + num as u32);
+            gl::BindTexture(gl::TEXTURE_2D, self.id);
+        }
+    }
 
 	fn insert_texture(img: DynamicImage, gl_type: GLenum) {
 		unsafe {

@@ -31,13 +31,24 @@ use texture::{Texture};
 static HEIGHT: usize = 800;
 static WIDTH: usize = 600;
 
+static VERTICES: [f32; 32] = [
+    // positions          // colors           // texture coords
+     0.5,  0.5, 0.0,   1.0, 0.0, 0.0,   1.0, 1.0,   // top right
+     0.5, -0.5, 0.0,   0.0, 1.0, 0.0,   1.0, 0.0,   // bottom right
+    -0.5, -0.5, 0.0,   0.0, 0.0, 1.0,   0.0, 0.0,   // bottom left
+    -0.5,  0.5, 0.0,   1.0, 1.0, 0.0,   0.0, 1.0    // top left 
+];
+
 fn main()
 {
     let mut window = Window::new(HEIGHT, WIDTH, "Hello");
     let vbo = VertexBuffer::new(&window::TEST);
-    let tex = Texture::new("texture/Z.png");
-    let sprite = Sprite::new_from_texture(Rc::new(tex));
+    let mut rect = VertexBuffer::new(&VERTICES);
+    let tex = Rc::new(Texture::new("texture/Z.png"));
+    let sprite = Sprite::new_from_texture(Rc::clone(&tex));
 
+
+    rect.set_texture(&Rc::clone(&tex));
     window.set_clear_color(Color::new(0.6, 0.0, 1.0));
     window.set_key_polling(true);
     while window.is_open() {

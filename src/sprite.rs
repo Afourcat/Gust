@@ -54,7 +54,6 @@ impl Drawable for Sprite {
         if let Some(ref a) = self.texture { unsafe {
                 gl::BindTexture(gl::TEXTURE_2D, self.id as u32);
             }
-        };
-        
+        }
     }
 }

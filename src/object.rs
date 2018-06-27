@@ -12,12 +12,15 @@ use drawable::Drawable;
 use window::Window;
 use std::ptr;
 use std::os::raw::c_void;
+use std::rc::Rc;
+use texture::Texture;
 
 /// Vertex Buffer structure
 #[derive(Debug)]
 pub struct VertexBuffer {
 	buffer: u32,
 	array: u32,
+    texture: Option<u32>,
 }
 
 impl VertexBuffer {
@@ -30,14 +33,12 @@ impl VertexBuffer {
 			gl::GenBuffers(1, &mut buffer_id);
 			gl::BindVertexArray(array_id);
 			gl::BindBuffer(gl::ARRAY_BUFFER, buffer_id);
-			// TODO REFACTOR
 			gl::BufferData(
 				gl::ARRAY_BUFFER,
 				(std::mem::size_of::<GLfloat>() * vertice.len()) as GLsizeiptr,
 				&vertice[0] as *const f32 as *const c_void,
 				gl::STATIC_DRAW
 			);
-			// TODO: Refactor
 			gl::VertexAttribPointer(
 						0,
 						3,
@@ -53,14 +54,22 @@ impl VertexBuffer {
 		VertexBuffer {
 			buffer: buffer_id,
 			array: array_id,
+            texture: None,
 		}
 	}
+
+    pub fn set_texture(&mut self, texture: &Texture) {
+        self.texture = Some(texture.id.clone());
+    }
 }
 
 impl Drawable for VertexBuffer {
 	fn draw(&self, window: &mut Window) {
 		window.shaders.activate();
 		unsafe {
+            if (self.texture.is_some()) {
+                gl::BindTexture(gl::TEXTURE_2D, self.texture.unwrap());
+            }
 			gl::BindVertexArray(self.array);
 			gl::DrawArrays(gl::TRIANGLES, 0, 3);
 			gl::BindVertexArray(0);
