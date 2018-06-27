@@ -170,7 +170,7 @@ impl Default for Window {
 
         Window::init_gl();
 
-        let shader = Shader::new("shr/shader.vert", "shr/shader.frag").unwrap();
+        let shader = Shader::default();
 
         Window {
             height: 800,
