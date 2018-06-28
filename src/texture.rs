@@ -10,6 +10,7 @@ use self::image::{GenericImage, DynamicImage, ImageBuffer, Pixel};
 use gl::types::*;
 use gl;
 use std::rc::Rc;
+use drawable::Drawable;
 
 /// Texture structure
 #[derive(Debug,Clone)]
@@ -64,7 +65,11 @@ impl Texture {
 				img.raw_pixels().as_ptr() as *const _
 			);
 		}
-	}
+    }
+
+    fn assign_to<T: Drawable>(&self, object: &mut T) {
+        object.assign_texture(&self);   
+    }
 
 	unsafe fn setTextureParameter() {
 		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);

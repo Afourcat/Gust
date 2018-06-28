@@ -25,11 +25,30 @@ use window::Window;
 use std::cell::RefCell;
 use std::rc::Rc;
 use color::Color;
-use object::VertexBuffer;
+use object::{VertexBuffer, Primitive};
 use texture::{Texture};
+use drawable::Drawable;
 
 static HEIGHT: usize = 800;
 static WIDTH: usize = 600;
+
+static RECT_VBO: [f32; 18] = [
+    // first triangle
+     0.5,  0.5, 0.0,  // top right
+     0.5, -0.5, 0.0,  // bottom right
+    -0.5,  0.5, 0.0,  // top left 
+    // scond triangle
+     0.5, -0.5, 0.0,  // bottom right
+    -0.5, -0.5, 0.0,  // bottom left
+    -0.5,  0.5, 0.0   // top left
+];
+
+static RECT_EBO: [f32; 12] = [
+     0.5,  0.5, 0.0,  // top right
+     0.5, -0.5, 0.0,  // bottom right
+    -0.5, -0.5, 0.0,  // bottom left
+    -0.5,  0.5, 0.0   // top left
+];
 
 static VERTICES: [f32; 32] = [
     // positions          // colors           // texture coords
@@ -42,14 +61,12 @@ static VERTICES: [f32; 32] = [
 fn main()
 {
     let mut window = Window::new(HEIGHT, WIDTH, "Hello");
-    let vbo = VertexBuffer::new(&window::TEST);
-    let mut rect = VertexBuffer::new(&VERTICES);
+    let mut rect = VertexBuffer::new(Primitive::Triangles, &RECT_VBO);
     let tex = Rc::new(Texture::new("texture/Z.png"));
-    let sprite = Sprite::new_from_texture(Rc::clone(&tex));
 
 
-    rect.set_texture(&Rc::clone(&tex));
-    window.set_clear_color(Color::new(0.6, 0.0, 1.0));
+    rect.assign_texture(&Rc::clone(&tex));
+    window.set_clear_color(Color::new(0.1, 0.5, 1.0));
     window.set_key_polling(true);
     while window.is_open() {
         window.poll_events();
@@ -59,7 +76,7 @@ fn main()
         }
 
         window.clear();
-        window.draw(&vbo);
+        window.draw(&rect);
         window.display();
     }
 }

@@ -21,11 +21,21 @@ pub struct VertexBuffer {
 	buffer: u32,
 	array: u32,
     texture: Option<u32>,
+    primitive: GLenum,
+    size: i32,
+}
+
+#[derive(Debug)]
+pub enum Primitive {
+    Triangles,
+    Quads,
+    Points,
+    Lines,
 }
 
 impl VertexBuffer {
 	/// Create new Vertex Buffer for vertices
-	pub fn new(vertice: &[f32]) -> VertexBuffer {
+	pub fn new(t: Primitive, vertice: &[f32]) -> VertexBuffer {
 		let mut buffer_id: u32 = 0;
 		let mut array_id: u32 = 0;
 		unsafe {
@@ -55,11 +65,28 @@ impl VertexBuffer {
 			buffer: buffer_id,
 			array: array_id,
             texture: None,
+            primitive: Self::get_gl_type(&t),
+            size: vertice.len() as i32 / 3,
 		}
 	}
 
-    pub fn set_texture(&mut self, texture: &Texture) {
-        self.texture = Some(texture.id.clone());
+    /// Get primitive type
+    fn get_gl_type(prim: &Primitive) -> GLenum {
+        match prim {
+            Primitive::Quads        => gl::QUADS,
+            Primitive::Triangles    => gl::TRIANGLES,
+            Primitive::Points       => gl::POINTS,
+            Primitive::Lines        => gl::LINES,
+        }
+    }
+
+    pub fn get_primitive(&self) -> Primitive {
+        match self.primitive {
+            gl::QUADS       => Primitive::Quads,
+            gl::TRIANGLES   => Primitive::Triangles,
+            gl::LINES       => Primitive::Lines,
+            _               => Primitive::Points,
+        }
     }
 }
 
@@ -71,8 +98,12 @@ impl Drawable for VertexBuffer {
                 gl::BindTexture(gl::TEXTURE_2D, self.texture.unwrap());
             }
 			gl::BindVertexArray(self.array);
-			gl::DrawArrays(gl::TRIANGLES, 0, 3);
+			gl::DrawArrays(self.primitive, 0, self.size as i32);
 			gl::BindVertexArray(0);
 		}
 	}
+
+    fn assign_texture(&mut self, texture: &Texture) {
+        self.texture = Some(texture.id);
+    }
 }
