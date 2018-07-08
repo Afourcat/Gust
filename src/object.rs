@@ -52,13 +52,31 @@ impl VertexBuffer {
 			);
 			gl::VertexAttribPointer(
 						0,
+						2,
+						gl::FLOAT,
+						gl::FALSE,
+						(7 * mem::size_of::<GLfloat>()) as GLsizei,
+						ptr::null()
+			);
+            gl::EnableVertexAttribArray(0);
+			gl::VertexAttribPointer(
+						1,
+						2,
+						gl::FLOAT,
+						gl::FALSE,
+						(7 * mem::size_of::<GLfloat>()) as GLsizei,
+						(2 * mem::size_of::<GLfloat>()) as *const _,
+			);
+			gl::EnableVertexAttribArray(1);
+            gl::VertexAttribPointer(
+						2,
 						3,
 						gl::FLOAT,
 						gl::FALSE,
-						(3 * mem::size_of::<GLfloat>()) as GLsizei,
-						ptr::null()
+						(7 * mem::size_of::<GLfloat>()) as GLsizei,
+						(4 * mem::size_of::<GLfloat>()) as *const _,
 			);
-			gl::EnableVertexAttribArray(0);
+			gl::EnableVertexAttribArray(2);
 			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
 			gl::BindVertexArray(0);
 		};
@@ -67,7 +85,7 @@ impl VertexBuffer {
 			array: array_id,
             texture: None,
             primitive: Self::get_gl_type(&t),
-            size: vertice.len() as i32 / 3,
+            size: vertice.len() as i32 / 2,
 		}
 	}
 
@@ -84,10 +102,8 @@ impl VertexBuffer {
             new_vertice[i + 4] =     elem.color.0;
             new_vertice[i + 5] =     elem.color.1;
             new_vertice[i + 6] =     elem.color.2;
-            new_vertice[i + 7] =     elem.color.3;
-            i += 8;
+            i += 7;
         }
-        println!("New Array {:?}", new_vertice);
         VertexBuffer::new(t, new_vertice.as_slice())
     }
 

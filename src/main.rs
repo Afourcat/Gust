@@ -46,42 +46,23 @@ static RECT_VBO: [f32; 18] = [
     -0.5,  0.5, 0.0   // top left
 ];
 
-static RECT_EBO: [f32; 12] = [
-     0.5,  0.5, 0.0,  // top right
-     0.5, -0.5, 0.0,  // bottom right
-    -0.5, -0.5, 0.0,  // bottom left
-    -0.5,  0.5, 0.0   // top left
-];
-
-static VERTICES: [f32; 32] = [
-    // positions          // colors           // texture coords
-     0.5,  0.5, 0.0,   1.0, 0.0, 0.0,   1.0, 1.0,   // top right
-     0.5, -0.5, 0.0,   0.0, 1.0, 0.0,   1.0, 0.0,   // bottom right
-    -0.5, -0.5, 0.0,   0.0, 0.0, 1.0,   0.0, 0.0,   // bottom left
-    -0.5,  0.5, 0.0,   1.0, 1.0, 0.0,   0.0, 1.0    // top left 
-];
-
-
-
 fn main()
 {
     let test_1: [Vertex; 6] = [
-        Vertex::new(Vector2::new( 0.5,  0.5), Vector2::new(1.0, 1.0), Color::new(1.0, 0.0, 0.8)),
-        Vertex::new(Vector2::new( 0.5, -0.5), Vector2::new(1.0, 0.0), Color::new(1.0, 0.0, 0.8)),
-        Vertex::new(Vector2::new(-0.5,  0.5), Vector2::new(0.0, 0.0), Color::new(1.0, 0.0, 0.8)),
-        Vertex::new(Vector2::new( 0.5, -0.5), Vector2::new(0.0, 1.0), Color::new(1.0, 0.6, 0.1)),
-        Vertex::new(Vector2::new(-0.5, -0.5), Vector2::new(0.0, 0.0), Color::new(1.0, 0.1, 0.5)),
-        Vertex::new(Vector2::new(-0.5,  0.5), Vector2::new(1.0, 1.0), Color::new(1.0, 0.2, 0.2)),
+        Vertex::new(Vector2::new( 0.5, 0.5), Vector2::new(1.0, 1.0), Color::new(1.0, 0.0, 0.0)),
+        Vertex::new(Vector2::new( 0.5,-0.5), Vector2::new(1.0, 0.0), Color::new(1.0, 0.0, 0.0)),
+        Vertex::new(Vector2::new(-0.5,-0.5), Vector2::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
+        Vertex::new(Vector2::new( 0.5, 0.5), Vector2::new(1.0, 1.0), Color::new(1.0, 0.0, 0.0)),
+        Vertex::new(Vector2::new(-0.5,-0.5), Vector2::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
+        Vertex::new(Vector2::new(-0.5, 0.5), Vector2::new(0.0, 1.0), Color::new(1.0, 0.0, 0.0)),
     ];
 
     let mut window = Window::new(HEIGHT, WIDTH, "Hello");
-    let mut rect = VertexBuffer::new(Primitive::Triangles, &RECT_VBO);
     let mut vertex_b = VertexBuffer::new_from_vertex_array(Primitive::Triangles, &test_1);
     let tex = Rc::new(Texture::new("texture/Z.png"));
     let tex_leave = Rc::new(Texture::new("texture/test.jpg"));
 
-
-    rect.assign_texture(&Rc::clone(&tex_leave));
+    vertex_b.assign_texture(&Rc::clone(&tex_leave));
     window.set_clear_color(Color::new(1.0, 0.2, 0.7));
     window.set_key_polling(true);
     while window.is_open() {
@@ -92,7 +73,8 @@ fn main()
         }
 
         window.clear();
-        window.draw(&rect);
+        window.draw(&vertex_b);
+//      window.draw(&rect);
         window.display();
     }
 }

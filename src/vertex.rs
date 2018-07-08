@@ -50,4 +50,4 @@ impl Vertex {
             color: color,
         }
     }
-}   
+}
