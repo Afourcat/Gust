@@ -15,6 +15,7 @@ pub struct Color(pub f32, pub f32, pub f32, pub f32);
 
 static MAGENTA: Color = Color(1.0, 0.0, 1.0, 1.0);
 static RED: Color = Color(1.0, 0.0, 0.0, 1.0);
+static BLUE: Color = Color(0.0, 0.0, 1.0, 1.0);
 
 /// Color class
 impl Color {

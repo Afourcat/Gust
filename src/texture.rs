@@ -6,11 +6,13 @@
 
 extern crate image;
 
-use self::image::{GenericImage, DynamicImage, ImageBuffer, Pixel};
+use self::image::{GenericImage, DynamicImage, ImageBuffer, Pixel, Rgba, Rgb};
 use gl::types::*;
 use gl;
 use std::rc::Rc;
 use drawable::Drawable;
+use std::os::raw::c_void;
+use std::mem;
 
 /// Texture structure
 #[derive(Debug,Clone)]
@@ -28,11 +30,31 @@ impl Texture {
 		unsafe {
 			gl::GenTextures(1, &mut id);
 			gl::BindTexture(gl::TEXTURE_2D, id);
-			Texture::setTextureParameter();
+			Texture::set_texture_parameter();
 		}
 		match img {
-			DynamicImage::ImageRgba8(_) => Texture::insert_texture(img, gl::RGBA),
-			DynamicImage::ImageRgb8(_) => Texture::insert_texture(img, gl::RGB),
+			DynamicImage::ImageRgba8(data) => unsafe { gl::TexImage2D(
+				gl::TEXTURE_2D,
+				0,
+				gl::RGBA as i32,
+				data.width() as i32,
+				data.height() as i32,
+				0,
+				gl::RGBA,
+				gl::UNSIGNED_BYTE,
+				mem::transmute(&data.into_raw()[0]))
+            },
+			DynamicImage::ImageRgb8(data) => unsafe { gl::TexImage2D(
+				gl::TEXTURE_2D,
+				0,
+				gl::RGB as i32,
+				data.width() as i32,
+				data.height() as i32,
+				0,
+				gl::RGB,
+				gl::UNSIGNED_BYTE,
+				mem::transmute(&data.into_raw()[0]))
+            },
 			_ => println!("Error while loading !"),
 		}
 		unsafe {
@@ -44,34 +66,18 @@ impl Texture {
 		}
 	}
 
-    pub fn active(&mut self, num: i32) {
+    pub fn active(&self, num: i32) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0 + num as u32);
             gl::BindTexture(gl::TEXTURE_2D, self.id);
         }
     }
 
-	fn insert_texture(img: DynamicImage, gl_type: GLenum) {
-		unsafe {
-			gl::TexImage2D(
-				gl::TEXTURE_2D,
-				0,
-				gl_type as i32,
-				img.dimensions().0 as i32,
-				img.dimensions().1 as i32,
-				0,
-				gl_type,
-				gl::UNSIGNED_BYTE,
-				img.raw_pixels().as_ptr() as *const _
-			);
-		}
-    }
-
     fn assign_to<T: Drawable>(&self, object: &mut T) {
         object.assign_texture(&self);   
     }
 
-	unsafe fn setTextureParameter() {
+	unsafe fn set_texture_parameter() {
 		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
 		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
 		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);

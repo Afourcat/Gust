@@ -14,13 +14,14 @@ use std::ptr;
 use std::os::raw::c_void;
 use std::rc::Rc;
 use texture::Texture;
+use vertex::Vertex;
 
 /// Vertex Buffer structure
 #[derive(Debug)]
 pub struct VertexBuffer {
 	buffer: u32,
 	array: u32,
-    texture: Option<u32>,
+    texture: Option<Texture>,
     primitive: GLenum,
     size: i32,
 }
@@ -70,6 +71,26 @@ impl VertexBuffer {
 		}
 	}
 
+    pub fn new_from_vertex_array(t: Primitive, vertice: &[Vertex]) 
+    -> VertexBuffer {
+        let mut new_vertice: Vec<f32> = vec![0.0; vertice.len() * 8];
+        let mut i = 0;
+
+        for elem in vertice {
+            new_vertice[i]     =     elem.pos.x;
+            new_vertice[i + 1] =     elem.pos.y;
+            new_vertice[i + 2] =     elem.tex.x;
+            new_vertice[i + 3] =     elem.tex.y;
+            new_vertice[i + 4] =     elem.color.0;
+            new_vertice[i + 5] =     elem.color.1;
+            new_vertice[i + 6] =     elem.color.2;
+            new_vertice[i + 7] =     elem.color.3;
+            i += 8;
+        }
+        println!("New Array {:?}", new_vertice);
+        VertexBuffer::new(t, new_vertice.as_slice())
+    }
+
     /// Get primitive type
     fn get_gl_type(prim: &Primitive) -> GLenum {
         match prim {
@@ -94,8 +115,8 @@ impl Drawable for VertexBuffer {
 	fn draw(&self, window: &mut Window) {
 		window.shaders.activate();
 		unsafe {
-            if (self.texture.is_some()) {
-                gl::BindTexture(gl::TEXTURE_2D, self.texture.unwrap());
+            if let Some(ref tex) = self.texture {
+                tex.active(0);
             }
 			gl::BindVertexArray(self.array);
 			gl::DrawArrays(self.primitive, 0, self.size as i32);
@@ -104,6 +125,6 @@ impl Drawable for VertexBuffer {
 	}
 
     fn assign_texture(&mut self, texture: &Texture) {
-        self.texture = Some(texture.id);
+        self.texture = Some(texture.clone());
     }
 }

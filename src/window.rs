@@ -62,7 +62,7 @@ impl<'a> Window {
         // Make this window usable
         win.make_current();
 
-        // Load all the gl function from the uer configuration
+        // Load all the gl function from the user configuration
         gl::load_with(|s| win.get_proc_address(s) as *const _);
 
         // Goto: 133
