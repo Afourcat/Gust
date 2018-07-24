@@ -1,10 +1,3 @@
-/*
-** Alexandre Fourcat 2018
-** main
-** Description:
-**
-*/
-
 extern crate gl;
 extern crate glfw;
 extern crate nalgebra;
@@ -39,7 +32,7 @@ static RECT_VBO: [f32; 18] = [
     // first triangle
      0.5,  0.5, 0.0,  // top right
      0.5, -0.5, 0.0,  // bottom right
-    -0.5,  0.5, 0.0,  // top left 
+    -0.5,  0.5, 0.0,  // top left
     // scond triangle
      0.5, -0.5, 0.0,  // bottom right
     -0.5, -0.5, 0.0,  // bottom left
@@ -49,11 +42,11 @@ static RECT_VBO: [f32; 18] = [
 fn main()
 {
     let test_1: [Vertex; 6] = [
-        Vertex::new(Vector2::new( 0.5, 0.5), Vector2::new(1.0, 1.0), Color::new(1.0, 0.0, 0.0)),
-        Vertex::new(Vector2::new( 0.5,-0.5), Vector2::new(1.0, 0.0), Color::new(1.0, 0.0, 0.0)),
-        Vertex::new(Vector2::new(-0.5,-0.5), Vector2::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
-        Vertex::new(Vector2::new( 0.5, 0.5), Vector2::new(1.0, 1.0), Color::new(1.0, 0.0, 0.0)),
-        Vertex::new(Vector2::new(-0.5,-0.5), Vector2::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
+        Vertex::new(Vector2::new( 0.5, 0.5), Vector2::new(1.0, 1.0), Color::new(1.0, 1.0, 1.0)),
+        Vertex::new(Vector2::new( 0.5,-0.5), Vector2::new(1.0, 0.0), Color::new(1.0, 1.0, 1.0)),
+        Vertex::new(Vector2::new(-0.5,-0.5), Vector2::new(0.0, 0.0), Color::new(1.0, 0.5, 0.0)),
+        Vertex::new(Vector2::new( 0.5, 0.5), Vector2::new(1.0, 1.0), Color::new(1.0, 1.0, 1.0)),
+        Vertex::new(Vector2::new(-0.5,-0.5), Vector2::new(0.0, 0.0), Color::new(1.0, 1.0, 1.0)),
         Vertex::new(Vector2::new(-0.5, 0.5), Vector2::new(0.0, 1.0), Color::new(1.0, 0.0, 0.0)),
     ];
 
@@ -74,6 +67,10 @@ fn main()
 
         window.clear();
         window.draw(&vertex_b);
+        window.draw(&vertex_b);
+        window.draw(&vertex_b);
+        window.draw(&vertex_b);
+        window.draw(&vertex_b);
 //      window.draw(&rect);
         window.display();
     }
@@ -87,7 +84,10 @@ fn event_handling(window: &mut Window, event: glfw::WindowEvent) {
                 window.close();
             },
             Key::A  => {
-              println!("Hello A !");  
+              println!("Hello A !");
+            },
+            Key::K => {
+                println!("Je taime!");
             },
             _ => {}
         };

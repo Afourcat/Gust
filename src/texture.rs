@@ -1,9 +1,3 @@
-// Alexanre Fourcat 2018
-// Rust_gl 
-//
-//
-//
-
 extern crate image;
 
 use self::image::{GenericImage, DynamicImage, ImageBuffer, Pixel, Rgba, Rgb};

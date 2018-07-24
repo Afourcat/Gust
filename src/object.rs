@@ -1,9 +1,3 @@
-//
-//
-//
-//
-//
-
 use gl;
 use gl::types::*;
 use std::mem;
