@@ -4,7 +4,7 @@ use self::image::{GenericImage, DynamicImage, ImageBuffer, Pixel, Rgba, Rgb};
 use gl::types::*;
 use gl;
 use std::rc::Rc;
-use drawable::Drawable;
+use draw::{Drawable,Drawer};
 use std::os::raw::c_void;
 use std::mem;
 
@@ -65,10 +65,6 @@ impl Texture {
             gl::ActiveTexture(gl::TEXTURE0 + num as u32);
             gl::BindTexture(gl::TEXTURE_2D, self.id);
         }
-    }
-
-    fn assign_to<T: Drawable>(&self, object: &mut T) {
-        object.assign_texture(&self);   
     }
 
 	unsafe fn set_texture_parameter() {

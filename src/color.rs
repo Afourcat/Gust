@@ -28,6 +28,10 @@ impl Color {
     pub fn new(r: f32, g: f32, b: f32) -> Color {
         Color(r, g, b, 1.0)
     }
+
+    pub fn white() -> Color {
+        Color(1.0, 1.0, 1.0, 1.0)
+    }
 }
 
 // Adding ops trait ----------------------------------------------------<

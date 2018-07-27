@@ -5,7 +5,7 @@ extern crate nalgebra;
 mod object;
 mod color;
 mod window;
-mod drawable;
+mod draw;
 mod texture;
 mod event;
 mod shader;
@@ -22,8 +22,9 @@ use color::Color;
 use object::{VertexBuffer, Primitive};
 use texture::{Texture};
 use vertex::Vertex;
-use drawable::Drawable;
+use draw::Drawable;
 use nalgebra::*;
+use draw::Drawer;
 
 static HEIGHT: usize = 800;
 static WIDTH: usize = 600;
@@ -55,7 +56,7 @@ fn main()
     let tex = Rc::new(Texture::new("texture/Z.png"));
     let tex_leave = Rc::new(Texture::new("texture/test.jpg"));
 
-    vertex_b.assign_texture(&Rc::clone(&tex_leave));
+    vertex_b.assign_texture(tex_leave);
     window.set_clear_color(Color::new(1.0, 0.2, 0.7));
     window.set_key_polling(true);
     while window.is_open() {
@@ -67,11 +68,6 @@ fn main()
 
         window.clear();
         window.draw(&vertex_b);
-        window.draw(&vertex_b);
-        window.draw(&vertex_b);
-        window.draw(&vertex_b);
-        window.draw(&vertex_b);
-//      window.draw(&rect);
         window.display();
     }
 }

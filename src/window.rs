@@ -17,7 +17,6 @@ use object::{VertexBuffer};
 use gl::types::*;
 use std::default;
 use color::Color;
-use drawable::Drawable;
 use std::sync::mpsc::Receiver;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -25,6 +24,7 @@ use event::*;
 use glfw::Context;
 use std::ops::Drop;
 use shader::Shader;
+use draw::{Drawable,Drawer};
 
 /// Window struct
 /// Define a struct by many thing in glfw
@@ -134,10 +134,7 @@ impl<'a> Window {
         self.win.swap_buffers();
     }
 
-    /// Draw on actual target
-    pub fn draw<T: Drawable>(&mut self, drawable: &T) {
-        drawable.draw(self);
-    }
+
 
     /// Init basic gl modules
     fn init_gl() {
@@ -150,6 +147,17 @@ impl<'a> Window {
 impl Drop for Window {
     fn drop(&mut self) {
         println!("Dropped");
+    }
+}
+
+impl Drawer for Window {
+    /// Draw on actual target
+    fn draw<T: Drawable>(&mut self, drawable: &T) {
+        drawable.draw(self);
+    }
+
+    fn activate_shader(&self) {
+        self.shaders.activate();
     }
 }
 

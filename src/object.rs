@@ -2,7 +2,7 @@ use gl;
 use gl::types::*;
 use std::mem;
 use std;
-use drawable::Drawable;
+use draw::{Drawable,Drawer};
 use window::Window;
 use std::ptr;
 use std::os::raw::c_void;
@@ -15,7 +15,7 @@ use vertex::Vertex;
 pub struct VertexBuffer {
 	buffer: u32,
 	array: u32,
-    texture: Option<Texture>,
+    texture: Option<Rc<Texture>>,
     primitive: GLenum,
     size: i32,
 }
@@ -83,7 +83,7 @@ impl VertexBuffer {
 		}
 	}
 
-    pub fn new_from_vertex_array(t: Primitive, vertice: &[Vertex]) 
+    pub fn new_from_vertex_array(t: Primitive, vertice: &[Vertex])
     -> VertexBuffer {
         let mut new_vertice: Vec<f32> = vec![0.0; vertice.len() * 8];
         let mut i = 0;
@@ -122,8 +122,8 @@ impl VertexBuffer {
 }
 
 impl Drawable for VertexBuffer {
-	fn draw(&self, window: &mut Window) {
-		window.shaders.activate();
+	fn draw<T: Drawer>(&self, window: &mut T) {
+		window.activate_shader();
 		unsafe {
             if let Some(ref tex) = self.texture {
                 tex.active(0);
@@ -134,7 +134,7 @@ impl Drawable for VertexBuffer {
 		}
 	}
 
-    fn assign_texture(&mut self, texture: &Texture) {
-        self.texture = Some(texture.clone());
+    fn assign_texture(&mut self, texture: Rc<Texture>) {
+        self.texture = Some(Rc::clone(&texture));
     }
 }

@@ -11,7 +11,7 @@ pub struct Vertex {
 
 impl Vertex {
 
-    pub fn new_with_pos(pos: Vector2<f32>) -> Vertex {
+    pub fn from_pos(pos: Vector2<f32>) -> Vertex {
         Vertex {
             pos: pos,
             tex: pos,
@@ -19,7 +19,7 @@ impl Vertex {
         }
     }
 
-    pub fn new_with_texture(pos: Vector2<f32>, tex: Vector2<f32>) -> Vertex {
+    pub fn from_texture(pos: Vector2<f32>, tex: Vector2<f32>) -> Vertex {
         Vertex {
             pos: pos,
             tex: tex,
@@ -27,7 +27,7 @@ impl Vertex {
         }
     }
 
-    pub fn new_with_color(pos: Vector2<f32>, color: Color) -> Vertex {
+    pub fn from_color(pos: Vector2<f32>, color: Color) -> Vertex {
         Vertex {
             pos: pos,
             tex: pos,
@@ -41,6 +41,16 @@ impl Vertex {
             pos: pos,
             tex: tex,
             color: color,
+        }
+    }
+}
+
+impl Default for Vertex {
+    fn default() -> Vertex {
+        Vertex {
+            pos: Vector2::new(0.0, 0.0),
+            tex: Vector2::new(0.0, 0.0),
+            color: Color::white(),
         }
     }
 }
