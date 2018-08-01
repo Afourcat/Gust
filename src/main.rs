@@ -27,8 +27,8 @@ use draw::Drawable;
 use nalgebra::*;
 use draw::Drawer;
 
-static HEIGHT: usize = 800;
-static WIDTH: usize = 600;
+static HEIGHT: usize = 1920;
+static WIDTH: usize = 1080;
 
 static RECT_VBO: [f32; 18] = [
     // first triangle

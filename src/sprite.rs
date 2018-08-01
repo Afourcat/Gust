@@ -51,18 +51,15 @@ impl Sprite {
         (pos + offset) / screen
     }
 
-    fn new_rect_vertex(pos: Vector2<f32>, x: f32, y: f32,/* text_coord: Vector2<f32> ,*/ color: Color) -> Vertex {
-        let pos1 = Self::convert_pos(pos.x, super::WIDTH as f32, x);
+    fn new_rect_vertex(pos: Vector2<f32>, x: f32, y: f32, text_coord: Vector2<f32> , color: Color) -> Vertex {
+        let pos1 = Self::convert_pos(pos.x, super::HEIGHT as f32, x);
         let pos2 = Self::convert_pos(pos.y, super::WIDTH as f32, y);
         Vertex::new(
             Vector2::new(
                 pos1,
                 pos2
             ),
-            Vector2::new(
-                pos1,
-                pos2,
-            ),
+            text_coord,
             color,
         )
     }
@@ -77,10 +74,10 @@ impl Sprite {
             pos: pos,
             color: Color::white(),
             vertice: Box::new(VertexBuffer::new_from_vertex_array(Primitive::TrianglesStrip, &[
-                Sprite::new_rect_vertex(pos,   0.0,    0.0, Color::white()),
-                Sprite::new_rect_vertex(pos, width,    0.0, Color::white()),
-                Sprite::new_rect_vertex(pos,   0.0, height, Color::white()),
-                Sprite::new_rect_vertex(pos, width, height, Color::white()),
+                Sprite::new_rect_vertex(pos,   0.0,    0.0, Vector2::new(0.0, 0.0), Color::white()),
+                Sprite::new_rect_vertex(pos, width,    0.0, Vector2::new(1.0, 0.0), Color::white()),
+                Sprite::new_rect_vertex(pos,   0.0, height, Vector2::new(0.0, 1.0), Color::white()),
+                Sprite::new_rect_vertex(pos, width, height, Vector2::new(1.0, 1.0), Color::white()),
             ])),
         };
         new.vertice.assign_texture(texture);
