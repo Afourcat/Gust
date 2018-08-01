@@ -195,6 +195,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "gust"
+version = "0.1.0"
+dependencies = [
+ "gl 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glfw 0.23.0 (git+https://github.com/bjz/glfw-rs.git)",
+ "image 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nalgebra 0.15.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "image"
 version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -473,16 +483,6 @@ dependencies = [
  "libc 0.2.42 (registry+https://github.com/rust-lang/crates.io-index)",
  "num_cpus 1.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "rust_gl"
-version = "0.1.0"
-dependencies = [
- "gl 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "glfw 0.23.0 (git+https://github.com/bjz/glfw-rs.git)",
- "image 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "nalgebra 0.15.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

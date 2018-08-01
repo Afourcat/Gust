@@ -11,6 +11,7 @@ mod event;
 mod shader;
 mod sprite;
 mod vertex;
+mod convert;
 
 use sprite::Sprite;
 use gl::types::*;
@@ -42,23 +43,25 @@ static RECT_VBO: [f32; 18] = [
 
 fn main()
 {
-    let test_1: [Vertex; 6] = [
-        Vertex::new(Vector2::new( 0.5, 0.5), Vector2::new(1.0, 1.0), Color::new(1.0, 1.0, 1.0)),
-        Vertex::new(Vector2::new( 0.5,-0.5), Vector2::new(1.0, 0.0), Color::new(1.0, 1.0, 1.0)),
-        Vertex::new(Vector2::new(-0.5,-0.5), Vector2::new(0.0, 0.0), Color::new(1.0, 0.5, 0.0)),
-        Vertex::new(Vector2::new( 0.5, 0.5), Vector2::new(1.0, 1.0), Color::new(1.0, 1.0, 1.0)),
-        Vertex::new(Vector2::new(-0.5,-0.5), Vector2::new(0.0, 0.0), Color::new(1.0, 1.0, 1.0)),
-        Vertex::new(Vector2::new(-0.5, 0.5), Vector2::new(0.0, 1.0), Color::new(1.0, 0.0, 0.0)),
-    ];
+    //let test_1: [Vertex; 6] = [
+    //    Vertex::new(Vector2::new( 0.5, 0.5), Vector2::new(1.0, 1.0), Color::new(1.0, 1.0, 1.0)),
+    //    Vertex::new(Vector2::new( 0.5,-0.5), Vector2::new(1.0, 0.0), Color::new(1.0, 1.0, 1.0)),
+    //    Vertex::new(Vector2::new(-0.5,-0.5), Vector2::new(0.0, 0.0), Color::new(1.0, 0.5, 0.0)),
+    //    Vertex::new(Vector2::new( 0.5, 0.5), Vector2::new(1.0, 1.0), Color::new(1.0, 1.0, 1.0)),
+    //    Vertex::new(Vector2::new(-0.5,-0.5), Vector2::new(0.0, 0.0), Color::new(1.0, 1.0, 1.0)),
+    //    Vertex::new(Vector2::new(-0.5, 0.5), Vector2::new(0.0, 1.0), Color::new(1.0, 0.0, 0.0)),
+    //];
 
     let mut window = Window::new(HEIGHT, WIDTH, "Hello");
-    let mut vertex_b = VertexBuffer::new_from_vertex_array(Primitive::Triangles, &test_1);
+    //let mut vertex_b = VertexBuffer::new_from_vertex_array(Primitive::Triangles, &test_1);
     let tex = Rc::new(Texture::new("texture/Z.png"));
     let tex_leave = Rc::new(Texture::new("texture/test.jpg"));
+    let sprite = Sprite::from_texture(Rc::clone(&tex_leave));
 
-    vertex_b.assign_texture(tex_leave);
+    //vertex_b.assign_texture(tex_leave);
     window.set_clear_color(Color::new(1.0, 0.2, 0.7));
     window.set_key_polling(true);
+    println!("{:?}", sprite);
     while window.is_open() {
         window.poll_events();
 
@@ -67,7 +70,8 @@ fn main()
         }
 
         window.clear();
-        window.draw(&vertex_b);
+        window.draw(&sprite);
+    //    window.draw(&vertex_b);
         window.display();
     }
 }

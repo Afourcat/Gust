@@ -12,6 +12,8 @@ use std::mem;
 #[derive(Debug,Clone)]
 pub struct Texture {
 	pub id: u32,
+	width: u32,
+	height: u32,
 }
 
 impl Texture {
@@ -20,6 +22,7 @@ impl Texture {
 	pub fn new(path_to_file: &str) -> Texture {
 		let img = image::open(path_to_file).unwrap();
 		let mut id = 0;
+		let mut size = (0, 0);
 
 		unsafe {
 			gl::GenTextures(1, &mut id);
@@ -27,28 +30,36 @@ impl Texture {
 			Texture::set_texture_parameter();
 		}
 		match img {
-			DynamicImage::ImageRgba8(data) => unsafe { gl::TexImage2D(
-				gl::TEXTURE_2D,
-				0,
-				gl::RGBA as i32,
-				data.width() as i32,
-				data.height() as i32,
-				0,
-				gl::RGBA,
-				gl::UNSIGNED_BYTE,
-				mem::transmute(&data.into_raw()[0]))
+			DynamicImage::ImageRgba8(data) => unsafe {
+				size.0 = data.width();
+				size.1 = data.height();
+				gl::TexImage2D(
+					gl::TEXTURE_2D,
+					0,
+					gl::RGBA as i32,
+					data.width() as i32,
+					data.height() as i32,
+					0,
+					gl::RGBA,
+					gl::UNSIGNED_BYTE,
+					mem::transmute(&data.into_raw()[0])
+				);
             },
-			DynamicImage::ImageRgb8(data) => unsafe { gl::TexImage2D(
-				gl::TEXTURE_2D,
-				0,
-				gl::RGB as i32,
-				data.width() as i32,
-				data.height() as i32,
-				0,
-				gl::RGB,
-				gl::UNSIGNED_BYTE,
-				mem::transmute(&data.into_raw()[0]))
-            },
+			DynamicImage::ImageRgb8(data) => unsafe {
+				size.0 = data.width();
+				size.1 = data.height();
+				gl::TexImage2D(
+					gl::TEXTURE_2D,
+					0,
+					gl::RGB as i32,
+					data.width() as i32,
+					data.height() as i32,
+					0,
+					gl::RGB,
+					gl::UNSIGNED_BYTE,
+					mem::transmute(&data.into_raw()[0])
+				);
+			},
 			_ => println!("Error while loading !"),
 		}
 		unsafe {
@@ -57,7 +68,19 @@ impl Texture {
 		}
 		Texture {
 			id: id,
+			width: size.0,
+			height: size.1,
 		}
+	}
+
+	/// Simple getter for width
+	pub fn get_width(&self) -> u32 {
+		self.width
+	}
+
+	/// Simple getter for height
+	pub fn get_height(&self) -> u32 {
+		self.height
 	}
 
     pub fn active(&self, num: i32) {

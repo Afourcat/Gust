@@ -1,5 +1,5 @@
 [package]
-name = "rust_gl"
+name = "gust"
 version = "0.1.0"
 authors = ["alex <alexandre.fourcat@epitech.eu>"]
 

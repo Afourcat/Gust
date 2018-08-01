@@ -24,6 +24,7 @@ pub struct VertexBuffer {
 pub enum Primitive {
     Triangles,
     Quads,
+	TrianglesStrip,
     Points,
     Lines,
 }
@@ -104,10 +105,11 @@ impl VertexBuffer {
     /// Get primitive type
     fn get_gl_type(prim: &Primitive) -> GLenum {
         match prim {
-            Primitive::Quads        => gl::QUADS,
-            Primitive::Triangles    => gl::TRIANGLES,
-            Primitive::Points       => gl::POINTS,
-            Primitive::Lines        => gl::LINES,
+            Primitive::Quads        	=> gl::QUADS,
+            Primitive::Triangles    	=> gl::TRIANGLES,
+            Primitive::Points       	=> gl::POINTS,
+            Primitive::Lines        	=> gl::LINES,
+			Primitive::TrianglesStrip	=> gl::TRIANGLE_STRIP,
         }
     }
 
@@ -115,6 +117,7 @@ impl VertexBuffer {
         match self.primitive {
             gl::QUADS       => Primitive::Quads,
             gl::TRIANGLES   => Primitive::Triangles,
+			gl::TRIANGLE_STRIP => Primitive::TrianglesStrip,
             gl::LINES       => Primitive::Lines,
             _               => Primitive::Points,
         }
@@ -137,4 +140,11 @@ impl Drawable for VertexBuffer {
     fn assign_texture(&mut self, texture: Rc<Texture>) {
         self.texture = Some(Rc::clone(&texture));
     }
+}
+
+impl Drop for VertexBuffer {
+	fn drop(&mut self) {
+		//gl::DeleteVertexArrays(1, self.array);
+		//gl::DeleteBuffers(1, self.buffer);
+	}
 }
