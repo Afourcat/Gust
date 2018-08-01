@@ -35,16 +35,30 @@ impl VertexBuffer {
 		let mut buffer_id: u32 = 0;
 		let mut array_id: u32 = 0;
 		unsafe {
+			// --------------------------------
+			// Buffers generations heere
+			// we create a vertexArray and a buffer.
+			// Then we Bind the VertexArray the buffer
+			// to the openGl state machine.
+			// After we put data inside the buffer.
+			// Then we cut the data inside the buffer in 3
+			// { 1.0, 1.0, 2.0, 2.0, 3.0, 3.0 }
+			// |   pos  | texCoord |  color  |
+			// |        |          |         |
+			// With the 3 VertexAttribPointer
+			// --------------------------------
 			gl::GenVertexArrays(1, &mut array_id);
 			gl::GenBuffers(1, &mut buffer_id);
 			gl::BindVertexArray(array_id);
 			gl::BindBuffer(gl::ARRAY_BUFFER, buffer_id);
+			// Put data inside
 			gl::BufferData(
 				gl::ARRAY_BUFFER,
 				(std::mem::size_of::<GLfloat>() * vertice.len()) as GLsizeiptr,
 				&vertice[0] as *const f32 as *const c_void,
 				gl::STATIC_DRAW
 			);
+			// Attrib to position to vertexBuffer
 			gl::VertexAttribPointer(
 						0,
 						2,
@@ -54,6 +68,7 @@ impl VertexBuffer {
 						ptr::null()
 			);
             gl::EnableVertexAttribArray(0);
+			// Attrib texCoord to VertexBuffer
 			gl::VertexAttribPointer(
 						1,
 						2,
@@ -63,6 +78,7 @@ impl VertexBuffer {
 						(2 * mem::size_of::<GLfloat>()) as *const _,
 			);
 			gl::EnableVertexAttribArray(1);
+			// Attrib color to VertexBuffer
             gl::VertexAttribPointer(
 						2,
 						3,
@@ -72,6 +88,7 @@ impl VertexBuffer {
 						(4 * mem::size_of::<GLfloat>()) as *const _,
 			);
 			gl::EnableVertexAttribArray(2);
+			// Clear openGl state machine
 			gl::BindBuffer(gl::ARRAY_BUFFER, 0);
 			gl::BindVertexArray(0);
 		};
@@ -86,7 +103,7 @@ impl VertexBuffer {
 
     pub fn new_from_vertex_array(t: Primitive, vertice: &[Vertex])
     -> VertexBuffer {
-        let mut new_vertice: Vec<f32> = vec![0.0; vertice.len() * 8];
+        let mut new_vertice: Vec<f32> = vec![1.0; vertice.len() * 7];
         let mut i = 0;
 
         for elem in vertice {

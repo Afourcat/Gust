@@ -52,14 +52,16 @@ impl Sprite {
     }
 
     fn new_rect_vertex(pos: Vector2<f32>, x: f32, y: f32,/* text_coord: Vector2<f32> ,*/ color: Color) -> Vertex {
+        let pos1 = Self::convert_pos(pos.x, super::WIDTH as f32, x);
+        let pos2 = Self::convert_pos(pos.y, super::WIDTH as f32, y);
         Vertex::new(
             Vector2::new(
-                Self::convert_pos(pos.x, super::WIDTH as f32, x),
-                Self::convert_pos(pos.y, super::HEIGHT as f32, y)
+                pos1,
+                pos2
             ),
             Vector2::new(
-                Self::convert_pos(pos.x, super::WIDTH as f32, x),
-                Self::convert_pos(pos.y, super::HEIGHT as f32, y)
+                pos1,
+                pos2,
             ),
             color,
         )
