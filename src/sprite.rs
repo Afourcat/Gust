@@ -28,7 +28,6 @@ use std::borrow::BorrowMut;
 #[derive(Debug)]
 pub struct Sprite {
     pos: Vector2<f32>,
-    texture: Option<Rc<Texture>>,
     color: Color,
     vertice: Box<VertexBuffer>,
 }
@@ -38,7 +37,6 @@ impl Sprite {
     pub fn new() -> Sprite {
         Sprite {
             pos: Vector2::new(0.0, 0.0),
-            texture: None,
             color: Color::white(),
             vertice: Box::new(VertexBuffer::new_from_vertex_array(Primitive::TrianglesStrip, &[
                 Vertex::default(),
@@ -53,13 +51,16 @@ impl Sprite {
         (pos + offset) / screen
     }
 
-    fn new_rect_vertex(pos: Vector2<f32>, x: f32, y: f32, color: Color) -> Vertex {
+    fn new_rect_vertex(pos: Vector2<f32>, x: f32, y: f32,/* text_coord: Vector2<f32> ,*/ color: Color) -> Vertex {
         Vertex::new(
             Vector2::new(
                 Self::convert_pos(pos.x, super::WIDTH as f32, x),
                 Self::convert_pos(pos.y, super::HEIGHT as f32, y)
             ),
-            Vector2::new(1.0, 1.0),
+            Vector2::new(
+                Self::convert_pos(pos.x, super::WIDTH as f32, x),
+                Self::convert_pos(pos.y, super::HEIGHT as f32, y)
+            ),
             color,
         )
     }
@@ -67,16 +68,17 @@ impl Sprite {
     /// Create a new sprite from a texture
     pub fn from_texture(texture: Rc<Texture>) -> Sprite {
         let pos = Vector2::new(0.0, 0.0);
+        let width = texture.get_width() as f32;
+        let height = texture.get_height() as f32;
 
         let mut new = Sprite {
             pos: pos,
-            texture: Some(Rc::clone(&texture)),
             color: Color::white(),
             vertice: Box::new(VertexBuffer::new_from_vertex_array(Primitive::TrianglesStrip, &[
-                Sprite::new_rect_vertex(pos, 0.0, 0.0, Color::white()),
-                Sprite::new_rect_vertex(pos, texture.get_width() as f32, 0.0, Color::white()),
-                Sprite::new_rect_vertex(pos, 0.0, texture.get_height() as f32, Color::white()),
-                Sprite::new_rect_vertex(pos, texture.get_width() as f32, texture.get_height() as f32, Color::white()),
+                Sprite::new_rect_vertex(pos,   0.0,    0.0, Color::white()),
+                Sprite::new_rect_vertex(pos, width,    0.0, Color::white()),
+                Sprite::new_rect_vertex(pos,   0.0, height, Color::white()),
+                Sprite::new_rect_vertex(pos, width, height, Color::white()),
             ])),
         };
         new.vertice.assign_texture(texture);
@@ -86,10 +88,6 @@ impl Sprite {
     /// Set a new color for the sprite
     pub fn set_color(&mut self, new_color: Color) {
         self.color = new_color;
-    }
-
-    pub fn set_texture(&mut self, new_texture: Rc<Texture>) {
-        self.texture = Some(Rc::clone(&new_texture));
     }
 
     /// Rotate the sprite
@@ -106,6 +104,6 @@ impl Drawable for Sprite {
     }
 
     fn assign_texture(&mut self, texture: Rc<Texture>) {
-        self.texture = Some(Rc::clone(&texture));
+        self.vertice.assign_texture(texture);
     }
 }
