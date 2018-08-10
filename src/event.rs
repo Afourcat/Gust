@@ -10,11 +10,19 @@ use std::marker::Send;
 use std::sync::mpsc::Receiver;
 
 /// EventReceiver Wrapper for glfw
+/// ```
+/// let event_r = EventReceiver::from(&window);
+///
+/// for (_, event) in event_r.fetch() {
+/// 	handle_events(/*  omited  */);
+/// }
+/// ```
+///
 pub struct EventReceiver {
 	event: Rc<Receiver<(f64, WindowEvent)>>,
 }
 
-/// Wrapper for flushed message
+/// Wrapper for flushed message iterator
 pub struct EventIterator<'a, Message: 'a + Send> {
 	fmsg: FlushedMessages<'a, Message>,
 }

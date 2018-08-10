@@ -26,9 +26,18 @@ pub trait Drawable {
     }
 }
 
+pub trait Angle {
+    fn to_degrees() -> f64;
+    fn to_radian() -> f64;
+}
+
 /// Trait defining movable structures as sprite or higher
 pub trait Movable {
-    fn move_it<T: nalgebra::Scalar>(&mut self, vec: Vector2<T>);
+    fn translate<T: nalgebra::Scalar>(&mut self, vec: Vector2<T>);
 
-    fn rotate<T: nalgebra::Scalar>(&mut self, rot: Rotation2<T>);
+    fn rotate_from_rotation<T: nalgebra::Scalar>(&mut self, rot: Rotation2<T>);
+
+    fn rotate_from_angle<T: nalgebra::Scalar, R: Angle>(&mut self, angle: R);
+
+    fn scale<T: nalgebra::Scalar>(&mut self, factor: Vector2<T>);
 }

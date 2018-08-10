@@ -58,7 +58,7 @@ fn main()
     //let mut vertex_b = VertexBuffer::new_from_vertex_array(Primitive::Triangles, &test_1);
     let tex = Rc::new(Texture::new("texture/Z.png"));
     let tex_leave = Rc::new(Texture::new("texture/test.jpg"));
-    let sprite = Sprite::from_texture(Rc::clone(&tex));
+    let sprite = Sprite::from_texture(Rc::clone(&tex_leave));
     let event_receiver = EventReceiver::from(&window);
 
     //vertex_b.assign_texture(tex_leave);
