@@ -7,6 +7,7 @@ mod color;
 mod window;
 mod draw;
 mod texture;
+#[macro_use]
 mod event;
 mod shader;
 mod sprite;
@@ -17,6 +18,7 @@ use sprite::Sprite;
 use gl::types::*;
 use glfw::{Action, Context, Key};
 use window::Window;
+use event::{EventReceiver};
 use std::cell::RefCell;
 use std::rc::Rc;
 use color::Color;
@@ -27,8 +29,8 @@ use draw::Drawable;
 use nalgebra::*;
 use draw::Drawer;
 
-static HEIGHT: usize = 1920;
-static WIDTH: usize = 1080;
+static HEIGHT: usize = 900;
+static WIDTH: usize = 1600;
 
 static RECT_VBO: [f32; 18] = [
     // first triangle
@@ -52,11 +54,12 @@ fn main()
     //    Vertex::new(Vector2::new(-0.5, 0.5), Vector2::new(0.0, 1.0), Color::new(1.0, 0.0, 0.0)),
     //];
 
-    let mut window = Window::new(HEIGHT, WIDTH, "Hello");
+    let mut window = Window::new(WIDTH, HEIGHT, "Hello");
     //let mut vertex_b = VertexBuffer::new_from_vertex_array(Primitive::Triangles, &test_1);
     let tex = Rc::new(Texture::new("texture/Z.png"));
     let tex_leave = Rc::new(Texture::new("texture/test.jpg"));
-    let sprite = Sprite::from_texture(Rc::clone(&tex_leave));
+    let sprite = Sprite::from_texture(Rc::clone(&tex));
+    let event_receiver = EventReceiver::from(&window);
 
     //vertex_b.assign_texture(tex_leave);
     window.set_clear_color(Color::new(1.0, 0.2, 0.7));
@@ -65,13 +68,13 @@ fn main()
     while window.is_open() {
         window.poll_events();
 
-        for (_, event) in glfw::flush_messages(&*window.event.clone()) {
-            event_handling(&mut window, event);
+		for (_, input) in event_receiver.fetch() {
+            event_handling(&mut window, input);
         }
 
         window.clear();
         window.draw(&sprite);
-    //    window.draw(&vertex_b);
+//      window.draw(&vertex_b);
         window.display();
     }
 }
@@ -88,6 +91,9 @@ fn event_handling(window: &mut Window, event: glfw::WindowEvent) {
             },
             Key::K => {
                 println!("Je taime!");
+            },
+            Key::E => {
+                println!("TEST");
             },
             _ => {}
         };

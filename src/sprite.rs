@@ -52,12 +52,12 @@ impl Sprite {
     }
 
     fn new_rect_vertex(pos: Vector2<f32>, x: f32, y: f32, text_coord: Vector2<f32> , color: Color) -> Vertex {
-        let pos1 = Self::convert_pos(pos.x, super::HEIGHT as f32, x);
-        let pos2 = Self::convert_pos(pos.y, super::WIDTH as f32, y);
+        let posy = Self::convert_pos(pos.y, super::HEIGHT as f32, y);
+        let posx = Self::convert_pos(pos.x, super::WIDTH as f32, x);
         Vertex::new(
             Vector2::new(
-                pos1,
-                pos2
+                posx,
+                posy
             ),
             text_coord,
             color,
@@ -66,7 +66,7 @@ impl Sprite {
 
     /// Create a new sprite from a texture
     pub fn from_texture(texture: Rc<Texture>) -> Sprite {
-        let pos = Vector2::new(0.0, 0.0);
+        let pos = Vector2::new(-250.0, -250.0);
         let width = texture.get_width() as f32;
         let height = texture.get_height() as f32;
 
@@ -75,9 +75,9 @@ impl Sprite {
             color: Color::white(),
             vertice: Box::new(VertexBuffer::new_from_vertex_array(Primitive::TrianglesStrip, &[
                 Sprite::new_rect_vertex(pos,   0.0,    0.0, Vector2::new(0.0, 0.0), Color::white()),
-                Sprite::new_rect_vertex(pos, width,    0.0, Vector2::new(1.0, 0.0), Color::white()),
-                Sprite::new_rect_vertex(pos,   0.0, height, Vector2::new(0.0, 1.0), Color::white()),
-                Sprite::new_rect_vertex(pos, width, height, Vector2::new(1.0, 1.0), Color::white()),
+                Sprite::new_rect_vertex(pos,   0.0, height, Vector2::new(0.0, -1.0), Color::red()),
+                Sprite::new_rect_vertex(pos, width,    0.0, Vector2::new(-1.0, 0.0), Color::blue()),
+                Sprite::new_rect_vertex(pos, width, height, Vector2::new(-1.0, -1.0), Color::green()),
             ])),
         };
         new.vertice.assign_texture(texture);

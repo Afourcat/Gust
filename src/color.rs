@@ -13,10 +13,6 @@ use std::ops::Sub;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Color(pub f32, pub f32, pub f32, pub f32);
 
-static MAGENTA: Color = Color(1.0, 0.0, 1.0, 1.0);
-static RED: Color = Color(1.0, 0.0, 0.0, 1.0);
-static BLUE: Color = Color(0.0, 0.0, 1.0, 1.0);
-
 /// Color class
 impl Color {
     /// Create a color with the alpha
@@ -31,6 +27,18 @@ impl Color {
 
     pub fn white() -> Color {
         Color(1.0, 1.0, 1.0, 1.0)
+    }
+
+    pub fn red() -> Color {
+        Color(1.0, 0.0, 0.0, 1.0)
+    }
+
+    pub fn blue() -> Color {
+        Color(0.0, 0.0, 1.0, 1.0)
+    }
+
+    pub fn green() -> Color {
+        Color(0.0, 1.0, 0.0, 1.0)
     }
 }
 

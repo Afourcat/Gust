@@ -20,7 +20,6 @@ use color::Color;
 use std::sync::mpsc::Receiver;
 use std::cell::RefCell;
 use std::rc::Rc;
-use event::*;
 use glfw::Context;
 use std::ops::Drop;
 use shader::Shader;
@@ -57,7 +56,7 @@ impl<'a> Window {
             height as u32, width as u32,
             name,
             glfw::WindowMode::Windowed
-            ).unwrap();
+        ).unwrap();
 
         // Make this window usable
         win.make_current();
