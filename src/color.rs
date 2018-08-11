@@ -1,9 +1,4 @@
-/*
-** Alexandre Fourcat 2018
-** color
-** Description:
-** color gesture
-*/
+//! Color handling module
 
 use std::default;
 use std::ops::Add;

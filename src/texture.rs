@@ -1,3 +1,7 @@
+//! This module is for texture handling
+//! Importing, Loading, Pushing into OpenGl
+//! I'm using image crate that is really useful
+
 extern crate image;
 
 use self::image::{GenericImage, DynamicImage, ImageBuffer, Pixel, Rgba, Rgb};
