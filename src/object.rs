@@ -11,7 +11,7 @@ use texture::Texture;
 use vertex::Vertex;
 
 /// Vertex Buffer structure
-#[derive(Debug)]
+#[derive(Debug,Clone,PartialEq)]
 pub struct VertexBuffer {
 	buffer: u32,
 	array: u32,
@@ -20,7 +20,7 @@ pub struct VertexBuffer {
     size: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone,PartialEq,Copy)]
 pub enum Primitive {
     Triangles,
     Quads,
@@ -165,3 +165,9 @@ impl Drop for VertexBuffer {
 		//gl::DeleteBuffers(1, self.buffer);
 	}
 }
+
+//impl Copy for VertexBuffer {
+//	fn copy() -> VertexBuffer {
+//
+//	}
+//}

@@ -9,6 +9,8 @@ use shader::Shader;
 use color::Color;
 use vertex::Vertex;
 use nalgebra::*;
+use nalgebra;
+use draw::{Movable};
 use std::borrow::BorrowMut;
 
 /// A sprite is a transformable
@@ -25,7 +27,7 @@ use std::borrow::BorrowMut;
 /// window.display();
 /// ```
 /// > A sprite is just attributes for textures to become printable ...
-#[derive(Debug)]
+#[derive(Debug,Clone,PartialEq)]
 pub struct Sprite {
     pos: Vector2<f32>,
     color: Color,
@@ -89,13 +91,29 @@ impl Sprite {
         self.color = new_color;
     }
 
-    /// Rotate the sprite
-    pub fn rotate(&mut self, rot: Rotation2<f64>) {
-        //
-    }
-
 }
 
+//impl<T: nalgebra::Scalar> Movable<T> for Sprite {
+//
+//    fn translate(&mut self, vec: Vector2<T>) {
+//        self.pos.x += vec.x;
+//        self.pos.y += vec.y;
+//    }
+//
+//    fn scale(&mut self, factor: Vector2<T>) {
+//        self.scale
+//    }
+//
+//    fn rotate_from_rotation(&mut self, rot: Rotation2<T>) {
+//
+//    }
+//
+//    fn set_position(&mut self, vec: Vector2<T>) {
+//        self.pos.x = vec.x;
+//        self.pos.y = vec.y;
+//    }
+//}
+//
 /// Drawing trait for sprite sturct
 impl Drawable for Sprite {
     fn draw<T: Drawer>(&self, window: &mut T) {

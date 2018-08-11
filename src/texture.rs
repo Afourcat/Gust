@@ -9,7 +9,7 @@ use std::os::raw::c_void;
 use std::mem;
 
 /// Texture structure
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq,Copy)]
 pub struct Texture {
 	pub id: u32,
 	width: u32,

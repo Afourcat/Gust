@@ -3,6 +3,7 @@ use nalgebra::{Vector3, Vector2, Vector4, Matrix4, Matrix2, Matrix3};
 use color::Color;
 
 /// Vertex structure defined by texture coord, space coors and color
+#[derive(Debug,Clone,PartialEq)]
 pub struct Vertex {
     pub pos:    Vector2<f32>,
     pub tex:    Vector2<f32>,
