@@ -132,11 +132,11 @@ impl VertexBuffer {
 
     pub fn get_primitive(&self) -> Primitive {
         match self.primitive {
-            gl::QUADS       => Primitive::Quads,
-            gl::TRIANGLES   => Primitive::Triangles,
+			gl::QUADS       => Primitive::Quads,
+			gl::TRIANGLES   => Primitive::Triangles,
 			gl::TRIANGLE_STRIP => Primitive::TrianglesStrip,
-            gl::LINES       => Primitive::Lines,
-            _               => Primitive::Points,
+			gl::LINES       => Primitive::Lines,
+			_               => Primitive::Points,
         }
     }
 }
