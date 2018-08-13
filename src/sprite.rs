@@ -1,3 +1,5 @@
+//! Module to handle drawable texture that are called Sprite
+
 use gl::types::*;
 use gl;
 use texture::Texture;

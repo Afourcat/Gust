@@ -1,3 +1,5 @@
+//! This is a module for vertex
+
 use std;
 use nalgebra::{Vector3, Vector2, Vector4, Matrix4, Matrix2, Matrix3};
 use color::Color;

@@ -1,8 +1,4 @@
-//! Shader
-//
-//
-//
-//
+//! Shader module
 
 use gl;
 use std;

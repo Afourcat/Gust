@@ -1,5 +1,5 @@
-//! Drawer trait define a struct that can draw a drawable
-//!
+//! Every traits needed by drawable object
+//! 
 
 use nalgebra::{Vector2,Rotation2};
 use nalgebra;

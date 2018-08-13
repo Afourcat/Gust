@@ -1,6 +1,4 @@
-//
-//
-//
+//! Module to handle keyboard and mouse event one day
 
 use glfw::{WindowEvent, Key, Action, FlushedMessages};
 use glfw;

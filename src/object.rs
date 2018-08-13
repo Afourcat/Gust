@@ -1,3 +1,6 @@
+//! This module encapsulate the system of vertexBuffer
+//! Here you can create a drawable object easily with a VertexArray
+
 use gl;
 use gl::types::*;
 use std::mem;

@@ -1,3 +1,7 @@
+//! This module is for texture handling
+//! Importing, Loading, Pushing into OpenGl
+//! I'm using image crate that is really useful
+
 extern crate image;
 
 use self::image::{GenericImage, DynamicImage, ImageBuffer, Pixel, Rgba, Rgb};
@@ -8,7 +12,17 @@ use draw::{Drawable,Drawer};
 use std::os::raw::c_void;
 use std::mem;
 
-/// Texture structure
+/// # Texture structure
+/// A texture is an id inside openGL that can contain a array of byte
+/// this array can be spreaded to drawable object
+/// ```
+/// let window = Window::new(1080, 1920, "Test");
+/// let leave = Texture.new("path/to/test");
+///	let sprite = Sprite::from(&leave);
+/// ...
+/// window.draw(&sprite);
+/// ...
+/// ```
 #[derive(Debug,Clone,PartialEq,Copy)]
 pub struct Texture {
 	pub id: u32,
