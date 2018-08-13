@@ -1,0 +1,24 @@
+image: "gitlab-runner"
+before_script:
+  - apt-get update -qq && apt-get install -y -qq rust cargo
+  - bundle install
+
+stages:
+  - build
+  - test
+  - deploy
+
+job1:
+  stage: build
+  script: "cargo build"
+
+job2:
+  stage: test
+  script: "cargo test"
+
+job3:
+  stage: deploy
+  script: ""
+
+after_script:
+  - cargo clean

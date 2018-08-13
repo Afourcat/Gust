@@ -12,7 +12,6 @@ mod event;
 mod shader;
 mod sprite;
 mod vertex;
-mod convert;
 
 use sprite::Sprite;
 use gl::types::*;
