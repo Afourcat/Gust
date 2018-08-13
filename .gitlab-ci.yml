@@ -16,9 +16,5 @@ job2:
   stage: test
   script: "cargo test"
 
-job3:
-  stage: deploy
-  script: ""
-
 after_script:
   - cargo clean
