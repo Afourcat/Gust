@@ -1,4 +1,4 @@
-image: "gitlab-runner"
+image: "alpine"
 before_script:
   - apt-get update -qq && apt-get install -y -qq rust cargo
   - bundle install
