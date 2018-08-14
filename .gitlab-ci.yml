@@ -1,7 +1,6 @@
 image: "alpine"
 before_script:
-  - apt-get update -qq && apt-get install -y -qq rust cargo
-  - bundle install
+  - apk update && apk add cargo && apk upgrade
 
 stages:
   - build
