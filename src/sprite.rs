@@ -32,6 +32,7 @@ use std::borrow::BorrowMut;
 #[derive(Debug,Clone,PartialEq)]
 pub struct Sprite {
     pos: Vector2<f32>,
+    scale: Vector2<f32>,
     color: Color,
     vertice: Box<VertexBuffer>,
 }
@@ -41,6 +42,7 @@ impl Sprite {
     pub fn new() -> Sprite {
         Sprite {
             pos: Vector2::new(0.0, 0.0),
+            scale: Vector2::new(1.0, 1.0),
             color: Color::white(),
             vertice: Box::new(VertexBuffer::new_from_vertex_array(Primitive::TrianglesStrip, &[
                 Vertex::default(),
@@ -76,6 +78,7 @@ impl Sprite {
 
         let mut new = Sprite {
             pos: pos,
+            scale: Vector2::new(1.0, 1.0),
             color: Color::white(),
             vertice: Box::new(VertexBuffer::new_from_vertex_array(Primitive::TrianglesStrip, &[
                 Sprite::new_rect_vertex(pos,   0.0,    0.0, Vector2::new(0.0, 0.0), Color::white()),
@@ -93,28 +96,42 @@ impl Sprite {
         self.color = new_color;
     }
 
+    pub fn get_color(&self) -> Color {
+        self.color
+    }
+
 }
 
-//impl<T: nalgebra::Scalar> Movable<T> for Sprite {
-//
-//    fn translate(&mut self, vec: Vector2<T>) {
-//        self.pos.x += vec.x;
-//        self.pos.y += vec.y;
-//    }
-//
-//    fn scale(&mut self, factor: Vector2<T>) {
-//        self.scale
-//    }
-//
-//    fn rotate_from_rotation(&mut self, rot: Rotation2<T>) {
-//
-//    }
-//
-//    fn set_position(&mut self, vec: Vector2<T>) {
-//        self.pos.x = vec.x;
-//        self.pos.y = vec.y;
-//    }
-//}
+impl Movable for Sprite {
+
+    fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>) {
+        self.pos.x += vec.x.into();
+        self.pos.y += vec.y.into();
+    }
+
+    fn set_scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>) {
+        self.scale.x = vec.x.into();
+        self.scale.y = vec.y.into();
+    }
+
+    fn get_scale(&self) -> Vector2<f32> {
+        self.scale
+    }
+
+    fn scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, factor: Vector2<T>) {
+        self.scale.x += factor.x.into();
+        self.scale.y += factor.y.into();
+    }
+
+    fn get_position(&self) -> Vector2<f32> {
+        self.pos
+    }
+
+    fn set_position<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>) {
+        self.pos.x = vec.x.into();
+        self.pos.y = vec.y.into();
+    }
+}
 //
 /// Drawing trait for sprite sturct
 impl Drawable for Sprite {
@@ -122,7 +139,7 @@ impl Drawable for Sprite {
         self.vertice.draw(window);
     }
 
-    fn assign_texture(&mut self, texture: Rc<Texture>) {
+    fn assign_texture<'a>(&mut self, texture: Rc<Texture>) {
         self.vertice.assign_texture(texture);
     }
 }

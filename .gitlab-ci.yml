@@ -13,7 +13,7 @@ job1:
 
 job2:
   stage: test
-  script: "cargo test"
+  script: "cargo test gitlab --lib"
 
 after_script:
   - cargo clean

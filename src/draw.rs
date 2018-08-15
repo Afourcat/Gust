@@ -1,5 +1,5 @@
 //! Every traits needed by drawable object
-//! 
+//!
 
 use nalgebra::{Vector2,Rotation2};
 use nalgebra;
@@ -27,12 +27,16 @@ pub trait Drawable {
 }
 
 /// Trait defining movable structures as sprite or higher
-pub trait Movable<T: nalgebra::Scalar> {
-    fn set_position(&mut self, vec: Vector2<T>);
+pub trait Movable {
+    fn set_position<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>);
 
-    fn translate(&mut self, vec: Vector2<T>);
+    fn get_position(&self) -> Vector2<f32>;
 
-    fn set_scale(&mut self, vec: Vector2<T>);
+    fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>);
 
-    fn scale(&mut self, factor: Vector2<T>);
+    fn set_scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>);
+
+    fn scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, factor: Vector2<T>);
+
+    fn get_scale(&self) -> Vector2<f32>;
 }

@@ -92,6 +92,7 @@ mod test {
     use glfw::{Action, Context, Key};
     use glfw;
     use window::Window;
+    use sprite;
     use event::{EventReceiver};
     use event;
     use std::cell::RefCell;
@@ -102,7 +103,13 @@ mod test {
     use vertex::Vertex;
     use draw::Drawable;
     use nalgebra::*;
-    use draw::Drawer;
+    use draw::{Drawer,Movable};
+    use draw;
+
+    #[test]
+    fn gitlab_texture() {
+
+    }
 
     #[test]
     fn main()
