@@ -1,6 +1,6 @@
 image: "alpine"
 before_script:
-  - apk update && apk add cargo cmake make && apk upgrade
+  - apk update && apk add cargo cmake make X11 && apk upgrade
 
 stages:
   - build
