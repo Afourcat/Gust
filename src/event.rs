@@ -20,12 +20,12 @@ pub struct EventReceiver {
 	event: Rc<Receiver<(f64, WindowEvent)>>,
 }
 
-/// Wrapper for flushed message iterator
+/// Wrapper for flushed message iterator that is simplet to use
 pub struct EventIterator<'a, Message: 'a + Send> {
 	fmsg: FlushedMessages<'a, Message>,
 }
 
-impl<'a> EventIterator<'a, (f64, WindowEvent)> {
+impl<'a> From<&'a EventReceiver> for EventIterator<'a, (f64, WindowEvent)> {
 	fn from(var: &'a EventReceiver) -> EventIterator<'a, (f64, WindowEvent)> {
 		EventIterator {
 			fmsg: glfw::flush_messages(&var.event)
@@ -47,7 +47,7 @@ impl EventReceiver {
 	}
 
 	pub fn fetch<'a>(&'a self) -> EventIterator<'a, (f64, WindowEvent)> {
-		EventIterator::from(&self)
+		EventIterator::from(&*self)
 	}
 }
 
