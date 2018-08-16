@@ -117,7 +117,7 @@ mod test {
         let mut window = Window::new(::WIDTH, ::HEIGHT, "Hello");
         let tex = Rc::new(Texture::new("texture/Z.png"));
         let tex_leave = Rc::new(Texture::new("texture/test.jpg"));
-        let sprite = Sprite::from_texture(Rc::clone(&tex_leave));
+        let sprite = Sprite::from(Rc::clone(&tex_leave));
         let event_receiver = EventReceiver::from(&window);
 
         window.set_clear_color(Color::new(1.0, 0.2, 0.7));

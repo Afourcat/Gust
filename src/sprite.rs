@@ -70,12 +70,23 @@ impl Sprite {
         )
     }
 
-    /// Create a new sprite from a texture
-    pub fn from_texture(texture: Rc<Texture>) -> Sprite {
-        let pos = Vector2::new(-250.0, -250.0);
-        let width = texture.get_width() as f32;
-        let height = texture.get_height() as f32;
+    /// Set a new color for the sprite
+    pub fn set_color(&mut self, new_color: Color) {
+        self.color = new_color;
+    }
 
+    pub fn get_color(&self) -> Color {
+        self.color
+    }
+
+}
+
+impl From<Rc<Texture>> for Sprite {
+
+    fn from(tex: Rc<Texture>) -> Sprite {
+        let pos = Vector2::new(-250.0, -250.0);
+        let width = tex.get_width() as f32;
+        let height = tex.get_height() as f32;
         let mut new = Sprite {
             pos: pos,
             scale: Vector2::new(1.0, 1.0),
@@ -87,19 +98,10 @@ impl Sprite {
                 Sprite::new_rect_vertex(pos, width, height, Vector2::new(-1.0, -1.0), Color::green()),
             ])),
         };
-        new.vertice.assign_texture(texture);
+
+        new.vertice.assign_texture(tex);
         new
     }
-
-    /// Set a new color for the sprite
-    pub fn set_color(&mut self, new_color: Color) {
-        self.color = new_color;
-    }
-
-    pub fn get_color(&self) -> Color {
-        self.color
-    }
-
 }
 
 impl Movable for Sprite {
