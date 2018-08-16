@@ -14,30 +14,7 @@ pub struct Vertex {
 
 impl Vertex {
 
-    pub fn from_pos(pos: Vector2<f32>) -> Vertex {
-        Vertex {
-            pos: pos,
-            tex: pos,
-            color: Color::new(1.0, 1.0, 1.0),
-        }
-    }
-
-    pub fn from_texture(pos: Vector2<f32>, tex: Vector2<f32>) -> Vertex {
-        Vertex {
-            pos: pos,
-            tex: tex,
-            color: Color::new(1.0, 1.0, 1.0),
-        }
-    }
-
-    pub fn from_color(pos: Vector2<f32>, color: Color) -> Vertex {
-        Vertex {
-            pos: pos,
-            tex: pos,
-            color: color,
-        }
-    }
-
+    /// Create a vertex containing position, texCoord and Color
     pub fn new
     (pos: Vector2<f32>, tex: Vector2<f32>, color: Color) -> Vertex {
         Vertex {
@@ -48,7 +25,47 @@ impl Vertex {
     }
 }
 
+impl From<Vector2<f32>> for Vertex {
+
+    /// create a vertex with just a position in 2D space
+    fn from(pos: Vector2<f32>) -> Vertex {
+        Vertex {
+            pos: pos,
+            tex: pos,
+            color: Color::new(1.0, 1.0, 1.0),
+        }
+    }
+}
+
+impl From<(Vector2<f32>, Color)> for Vertex {
+
+    /// datas.0 = pos
+    /// datas.1 = color
+    fn from(datas: (Vector2<f32>, Color)) -> Vertex {
+        Vertex {
+            pos: datas.0,
+            tex: Vector2::new(0.0, 0.0),
+            color: datas.1,
+        }
+    }
+}
+
+impl From<(Vector2<f32>, Vector2<f32>)> for Vertex {
+
+    /// datas.0 = position
+    /// datas.1 = texCoord
+    fn from(datas: (Vector2<f32>, Vector2<f32>)) -> Vertex {
+        Vertex {
+            pos: datas.0,
+            tex: datas.1,
+            color: Color::new(1.0, 1.0, 1.0),
+        }
+    }
+}
+
 impl Default for Vertex {
+
+    /// Default vertex
     fn default() -> Vertex {
         Vertex {
             pos: Vector2::new(0.0, 0.0),

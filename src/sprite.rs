@@ -39,6 +39,7 @@ pub struct Sprite {
 
 impl Sprite {
     /// Create a empty sprite
+    /// It's not very useful but you can assign texture later
     pub fn new() -> Sprite {
         Sprite {
             pos: Vector2::new(0.0, 0.0),
@@ -53,6 +54,7 @@ impl Sprite {
         }
     }
 
+    /// Convert pos from screen to offset
     fn convert_pos(pos: f32, screen: f32, offset: f32) -> f32 {
         (pos + offset) / screen
     }
@@ -70,11 +72,12 @@ impl Sprite {
         )
     }
 
-    /// Set a new color for the sprite
+    /// Set a new color
     pub fn set_color(&mut self, new_color: Color) {
         self.color = new_color;
     }
 
+    /// Get texture color
     pub fn get_color(&self) -> Color {
         self.color
     }
@@ -83,8 +86,17 @@ impl Sprite {
 
 impl From<Rc<Texture>> for Sprite {
 
+    /// You can create sprite from texture (precisly Rc<Texture>)
+    /// ```
+    /// let personnage = Sprite::from(Rc::clone(&texture));
+    /// ...
+    /// window.clear();
+    /// window.draw(&personnage);
+    /// window.display();
+    /// ...
+    /// ```
     fn from(tex: Rc<Texture>) -> Sprite {
-        let pos = Vector2::new(-250.0, -250.0);
+        let pos = Vector2::new(0.0, 0.0);
         let width = tex.get_width() as f32;
         let height = tex.get_height() as f32;
         let mut new = Sprite {
