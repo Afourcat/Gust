@@ -1,9 +1,8 @@
 //! Every traits needed by drawable object
 //!
 
-use nalgebra::{Vector2,Rotation2};
+use nalgebra::{Vector2};
 use nalgebra;
-use window::Window;
 use texture::Texture;
 use std::rc::Rc;
 
@@ -14,20 +13,19 @@ pub trait Drawer {
 
     /// Active shader of the drawer
     fn activate_shader(&self);
+
 }
 
 /// Trait that can be use to draw on window
 pub trait Drawable {
 
     /// Draw the drawable structure, you need a Drawer(Where the struct will be draw)
-    fn draw<T: Drawer>(&self, window: &mut T) {
-        println!("You forgot to implement draw of Drawable Trait");
-    }
+    fn draw<T: Drawer>(&self, window: &mut T);
 
     /// Assign a texture to a drawable
-    fn assign_texture<'a>(&mut self, texture: Rc<Texture>) {
-        println!("You forgot to implement assign_texture of Drawable Trait");
-    }
+    fn assign_texture<'a>(&mut self, texture: Rc<Texture>);
+
+    fn update(&mut self);
 }
 
 /// Trait defining movable structures as sprite or higher

@@ -1,7 +1,6 @@
 //! This is a module for vertex
 
-use std;
-use nalgebra::{Vector3, Vector2, Vector4, Matrix4, Matrix2, Matrix3};
+use nalgebra::{Vector2};
 use color::Color;
 
 /// Vertex structure defined by texture coord, space coors and color

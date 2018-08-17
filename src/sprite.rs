@@ -1,19 +1,14 @@
 //! Module to handle drawable texture that are called Sprite
 
-use gl::types::*;
-use gl;
 use texture::Texture;
 use object::{VertexBuffer,Primitive};
 use std::rc::Rc;
 use draw::{Drawable,Drawer};
-use window::Window;
-use shader::Shader;
 use color::Color;
 use vertex::Vertex;
 use nalgebra::*;
 use nalgebra;
 use draw::{Movable};
-use std::borrow::BorrowMut;
 
 /// A sprite is a transformable
 /// drawable sprite
@@ -106,8 +101,8 @@ impl From<Rc<Texture>> for Sprite {
             scale: Vector2::new(1.0, 1.0),
             color: Color::white(),
             vertice: Box::new(VertexBuffer::new_from_vertex_array(Primitive::TrianglesStrip, &[
-                Sprite::new_rect_vertex(pos,   0.0,    0.0, Vector2::new(0.0, 0.0), Color::red()),          //  botom left    .__________.
-                Sprite::new_rect_vertex(pos,   0.0, height, Vector2::new(0.0, 1.0), Color::green()),        //  top left      |          |
+                Sprite::new_rect_vertex(pos,   0.0,    0.0, Vector2::new(0.0, 1.0), Color::red()),          //  botom left    .__________.
+                Sprite::new_rect_vertex(pos,   0.0, height, Vector2::new(0.0, 0.0), Color::green()),        //  top left      |          |
                 Sprite::new_rect_vertex(pos, width,    0.0, Vector2::new(1.0, 1.0), Color::blue()),         //  bottom right  |          |
                 Sprite::new_rect_vertex(pos, width, height, Vector2::new(1.0, 0.0), Color::red()),          //  top right     .__________.
             ])),
@@ -153,6 +148,10 @@ impl Movable for Sprite {
 impl Drawable for Sprite {
     fn draw<T: Drawer>(&self, window: &mut T) {
         self.vertice.draw(window);
+    }
+
+    fn update(&mut self) {
+        unimplemented!();
     }
 
     fn assign_texture<'a>(&mut self, texture: Rc<Texture>) {

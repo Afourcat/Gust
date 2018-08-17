@@ -1,6 +1,5 @@
 //! Color handling module
 
-use std::default;
 use std::ops::Add;
 use std::ops::Mul;
 use std::ops::Sub;

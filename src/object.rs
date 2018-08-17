@@ -6,7 +6,6 @@ use gl::types::*;
 use std::mem;
 use std;
 use draw::{Drawable,Drawer};
-use window::Window;
 use std::ptr;
 use std::os::raw::c_void;
 use std::rc::Rc;
@@ -143,6 +142,18 @@ impl VertexBuffer {
 			_               => Primitive::Points,
         }
     }
+
+	pub fn update_texture_coord(&mut self) {
+
+	}
+
+	pub fn update_position(&mut self) {
+
+	}
+
+	pub fn update_transform(&mut self) {
+
+	}
 }
 
 impl Drawable for VertexBuffer {
@@ -156,6 +167,12 @@ impl Drawable for VertexBuffer {
 			gl::DrawArrays(self.primitive, 0, self.size as i32);
 			gl::BindVertexArray(0);
 		}
+	}
+
+	fn update(&mut self) {
+		self.update_texture_coord();
+		self.update_position();
+		self.update_transform();
 	}
 
     fn assign_texture(&mut self, texture: Rc<Texture>) {

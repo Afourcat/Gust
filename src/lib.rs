@@ -67,6 +67,9 @@
 //! }
 //! ```
 
+#![allow(dead_code)]
+
+
 extern crate gl;
 extern crate glfw;
 extern crate nalgebra;
@@ -88,28 +91,23 @@ static WIDTH: usize = 1600;
 #[cfg(test)]
 mod test {
     use sprite::Sprite;
-    use gl::types::*;
-    use glfw::{Action, Context, Key};
+    use glfw::{Key};
     use glfw;
     use window::Window;
-    use sprite;
     use event::{EventReceiver};
     use event;
-    use std::cell::RefCell;
     use std::rc::Rc;
     use color::Color;
     use object::{VertexBuffer, Primitive};
     use texture::{Texture};
-    use vertex::Vertex;
     use draw::Drawable;
     use nalgebra::*;
     use draw::{Drawer,Movable};
-    use draw;
 
-static vertice: [f32; 32] = [
+static VERTICE: [f32; 32] = [
         -0.5, -0.5, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0,
          0.5, -0.5, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0,
-        -0.5,  0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+        -0.5,  0.5, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0,
          0.5,  0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
 ];
 
@@ -126,9 +124,9 @@ static vertice: [f32; 32] = [
         let tex_leave = Rc::new(Texture::new("texture/test.jpg"));
         let tex_dirt = Rc::new(Texture::new("texture/Dirt.png"));
         let mut sprite = Sprite::from(Rc::clone(&tex_dirt));
-        let mut buffer = VertexBuffer::new(Primitive::TrianglesStrip, &vertice);
+        let mut buffer = VertexBuffer::new(Primitive::TrianglesStrip, &VERTICE);
 
-        buffer.assign_texture(tex_dirt);
+        buffer.assign_texture(tex_leave);
         sprite.set_position(Vector2::new(-250 as f32, -250 as f32));
         let event_receiver = EventReceiver::from(&window);
 

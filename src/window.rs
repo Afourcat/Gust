@@ -13,12 +13,8 @@ pub static TEST: [f32; 9] = [
 extern crate glfw;
 extern crate gl;
 
-use object::{VertexBuffer};
-use gl::types::*;
-use std::default;
 use color::Color;
 use std::sync::mpsc::Receiver;
-use std::cell::RefCell;
 use std::rc::Rc;
 use glfw::Context;
 use std::ops::Drop;
@@ -63,9 +59,6 @@ impl<'a> Window {
 
         // Load all the gl function from the user configuration
         gl::load_with(|s| win.get_proc_address(s) as *const _);
-
-        // Goto: 133
-        Window::init_gl();
 
         // Box all the shader to allocate them in the heap
         // then push them to a vector to make them affordable for the user
@@ -137,9 +130,7 @@ impl<'a> Window {
 
     /// Init basic gl modules
     fn init_gl() {
-        unsafe {
-          //  gl::Enable(gl::DEPTH_TEST);
-        }
+        unimplemented!();
     }
 }
 
@@ -174,8 +165,6 @@ impl Default for Window {
         win.make_current();
 
         gl::load_with(|s| win.get_proc_address(s) as *const _);
-
-        Window::init_gl();
 
         let shader = Shader::default();
 

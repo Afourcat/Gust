@@ -4,12 +4,9 @@ use gl;
 use std;
 use std::io;
 use std::ptr;
-use std::mem;
 use gl::types::*;
 use std::io::Read;
 use std::fs::File;
-use std::path::Path;
-use std::error::Error;
 use std::ffi::CString;
 use nalgebra::{Vector3, Vector2, Vector4, Matrix4, Matrix2, Matrix3};
 

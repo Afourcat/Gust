@@ -78,31 +78,3 @@ pub fn released(ref event: &WindowEvent) -> Option<Key> {
 		_ => None,
 	}
 }
-
-//macro_rules! handle_events {
-//	($window:ident, $handler:ident ( $( $param:ident ) , * )) => {
-//		for (_, event) in glfw::flush_messages(&*$window.event.clone()) {
-//            $handler(&mut $window, event, $( $param )* );
-//        }
-//	};
-//}
-
-//macro_rules! event_handler {
-//	(
-//		fn $name:ident( $window:ident: &mut Window, $( $params:ident : $the:ty ), *) {
-//			$( $key:ident $type:tt { $( $search:pat => { $( $blo:expr ; ); * } ), * } ); *
-//		}
-//	) => {
-//		fn $name(window: &mut Window, event: glfw::WindowEventReceiver, $( $params : $the )* ) {
-//			$(
-//				if let Some($key) = event::$type(&event) {
-//					match $key {
-//						$(
-//							$search => { $( blo )* }
-//						)*
-//					}
-//				}
-//			)*
-//		}
-//	};
-//}

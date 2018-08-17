@@ -4,12 +4,8 @@
 
 extern crate image;
 
-use self::image::{GenericImage, DynamicImage, ImageBuffer, Pixel, Rgba, Rgb};
-use gl::types::*;
+use self::image::{DynamicImage};
 use gl;
-use std::rc::Rc;
-use draw::{Drawable,Drawer};
-use std::os::raw::c_void;
 use std::mem;
 
 /// # Texture structure
