@@ -45,7 +45,7 @@ impl VertexBuffer {
 			// to the openGl state machine.
 			// After we put data inside the buffer.
 			// Then we cut the data inside the buffer in 3
-			// { 1.0, 1.0, 2.0, 2.0, 3.0, 3.0 }
+			// { 1.0, 1.0, 0.0, 1.0, 3.0, 3.0 }
 			// |   pos  | texCoord |  color  |
 			// |        |          |         |
 			// With the 3 VertexAttribPointer
@@ -67,7 +67,7 @@ impl VertexBuffer {
 						2,
 						gl::FLOAT,
 						gl::FALSE,
-						(7 * mem::size_of::<GLfloat>()) as GLsizei,
+						(8 * mem::size_of::<GLfloat>()) as GLsizei,
 						ptr::null()
 			);
             gl::EnableVertexAttribArray(0);
@@ -77,17 +77,17 @@ impl VertexBuffer {
 						2,
 						gl::FLOAT,
 						gl::FALSE,
-						(7 * mem::size_of::<GLfloat>()) as GLsizei,
+						(8 * mem::size_of::<GLfloat>()) as GLsizei,
 						(2 * mem::size_of::<GLfloat>()) as *const _,
 			);
 			gl::EnableVertexAttribArray(1);
 			// Attrib color to VertexBuffer
             gl::VertexAttribPointer(
 						2,
-						3,
+						4,
 						gl::FLOAT,
 						gl::FALSE,
-						(7 * mem::size_of::<GLfloat>()) as GLsizei,
+						(8 * mem::size_of::<GLfloat>()) as GLsizei,
 						(4 * mem::size_of::<GLfloat>()) as *const _,
 			);
 			gl::EnableVertexAttribArray(2);
@@ -106,7 +106,7 @@ impl VertexBuffer {
 
     pub fn new_from_vertex_array(t: Primitive, vertice: &[Vertex])
     -> VertexBuffer {
-        let mut new_vertice: Vec<f32> = vec![1.0; vertice.len() * 7];
+        let mut new_vertice: Vec<f32> = vec![1.0; vertice.len() * 8];
         let mut i = 0;
 
         for elem in vertice {
@@ -117,7 +117,8 @@ impl VertexBuffer {
             new_vertice[i + 4] =     elem.color.0;
             new_vertice[i + 5] =     elem.color.1;
             new_vertice[i + 6] =     elem.color.2;
-            i += 7;
+			new_vertice[i + 7] =	 elem.color.3;
+            i += 8;
         }
         VertexBuffer::new(t, new_vertice.as_slice())
     }

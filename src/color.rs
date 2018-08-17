@@ -12,7 +12,7 @@ static WHITE: Color = Color(1.0, 1.0, 1.0, 1.0);
 static BLACK: Color = Color(0.0, 0.0, 0.0, 1.0);
 static RED: Color = Color(1.0, 0.0, 0.0, 1.0);
 static GREEN: Color = Color(0.0, 1.0, 0.0, 1.0);
-static BLUE: Color = Color(0.0, 1.0, 0.0, 1.0);
+static BLUE: Color = Color(0.0, 0.0, 1.0, 1.0);
 
 /// Color class
 impl Color {

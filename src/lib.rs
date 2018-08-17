@@ -106,6 +106,14 @@ mod test {
     use draw::{Drawer,Movable};
     use draw;
 
+static vertice: [f32; 32] = [
+        -0.5, -0.5, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0,
+         0.5, -0.5, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0,
+        -0.5,  0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+         0.5,  0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+];
+
+
     #[test]
     fn gitlab_texture() {
 
@@ -115,9 +123,12 @@ mod test {
     fn main()
     {
         let mut window = Window::new(::WIDTH, ::HEIGHT, "Hello");
-        let tex = Rc::new(Texture::new("texture/Z.png"));
         let tex_leave = Rc::new(Texture::new("texture/test.jpg"));
-        let mut sprite = Sprite::from(Rc::clone(&tex_leave));
+        let tex_dirt = Rc::new(Texture::new("texture/Dirt.png"));
+        let mut sprite = Sprite::from(Rc::clone(&tex_dirt));
+        let mut buffer = VertexBuffer::new(Primitive::TrianglesStrip, &vertice);
+
+        buffer.assign_texture(tex_dirt);
         sprite.set_position(Vector2::new(-250 as f32, -250 as f32));
         let event_receiver = EventReceiver::from(&window);
 
@@ -133,6 +144,7 @@ mod test {
 
 
             window.clear();
+            window.draw(&buffer);
             window.draw(&sprite);
             window.display();
         }

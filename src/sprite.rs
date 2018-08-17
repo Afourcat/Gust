@@ -54,6 +54,7 @@ impl Sprite {
         }
     }
 
+    #[inline]
     /// Convert pos from screen to offset
     fn convert_pos(pos: f32, screen: f32, offset: f32) -> f32 {
         (pos + offset) / screen
@@ -62,6 +63,7 @@ impl Sprite {
     fn new_rect_vertex(pos: Vector2<f32>, x: f32, y: f32, text_coord: Vector2<f32> , color: Color) -> Vertex {
         let posy = Self::convert_pos(pos.y, super::HEIGHT as f32, y);
         let posx = Self::convert_pos(pos.x, super::WIDTH as f32, x);
+
         Vertex::new(
             Vector2::new(
                 posx,
@@ -104,10 +106,10 @@ impl From<Rc<Texture>> for Sprite {
             scale: Vector2::new(1.0, 1.0),
             color: Color::white(),
             vertice: Box::new(VertexBuffer::new_from_vertex_array(Primitive::TrianglesStrip, &[
-                Sprite::new_rect_vertex(pos,   0.0,    0.0, Vector2::new(0.0, 0.0), Color::white()),
-                Sprite::new_rect_vertex(pos,   0.0, height, Vector2::new(0.0, -1.0), Color::red()),
-                Sprite::new_rect_vertex(pos, width,    0.0, Vector2::new(-1.0, 0.0), Color::blue()),
-                Sprite::new_rect_vertex(pos, width, height, Vector2::new(-1.0, -1.0), Color::green()),
+                Sprite::new_rect_vertex(pos,   0.0,    0.0, Vector2::new(0.0, 0.0), Color::red()),          //  botom left    .__________.
+                Sprite::new_rect_vertex(pos,   0.0, height, Vector2::new(0.0, 1.0), Color::green()),        //  top left      |          |
+                Sprite::new_rect_vertex(pos, width,    0.0, Vector2::new(1.0, 1.0), Color::blue()),         //  bottom right  |          |
+                Sprite::new_rect_vertex(pos, width, height, Vector2::new(1.0, 0.0), Color::red()),          //  top right     .__________.
             ])),
         };
 
