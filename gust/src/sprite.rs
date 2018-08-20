@@ -107,7 +107,7 @@ impl From<Rc<Texture>> for Sprite {
                 Vertex::new(Vector2::new(width,    0.0), Vector2::new(1.0, 0.0), Color::white()),
                 Vertex::new(Vector2::new(width, height), Vector2::new(1.0, 1.0), Color::white()),
             ])),
-            model: Matrix4::identity().append_translation(&Vector3::new(0.0, 0.0, 0.0)),
+            model: Matrix4::identity(),
         };
         new.vertice.assign_texture(tex);
         new
