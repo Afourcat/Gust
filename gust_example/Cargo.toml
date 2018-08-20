@@ -1,0 +1,7 @@
+[package]
+name = "gust_example"
+version = "0.1.0"
+authors = ["alex <alexandre.fourcat@epitech.eu>"]
+
+[dependencies]
+gust = { path = "../gust" }
