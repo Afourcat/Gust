@@ -4,6 +4,7 @@
 use nalgebra::{Vector2};
 use nalgebra;
 use texture::Texture;
+use shader::Shader;
 use std::rc::Rc;
 
 /// Trait defining a drawer
@@ -14,6 +15,7 @@ pub trait Drawer {
     /// Active shader of the drawer
     fn activate_shader(&self);
 
+    fn get_shader(&mut self) -> &mut Shader;
 }
 
 /// Trait that can be use to draw on window

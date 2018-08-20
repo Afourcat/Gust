@@ -11,6 +11,13 @@ use std::os::raw::c_void;
 use std::rc::Rc;
 use texture::Texture;
 use vertex::Vertex;
+#[macro_use]
+use lazy_static;
+use nalgebra;
+
+lazy_static! {
+	static ref PROJECTION: nalgebra::Matrix4<f32> = nalgebra::Matrix4::new_orthographic(0.0, ::WIDTH as f32, 0.0, ::HEIGHT as f32, 0.1, 100.0);
+}
 
 /// Vertex Buffer structure
 #[derive(Debug,Clone,PartialEq)]
@@ -159,6 +166,7 @@ impl VertexBuffer {
 impl Drawable for VertexBuffer {
 	fn draw<T: Drawer>(&self, window: &mut T) {
 		window.activate_shader();
+		window.get_shader().uniform_mat4f("projection", *PROJECTION);
 		unsafe {
             if let Some(ref tex) = self.texture {
                 tex.active(0);

@@ -25,9 +25,12 @@ layout (location = 1) in vec2 aTexCoord;
 layout (location = 2) in vec3 aColor;
 out vec3 ourColor;
 out vec2 TexCoord;
+uniform mat4 projection;
+uniform mat4 model;
+
 void main()
 {
-   gl_Position = vec4(aPos, -1.0, 1.0);
+   gl_Position = projection * model * vec4(aPos, -1.0, 1.0);
    ourColor = aColor;
    TexCoord = aTexCoord;
 }";
@@ -151,7 +154,7 @@ impl Shader {
             gl::Uniform1f(pos, value);
         }
     }
-   
+
 // Uniform setter integer
 
     pub fn uniform_bool(&mut self, name: &str, value: bool) {

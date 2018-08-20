@@ -73,6 +73,8 @@
 extern crate gl;
 pub extern crate glfw;
 extern crate nalgebra;
+#[macro_use]
+extern crate lazy_static;
 
 pub mod object;
 pub mod color;

@@ -30,6 +30,7 @@ pub struct Sprite {
     scale: Vector2<f32>,
     color: Color,
     vertice: Box<VertexBuffer>,
+    model: Matrix4<f32>
 }
 
 impl Sprite {
@@ -46,6 +47,7 @@ impl Sprite {
                 Vertex::default(),
                 Vertex::default(),
             ])),
+            model: Matrix4::identity(),
         }
     }
 
@@ -93,7 +95,7 @@ impl From<Rc<Texture>> for Sprite {
     /// ...
     /// ```
     fn from(tex: Rc<Texture>) -> Sprite {
-        let pos = Vector2::new(0.0, 0.0);
+        let pos = Vector2::new(100.0, 100.0);
         let width = tex.get_width() as f32;
         let height = tex.get_height() as f32;
         let mut new = Sprite {
@@ -101,13 +103,19 @@ impl From<Rc<Texture>> for Sprite {
             scale: Vector2::new(1.0, 1.0),
             color: Color::white(),
             vertice: Box::new(VertexBuffer::new_from_vertex_array(Primitive::TrianglesStrip, &[
-                Sprite::new_rect_vertex(pos,   0.0,    0.0, Vector2::new(0.0, 1.0), Color::red()),          //  botom left    .__________.
-                Sprite::new_rect_vertex(pos,   0.0, height, Vector2::new(0.0, 0.0), Color::green()),        //  top left      |          |
-                Sprite::new_rect_vertex(pos, width,    0.0, Vector2::new(1.0, 1.0), Color::blue()),         //  bottom right  |          |
-                Sprite::new_rect_vertex(pos, width, height, Vector2::new(1.0, 0.0), Color::red()),          //  top right     .__________.
+                Vertex::new(Vector2::new(0.0,      0.0), Vector2::new(0.0, 0.0), Color::white()),
+                Vertex::new(Vector2::new(0.0,   height), Vector2::new(0.0, 1.0), Color::white()),
+                Vertex::new(Vector2::new(width,    0.0), Vector2::new(1.0, 0.0), Color::white()),
+                Vertex::new(Vector2::new(width, height), Vector2::new(1.0, 1.0), Color::white()),
+//                Sprite::new_rect_vertex(pos,   0.0,    0.0, Vector2::new(0.0, 1.0), Color::red()),          //  botom left    .__________.
+//                Sprite::new_rect_vertex(pos,   0.0, height, Vector2::new(0.0, 0.0), Color::green()),        //  top left      |          |
+//                Sprite::new_rect_vertex(pos, width,    0.0, Vector2::new(1.0, 1.0), Color::blue()),         //  bottom right  |          |
+//                Sprite::new_rect_vertex(pos, width, height, Vector2::new(1.0, 0.0), Color::red()),          //  top right     .__________.
             ])),
+            model: Matrix4::identity(),
         };
 
+        new.model.append_translation(&Vector3::new(pos.x, pos.y, 0.0));
         new.vertice.assign_texture(tex);
         new
     }
@@ -147,6 +155,8 @@ impl Movable for Sprite {
 /// Drawing trait for sprite sturct
 impl Drawable for Sprite {
     fn draw<T: Drawer>(&self, window: &mut T) {
+        window.activate_shader();
+        window.get_shader().uniform_mat4f("model", self.model);
         self.vertice.draw(window);
     }
 

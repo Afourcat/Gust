@@ -149,6 +149,10 @@ impl Drawer for Window {
     fn activate_shader(&self) {
         self.shaders.activate();
     }
+
+    fn get_shader(&mut self) -> &mut Shader {
+        &mut self.shaders
+    }
 }
 
 /// Default trait implementation for window
