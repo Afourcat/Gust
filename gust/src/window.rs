@@ -40,6 +40,7 @@ impl<'a> Window {
     /// Create a new window by default
     pub fn new(height: usize, width: usize, name: &str) -> Window {
         // Init the glfw system
+
         let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
         glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
@@ -54,16 +55,19 @@ impl<'a> Window {
             glfw::WindowMode::Windowed
         ).unwrap();
 
-        // Make this window usable
-        win.make_current();
-
         // Load all the gl function from the user configuration
         gl::load_with(|s| win.get_proc_address(s) as *const _);
+
+        unsafe { gl::Viewport(0, 0, width as i32, height as i32); }
+
+        // Make this window usable
+        win.make_current();
 
         // Box all the shader to allocate them in the heap
         // then push them to a vector to make them affordable for the user
         // and for the renderer
         let shader = Shader::default();
+
 
         Window {
             height: height,
@@ -162,7 +166,7 @@ impl Default for Window {
 
         let (mut win, evt) = glfw.create_window(
             800, 600,
-            "RustGl",
+            "Gust",
             glfw::WindowMode::Windowed
             ).unwrap();
 

@@ -11,12 +11,10 @@ use std::os::raw::c_void;
 use std::rc::Rc;
 use texture::Texture;
 use vertex::Vertex;
-#[macro_use]
-use lazy_static;
-use nalgebra;
+use nalgebra::Matrix4;
 
 lazy_static! {
-	static ref PROJECTION: nalgebra::Matrix4<f32> = nalgebra::Matrix4::new_orthographic(0.0, ::WIDTH as f32, 0.0, ::HEIGHT as f32, 0.1, 100.0);
+	static ref PROJECTION: Matrix4<f32> = Matrix4::new_orthographic(0.0, 1600.0, 0.0, 900.0, -1.0, 1.0);
 }
 
 /// Vertex Buffer structure

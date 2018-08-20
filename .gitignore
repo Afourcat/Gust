@@ -5,4 +5,4 @@ gust/**/*.rs.bk
 gust_example/**/*.rs.bk
 
 ./**/*.rs.bk
-./target/
+target/
