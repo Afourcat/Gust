@@ -5,6 +5,9 @@ use color::Color;
 use gl;
 use texture::Texture;
 use shader::Shader;
+use draw::{Drawable,Drawer};
+use std::rc::Rc;
+use object::Primitive;
 
 /// Vertex structure defined by texture coord, space coors and color
 #[derive(Debug,Clone,PartialEq)]
@@ -80,8 +83,8 @@ impl Default for Vertex {
 /// VertexArray is a vertex data structure that is drawable and it's the basic system
 pub struct VertexArray {
 	array: Box<[Vertex]>,
-	sizes: Vector2<usize>,
 	context: Context,
+    id: u32,
 }
 
 /// Blend mode needed to draw
@@ -119,11 +122,23 @@ impl Default for Context {
 
 impl VertexArray {
 	/// Create a new vertex array from a ... vertex array :D
-	fn new(array: Box<[Vertex]>, size: usize) -> VertexArray {
+	fn new(array: Box<[Vertex]>) -> VertexArray {
+        let mut id = 0;
+        unsafe {
+            gl::GenVertexArrays(1, &mut id);
+        }
 		VertexArray {
 			array: array,
-			sizes: Vector2::new(size, size),
 			context: Context::default(),
+            id: id,
 		}
-	}
+    }
+
+    /// Low level drawing function that is called by all drawable
+    fn draw_vertex_array(&self, prim: Primitive, size: i32, offset: i32) {
+        unsafe {
+            gl::BindVertexArray(self.id);
+            gl::DrawArrays(prim.get_gl_type(), offset, size);
+        }
+    }
 }

@@ -36,6 +36,29 @@ pub enum Primitive {
     Lines,
 }
 
+impl Primitive {
+    /// Get primitive type
+    pub fn get_gl_type(&self) -> GLenum {
+        match self {
+            Primitive::Quads        	=> gl::QUADS,
+            Primitive::Triangles    	=> gl::TRIANGLES,
+            Primitive::Points       	=> gl::POINTS,
+            Primitive::Lines        	=> gl::LINES,
+			Primitive::TrianglesStrip	=> gl::TRIANGLE_STRIP,
+        }
+    }
+
+    pub fn get_primitive(prim: GLenum) -> Primitive {
+        match prim {
+			gl::QUADS       => Primitive::Quads,
+			gl::TRIANGLES   => Primitive::Triangles,
+			gl::TRIANGLE_STRIP => Primitive::TrianglesStrip,
+			gl::LINES       => Primitive::Lines,
+			_               => Primitive::Points,
+        }
+    }
+}
+
 impl VertexBuffer {
 	/// Create new Vertex Buffer for vertices
 	pub fn new(t: Primitive, vertice: &[f32]) -> VertexBuffer {
