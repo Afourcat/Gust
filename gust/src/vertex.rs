@@ -2,6 +2,9 @@
 
 use nalgebra::{Vector2};
 use color::Color;
+use gl;
+use texture::Texture;
+use shader::Shader;
 
 /// Vertex structure defined by texture coord, space coors and color
 #[derive(Debug,Clone,PartialEq)]
@@ -72,4 +75,55 @@ impl Default for Vertex {
             color: Color::white(),
         }
     }
+}
+
+/// VertexArray is a vertex data structure that is drawable and it's the basic system
+pub struct VertexArray {
+	array: Box<[Vertex]>,
+	sizes: Vector2<usize>,
+	context: Context,
+}
+
+/// Blend mode needed to draw
+pub enum BlendMode {
+	Alpha,
+	Beta,
+	Ceta
+}
+
+impl BlendMode {
+	fn blend_to_gl(&self) {
+		match self {
+			BlendMode::Alpha => unsafe { gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA) },
+			_ => {},
+		}
+	}
+}
+
+/// Context needed to handle a draw of a vertex array
+pub struct Context {
+	texture: Option<Texture>,
+	shader: Option<Shader>,
+	blend_mode: BlendMode,
+}
+
+impl Default for Context {
+	fn default() -> Context {
+		Context {
+			texture: None,
+			shader: None,
+			blend_mode: BlendMode::Alpha,
+		}
+	}
+}
+
+impl VertexArray {
+	/// Create a new vertex array from a ... vertex array :D
+	fn new(array: Box<[Vertex]>, size: usize) -> VertexArray {
+		VertexArray {
+			array: array,
+			sizes: Vector2::new(size, size),
+			context: Context::default(),
+		}
+	}
 }
