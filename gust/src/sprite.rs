@@ -51,26 +51,6 @@ impl Sprite {
         }
     }
 
-    #[inline]
-    /// Convert pos from screen to offset
-    fn convert_pos(pos: f32, screen: f32, offset: f32) -> f32 {
-        (pos + offset) / screen
-    }
-
-    fn new_rect_vertex(pos: Vector2<f32>, x: f32, y: f32, text_coord: Vector2<f32> , color: Color) -> Vertex {
-        let posy = Self::convert_pos(pos.y, super::HEIGHT as f32, y);
-        let posx = Self::convert_pos(pos.x, super::WIDTH as f32, x);
-
-        Vertex::new(
-            Vector2::new(
-                posx,
-                posy
-            ),
-            text_coord,
-            color,
-        )
-    }
-
     /// Set a new color
     pub fn set_color(&mut self, new_color: Color) {
         self.color = new_color;

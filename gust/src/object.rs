@@ -24,7 +24,7 @@ pub struct VertexBuffer {
 	array: u32,
     texture: Option<Rc<Texture>>,
     primitive: GLenum,
-    size: i32,
+    size: usize,
 }
 
 #[derive(Debug,Clone,PartialEq,Copy)]
@@ -104,7 +104,7 @@ impl VertexBuffer {
 			array: array_id,
             texture: None,
             primitive: Self::get_gl_type(&t),
-            size: vertice.len() as i32 / 2,
+			size: vertice.len() / 8,
 		}
 	}
 
@@ -147,18 +147,6 @@ impl VertexBuffer {
 			_               => Primitive::Points,
         }
     }
-
-	pub fn update_texture_coord(&mut self) {
-
-	}
-
-	pub fn update_position(&mut self) {
-
-	}
-
-	pub fn update_transform(&mut self) {
-
-	}
 }
 
 impl Drawable for VertexBuffer {
@@ -176,9 +164,7 @@ impl Drawable for VertexBuffer {
 	}
 
 	fn update(&mut self) {
-		self.update_texture_coord();
-		self.update_position();
-		self.update_transform();
+		unimplemented!();
 	}
 
     fn assign_texture(&mut self, texture: Rc<Texture>) {
@@ -192,9 +178,3 @@ impl Drop for VertexBuffer {
 		//gl::DeleteBuffers(1, self.buffer);
 	}
 }
-
-//impl Copy for VertexBuffer {
-//	fn copy() -> VertexBuffer {
-//
-//	}
-//}
