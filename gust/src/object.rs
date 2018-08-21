@@ -14,7 +14,7 @@ use vertex::Vertex;
 use nalgebra::Matrix4;
 
 lazy_static! {
-	static ref PROJECTION: Matrix4<f32> = Matrix4::new_orthographic(0.0, 1600.0, 0.0, 900.0, -1.0, 1.0);
+	static ref PROJECTION: Matrix4<f32> = Matrix4::new_orthographic(0.0, 900.0, 0.0, 1600.0, -1.0, 1.0);
 }
 
 /// Vertex Buffer structure

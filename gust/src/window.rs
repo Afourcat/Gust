@@ -58,7 +58,12 @@ impl<'a> Window {
         // Load all the gl function from the user configuration
         gl::load_with(|s| win.get_proc_address(s) as *const _);
 
-        unsafe { gl::Viewport(0, 0, width as i32, height as i32); }
+        unsafe {
+            gl::Viewport(0, 0, width as i32, height as i32);
+            gl::Enable(gl::CULL_FACE);
+            gl::Enable(gl::BLEND);
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        }
 
         // Make this window usable
         win.make_current();

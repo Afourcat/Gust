@@ -18,7 +18,7 @@ pub struct Shader {
 	frag: u32,
 }
 
-static VS: &'static str = 
+static VS: &'static str =
 "#version 330 core
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoord;
@@ -35,7 +35,7 @@ void main()
    TexCoord = aTexCoord;
 }";
 
-static FS: &'static str = 
+static FS: &'static str =
 "#version 330 core
 out vec4 FragColor;
 in vec3 ourColor;
@@ -193,7 +193,7 @@ impl Shader {
 
     pub fn uniform_mat4f(&mut self, name: &str, value: Matrix4<f32>) {
         unsafe {
-            let pos = gl::GetUniformLocation(self.id, name.as_ptr() as *const _);
+            let pos = gl::GetUniformLocation(self.id, CString::new(name.as_bytes()).unwrap().as_ptr());
             gl::UniformMatrix4fv(pos, 1, gl::FALSE, value.as_slice().as_ptr());
         }
     }

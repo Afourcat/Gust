@@ -97,8 +97,9 @@ impl From<Rc<Texture>> for Sprite {
     fn from(tex: Rc<Texture>) -> Sprite {
         let width = tex.get_width() as f32;
         let height = tex.get_height() as f32;
+        let pos = Vector2::new(0.0, 0.0);
         let mut new = Sprite {
-            pos: Vector2::new(0.0, 0.0),
+            pos: pos,
             scale: Vector2::new(1.0, 1.0),
             color: Color::white(),
             vertice: Box::new(VertexBuffer::new_from_vertex_array(Primitive::TrianglesStrip, &[
@@ -107,7 +108,7 @@ impl From<Rc<Texture>> for Sprite {
                 Vertex::new(Vector2::new(width,    0.0), Vector2::new(1.0, 0.0), Color::white()),
                 Vertex::new(Vector2::new(width, height), Vector2::new(1.0, 1.0), Color::white()),
             ])),
-            model: Matrix4::identity(),
+            model: Matrix4::identity().append_translation(&Vector3::new(pos.x, pos.y, 0.0)),
         };
         new.vertice.assign_texture(tex);
         new
