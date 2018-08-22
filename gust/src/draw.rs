@@ -6,16 +6,28 @@ use nalgebra;
 use texture::Texture;
 use shader::Shader;
 use std::rc::Rc;
+use vertex::Context;
+use nalgebra::Matrix4;
+
+lazy_static! {
+	static ref PROJECTION: Matrix4<f32> = Matrix4::new_orthographic(0.0, 900.0, 0.0, 1600.0, -1.0, 1.0);
+}
+
+pub fn setup_draw(context: &mut Context) {
+    context.apply_projection(&PROJECTION);
+    context.apply_texture(0);
+    //context.apply_blendmode();
+    context.setup_shader();
+}
 
 /// Trait defining a drawer
 pub trait Drawer {
 	/// Function that draw on itself
 	fn draw<T: Drawable>(&mut self, drawable: &T);
 
-    /// Active shader of the drawer
-    fn activate_shader(&self);
+    /// Draw with context fonction if you want to define you own fonction
+    fn draw_with_context<T: Drawable>(&mut self, drawable: &T, Context: &mut Context);
 
-    fn get_shader(&mut self) -> &mut Shader;
 }
 
 /// Trait that can be use to draw on window
@@ -24,9 +36,14 @@ pub trait Drawable {
     /// Draw the drawable structure, you need a Drawer(Where the struct will be draw)
     fn draw<T: Drawer>(&self, window: &mut T);
 
-    /// Assign a texture to a drawable
-    fn assign_texture<'a>(&mut self, texture: Rc<Texture>);
+    /// Draw with a particular context
+    fn draw_with_context<T: Drawer>(&self, window: &mut T, context: &mut Context);
 
+    /// Assign a texture to a drawable
+    fn set_texture(&mut self, texture: &Rc<Texture>);
+
+    /// Update the openGL state of the drawable entity
+    /// Should be call often so be carefull when implementing.
     fn update(&mut self);
 }
 

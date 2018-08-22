@@ -10,6 +10,10 @@ use std::fs::File;
 use std::ffi::CString;
 use nalgebra::{Vector3, Vector2, Vector4, Matrix4, Matrix2, Matrix3};
 
+lazy_static! {
+	pub static ref DEFAULT_SHADER: Shader = Shader::default();
+}
+
 /// Shader object that abstract openGl type
 #[derive(Debug)]
 pub struct Shader {
@@ -25,12 +29,11 @@ layout (location = 1) in vec2 aTexCoord;
 layout (location = 2) in vec3 aColor;
 out vec3 ourColor;
 out vec2 TexCoord;
-uniform mat4 projection;
-uniform mat4 model;
+uniform mat4 transform;
 
 void main()
 {
-   gl_Position = projection * model * vec4(aPos.xy, 0.0, 1.0);
+   gl_Position = transform * vec4(aPos.xy, 0.0, 1.0);
    ourColor = aColor;
    TexCoord = aTexCoord;
 }";
@@ -191,7 +194,7 @@ impl Shader {
 
 // Uniform setter for matrix
 
-    pub fn uniform_mat4f(&mut self, name: &str, value: Matrix4<f32>) {
+    pub fn uniform_mat4f(&self, name: &str, value: &Matrix4<f32>) {
         unsafe {
             let pos = gl::GetUniformLocation(self.id, CString::new(name.as_bytes()).unwrap().as_ptr());
             gl::UniformMatrix4fv(pos, 1, gl::FALSE, value.as_slice().as_ptr());

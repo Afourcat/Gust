@@ -9,6 +9,8 @@ use vertex::Vertex;
 use nalgebra::*;
 use nalgebra;
 use draw::{Movable};
+use vertex::*;
+use shader::Shader;
 
 /// A sprite is a transformable
 /// drawable sprite
@@ -24,12 +26,13 @@ use draw::{Movable};
 /// window.display();
 /// ```
 /// > A sprite is just attributes for textures to become printable ...
-#[derive(Debug,Clone,PartialEq)]
+#[derive(Debug,Clone)]
 pub struct Sprite {
     pos: Vector2<f32>,
     scale: Vector2<f32>,
     color: Color,
     vertice: Box<VertexBuffer>,
+    texture: Option<Rc<Texture>>,
     model: Matrix4<f32>
 }
 
@@ -41,12 +44,15 @@ impl Sprite {
             pos: Vector2::new(0.0, 0.0),
             scale: Vector2::new(1.0, 1.0),
             color: Color::white(),
-            vertice: Box::new(VertexBuffer::new_from_vertex_array(Primitive::TrianglesStrip, &[
-                Vertex::default(),
-                Vertex::default(),
-                Vertex::default(),
-                Vertex::default(),
-            ])),
+            vertice: Box::new(
+                VertexBuffer::new( Primitive::TrianglesStrip, VertexArray::new(vec! [
+                    Vertex::default(),
+                    Vertex::default(),
+                    Vertex::default(),
+                    Vertex::default(),
+                ]))
+            ),
+            texture: None,
             model: Matrix4::identity(),
         }
     }
@@ -63,7 +69,7 @@ impl Sprite {
 
 }
 
-impl From<Rc<Texture>> for Sprite {
+impl<'a> From<&'a Rc<Texture>> for Sprite {
 
     /// You can create sprite from texture (precisly Rc<Texture>)
     /// ```
@@ -74,24 +80,25 @@ impl From<Rc<Texture>> for Sprite {
     /// window.display();
     /// ...
     /// ```
-    fn from(tex: Rc<Texture>) -> Sprite {
+    fn from(tex: &'a Rc<Texture>) -> Sprite {
         let width = tex.get_width() as f32;
         let height = tex.get_height() as f32;
         let pos = Vector2::new(0.0, 0.0);
-        let mut new = Sprite {
+        Sprite {
             pos: pos,
             scale: Vector2::new(1.0, 1.0),
             color: Color::white(),
-            vertice: Box::new(VertexBuffer::new_from_vertex_array(Primitive::TrianglesStrip, &[
-                Vertex::new(Vector2::new(0.0,      0.0), Vector2::new(0.0, 0.0), Color::white()),
-                Vertex::new(Vector2::new(0.0,   height), Vector2::new(0.0, 1.0), Color::white()),
-                Vertex::new(Vector2::new(width,    0.0), Vector2::new(1.0, 0.0), Color::white()),
-                Vertex::new(Vector2::new(width, height), Vector2::new(1.0, 1.0), Color::white()),
-            ])),
+            vertice: Box::new(VertexBuffer::new(Primitive::TrianglesStrip,
+                VertexArray::new(vec![
+                    Vertex::new(Vector2::new(0.0,      0.0), Vector2::new(0.0, 0.0), Color::white()),
+                    Vertex::new(Vector2::new(0.0,   height), Vector2::new(0.0, 1.0), Color::white()),
+                    Vertex::new(Vector2::new(width,    0.0), Vector2::new(1.0, 0.0), Color::white()),
+                    Vertex::new(Vector2::new(width, height), Vector2::new(1.0, 1.0), Color::white()),
+                ])
+            )),
+            texture: Some(Rc::clone(tex)),
             model: Matrix4::identity().append_translation(&Vector3::new(pos.x, pos.y, 0.0)),
-        };
-        new.vertice.assign_texture(tex);
-        new
+        }
     }
 }
 
@@ -129,16 +136,28 @@ impl Movable for Sprite {
 /// Drawing trait for sprite sturct
 impl Drawable for Sprite {
     fn draw<T: Drawer>(&self, window: &mut T) {
-        window.activate_shader();
-        window.get_shader().uniform_mat4f("model", self.model);
-        self.vertice.draw(window);
+        self.draw_with_context(window, &mut Context::new(
+                    if let Some(ref rc_texture) = self.texture {
+                        Some(rc_texture.as_ref())
+                    } else {
+                        None
+                    },
+                    Shader::default(),
+                    Some(Matrix4::<f32>::identity() * self.model),
+                    BlendMode::Alpha
+        ));
+    }
+
+    fn draw_with_context<'a, T: Drawer>
+    (&self, window: &mut T, context: &'a mut Context) {
+        self.vertice.draw_with_context(window, context);
     }
 
     fn update(&mut self) {
         unimplemented!();
     }
 
-    fn assign_texture<'a>(&mut self, texture: Rc<Texture>) {
-        self.vertice.assign_texture(texture);
+    fn set_texture(&mut self, texture: &Rc<Texture>) {
+        self.texture = Some(Rc::clone(texture))
     }
 }

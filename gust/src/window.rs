@@ -20,6 +20,7 @@ use glfw::Context;
 use std::ops::Drop;
 use shader::Shader;
 use draw::{Drawable,Drawer};
+use vertex;
 
 /// Window struct
 /// Define a struct by many thing in glfw
@@ -31,7 +32,6 @@ pub struct Window {
     clear_color: Color,
     glf_window: glfw::Glfw,
     already_init: bool,
-    pub shaders: Shader,
 }
 
 /// Window structure implementation
@@ -68,12 +68,6 @@ impl<'a> Window {
         // Make this window usable
         win.make_current();
 
-        // Box all the shader to allocate them in the heap
-        // then push them to a vector to make them affordable for the user
-        // and for the renderer
-        let shader = Shader::default();
-
-
         Window {
             height: height,
             width: width,
@@ -82,7 +76,6 @@ impl<'a> Window {
             clear_color: Color::new(1.0, 1.0, 1.0),
             glf_window: glfw,
             already_init: true,
-            shaders: shader,
         }
     }
 
@@ -150,17 +143,14 @@ impl Drop for Window {
 }
 
 impl Drawer for Window {
-    /// Draw on actual target
+
     fn draw<T: Drawable>(&mut self, drawable: &T) {
         drawable.draw(self);
     }
 
-    fn activate_shader(&self) {
-        self.shaders.activate();
-    }
-
-    fn get_shader(&mut self) -> &mut Shader {
-        &mut self.shaders
+    fn draw_with_context<T: Drawable>
+    (&mut self, drawable: &T, context: &mut vertex::Context) {
+        drawable.draw_with_context(self, context);
     }
 }
 
@@ -179,8 +169,6 @@ impl Default for Window {
 
         gl::load_with(|s| win.get_proc_address(s) as *const _);
 
-        let shader = Shader::default();
-
         Window {
             height: 800,
             width: 600,
@@ -189,7 +177,6 @@ impl Default for Window {
             clear_color: Color::new(1.0, 1.0, 1.0),
             glf_window: glfw,
             already_init: true,
-            shaders: shader,
         }
     }
 }
