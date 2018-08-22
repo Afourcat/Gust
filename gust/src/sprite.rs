@@ -30,10 +30,10 @@ use shader::Shader;
 pub struct Sprite {
     pos: Vector2<f32>,
     scale: Vector2<f32>,
-    color: Color,
     vertice: Box<VertexBuffer>,
     texture: Option<Rc<Texture>>,
-    model: Matrix4<f32>
+    model: Matrix4<f32>,
+    auto_update: bool,
 }
 
 impl Sprite {
@@ -43,7 +43,6 @@ impl Sprite {
         Sprite {
             pos: Vector2::new(0.0, 0.0),
             scale: Vector2::new(1.0, 1.0),
-            color: Color::white(),
             vertice: Box::new(
                 VertexBuffer::new( Primitive::TrianglesStrip, VertexArray::new(vec! [
                     Vertex::default(),
@@ -54,19 +53,9 @@ impl Sprite {
             ),
             texture: None,
             model: Matrix4::identity(),
+            auto_update: false,
         }
     }
-
-    /// Set a new color
-    pub fn set_color(&mut self, new_color: Color) {
-        self.color = new_color;
-    }
-
-    /// Get texture color
-    pub fn get_color(&self) -> Color {
-        self.color
-    }
-
 }
 
 impl<'a> From<&'a Rc<Texture>> for Sprite {
@@ -87,7 +76,6 @@ impl<'a> From<&'a Rc<Texture>> for Sprite {
         Sprite {
             pos: pos,
             scale: Vector2::new(1.0, 1.0),
-            color: Color::white(),
             vertice: Box::new(VertexBuffer::new(Primitive::TrianglesStrip,
                 VertexArray::new(vec![
                     Vertex::new(Vector2::new(0.0,      0.0), Vector2::new(0.0, 0.0), Color::white()),
@@ -98,6 +86,7 @@ impl<'a> From<&'a Rc<Texture>> for Sprite {
             )),
             texture: Some(Rc::clone(tex)),
             model: Matrix4::identity().append_translation(&Vector3::new(pos.x, pos.y, 0.0)),
+            auto_update: false,
         }
     }
 }
