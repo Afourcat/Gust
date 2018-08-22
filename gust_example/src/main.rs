@@ -5,12 +5,13 @@ use gust::glfw::{Key};
 use gust::glfw;
 use gust::window::Window;
 use gust::event::{EventReceiver};
+use gust::{Vector,Point,Coord};
 use gust::event;
 use std::rc::Rc;
 use gust::color::Color;
-use gust::object::{VertexBuffer, Primitive};
 use gust::texture::{Texture};
-use gust::draw::{Drawable,Drawer};
+use gust::draw::{Drawer,Movable};
+use gust::draw::Drawable;
 
 fn main()
 {
@@ -19,11 +20,14 @@ fn main()
     let tex_dirt = Rc::new(Texture::new("texture/Dirt.png"));
     let sprite = Sprite::from(&tex_dirt);
     let event_receiver = EventReceiver::from(&window);
+    let mut leave = Sprite::from(&tex_leave);
 
+    leave.set_position(Point::new(100.0, 100.0));
     window.set_clear_color(Color::new(0.0, 0.0, 1.0));
     window.set_key_polling(true);
     while window.is_open() {
         window.poll_events();
+        leave.update();
 
         //event_receiver.fetch().for_each(|(_, input)| event_handling(&mut window, input));
         for (_, input) in event_receiver.fetch() {
@@ -32,6 +36,7 @@ fn main()
 
         window.clear();
         window.draw(&sprite);
+        window.draw(&leave);
         window.display();
     }
 }

@@ -4,11 +4,8 @@
 // Description:
 //
 
-pub static TEST: [f32; 9] = [
-    -0.5, -0.5, 0.0,
-     0.5, -0.5, 0.0,
-     0.0,  0.5, 0.0
-];
+static DEFAULT_HEIGHT: f32 = 900.0;
+static DEFAULT_WIDTH: f32 = 1600.0;
 
 extern crate glfw;
 extern crate gl;
@@ -16,11 +13,11 @@ extern crate gl;
 use color::Color;
 use std::sync::mpsc::Receiver;
 use std::rc::Rc;
-use glfw::Context;
 use std::ops::Drop;
-use shader::Shader;
 use draw::{Drawable,Drawer};
-use vertex;
+use glfw::Context;
+use draw;
+use nalgebra::Matrix4;
 
 /// Window struct
 /// Define a struct by many thing in glfw
@@ -32,6 +29,8 @@ pub struct Window {
     clear_color: Color,
     glf_window: glfw::Glfw,
     already_init: bool,
+    projection: Matrix4<f32>,
+//    view: Option<View>,
 }
 
 /// Window structure implementation
@@ -69,6 +68,7 @@ impl<'a> Window {
         win.make_current();
 
         Window {
+            projection: Matrix4::new_orthographic(0.0, width as f32, 0.0, height as f32, -1.0, 1.0),
             height: height,
             width: width,
             win: win,
@@ -128,8 +128,6 @@ impl<'a> Window {
         self.win.swap_buffers();
     }
 
-
-
     /// Init basic gl modules
     fn init_gl() {
         unimplemented!();
@@ -148,9 +146,12 @@ impl Drawer for Window {
         drawable.draw(self);
     }
 
-    fn draw_with_context<T: Drawable>
-    (&mut self, drawable: &T, context: &mut vertex::Context) {
+    fn draw_with_context<T: Drawable>(&mut self, drawable: &T, context: &mut draw::Context) {
         drawable.draw_with_context(self, context);
+    }
+
+    fn get_projection(&self) -> &Matrix4<f32> {
+        &self.projection
     }
 }
 
@@ -160,7 +161,7 @@ impl Default for Window {
         let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
         let (mut win, evt) = glfw.create_window(
-            800, 600,
+            DEFAULT_HEIGHT as u32, DEFAULT_WIDTH as u32,
             "Gust",
             glfw::WindowMode::Windowed
             ).unwrap();
@@ -170,8 +171,9 @@ impl Default for Window {
         gl::load_with(|s| win.get_proc_address(s) as *const _);
 
         Window {
-            height: 800,
-            width: 600,
+            projection: Matrix4::new_orthographic(0.0, DEFAULT_WIDTH, 0.0, DEFAULT_HEIGHT, -1.0, 1.0),
+            height: DEFAULT_HEIGHT as usize,
+            width: DEFAULT_WIDTH as usize,
             win: win,
             event: Rc::new(evt),
             clear_color: Color::new(1.0, 1.0, 1.0),

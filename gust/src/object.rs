@@ -4,13 +4,12 @@
 use gl;
 use gl::types::*;
 use std;
-use draw::{Drawable,Drawer};
+use draw::{Drawable,Drawer,Context,BlendMode};
 use std::rc::Rc;
 use texture::Texture;
 use vertex::*;
-use nalgebra::Matrix4;
 use shader;
-use draw;
+
 /// Vertex Buffer structure
 #[derive(Debug,Clone,PartialEq)]
 pub struct VertexBuffer {
@@ -95,10 +94,7 @@ impl VertexBuffer {
 				vertice.get_ptr(),
 				gl::STATIC_DRAW
 			);
-
 			vertice.active();
-
-			println!("{:?}", vertice.get_ptr());
 		};
 
 		let vertex_buffer = VertexBuffer {
@@ -165,7 +161,7 @@ impl Drawable for VertexBuffer {
 
     fn draw_with_context<T: Drawer>(&self, target: &mut T, context: &mut Context) {
 		unsafe {
-			draw::setup_draw(context);
+			self.setup_draw(context, target);
 			self.array.bind();
 			self.bind();
 			gl::DrawArrays(self.primitive, 0, self.array.len() as i32);

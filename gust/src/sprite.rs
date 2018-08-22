@@ -3,7 +3,7 @@
 use texture::Texture;
 use object::{VertexBuffer,Primitive};
 use std::rc::Rc;
-use draw::{Drawable,Drawer};
+use draw::{Drawable,Drawer,Context,BlendMode};
 use color::Color;
 use vertex::Vertex;
 use nalgebra::*;
@@ -154,7 +154,9 @@ impl Drawable for Sprite {
     }
 
     fn update(&mut self) {
-        unimplemented!();
+        self.model = Matrix4::<f32>::identity().append_translation(
+            &Vector3::new(self.pos.x, self.pos.y, 0.0)
+        );
     }
 
     fn set_texture(&mut self, texture: &Rc<Texture>) {

@@ -3,9 +3,6 @@
 use nalgebra::{Vector2};
 use color::Color;
 use gl;
-use texture::Texture;
-use nalgebra::Matrix4;
-use shader::{Shader,DEFAULT_SHADER};
 use std::ptr;
 use std::mem;
 use gl::types::*;
@@ -79,74 +76,6 @@ impl Default for Vertex {
             color: Color::white(),
         }
     }
-}
-
-/// Blend mode needed to draw
-pub enum BlendMode {
-	Alpha,
-	Beta,
-	Ceta
-}
-
-impl BlendMode {
-	fn blend_to_gl(&self) {
-		match self {
-			BlendMode::Alpha => unsafe { gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA) },
-			_ => {},
-		}
-	}
-}
-
-/// Context needed to handle a draw of a vertex array
-/// A context is needed by the drawer to handle the drawing
-/// process a default context can be use ether
-pub struct Context<'a> {
-	texture: Option<&'a Texture>,
-	shader: Shader,
-    transform: Matrix4<f32>,
-	blend_mode: BlendMode,
-}
-
-impl<'a> Context<'a> {
-    pub fn new(
-        texture: Option<&'a Texture>,
-        shader: Shader,
-        transform: Option<Matrix4<f32>>,
-        blend_mode: BlendMode
-    ) -> Context<'a> {
-        Context {
-            texture: texture,
-            shader: shader,
-            transform: transform.unwrap_or(Matrix4::identity()),
-            blend_mode: blend_mode
-        }
-    }
-
-    pub fn apply_texture(&self, id: i32) {
-        if let Some(texture) = self.texture {
-            texture.active(id);
-        }
-    }
-
-    pub fn apply_projection(&mut self, projection: &Matrix4<f32>) {
-        self.transform *= projection
-    }
-
-    pub fn setup_shader(&self) {
-        self.shader.activate();
-        self.shader.uniform_mat4f("transform", &self.transform);
-    }
-}
-
-impl<'a> Default for Context<'a> {
-	fn default() -> Context<'a> {
-		Context {
-			texture: None,
-			shader: Shader::default(),
-            transform: Matrix4::identity(),
-			blend_mode: BlendMode::Alpha,
-		}
-	}
 }
 
 /// VertexArray is a vertex data structure that is drawable and it's the basic system
