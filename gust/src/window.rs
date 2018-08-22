@@ -59,7 +59,7 @@ impl<'a> Window {
 
         unsafe {
             gl::Viewport(0, 0, width as i32, height as i32);
-            //gl::Enable(gl::CULL_FACE);
+            gl::Enable(gl::FRONT_FACE);
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         }
@@ -171,7 +171,7 @@ impl Default for Window {
         gl::load_with(|s| win.get_proc_address(s) as *const _);
 
         Window {
-            projection: Matrix4::new_orthographic(0.0, DEFAULT_WIDTH, 0.0, DEFAULT_HEIGHT, -1.0, 1.0),
+            projection: Matrix4::new_orthographic(0.0, DEFAULT_WIDTH, 0.0, DEFAULT_HEIGHT, -14.0, 14.0),
             height: DEFAULT_HEIGHT as usize,
             width: DEFAULT_WIDTH as usize,
             win: win,

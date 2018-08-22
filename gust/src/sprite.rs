@@ -1,7 +1,7 @@
 //! Module to handle drawable texture that are called Sprite
 
 use texture::Texture;
-use object::{VertexBuffer,Primitive};
+use vertex_buffer::{VertexBuffer,Primitive};
 use std::rc::Rc;
 use draw::{Drawable,Drawer,Context,BlendMode};
 use color::Color;

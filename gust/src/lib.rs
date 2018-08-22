@@ -76,7 +76,7 @@ extern crate nalgebra;
 #[macro_use]
 extern crate lazy_static;
 
-pub mod object;
+pub mod vertex_buffer;
 pub mod color;
 pub mod window;
 pub mod draw;
