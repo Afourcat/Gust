@@ -28,6 +28,7 @@ fn main()
     while window.is_open() {
         window.poll_events();
         leave.update();
+        leave.translate(Vector::new(10.0, 10.0));
 
         //event_receiver.fetch().for_each(|(_, input)| event_handling(&mut window, input));
         for (_, input) in event_receiver.fetch() {
