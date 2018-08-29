@@ -7,6 +7,7 @@ use gust::window::Window;
 use gust::event::{EventReceiver};
 use gust::{Vector,Point,Coord};
 use gust::event;
+use gust::event::{Event};
 use std::rc::Rc;
 use gust::color::Color;
 use gust::texture::{Texture};
@@ -31,8 +32,8 @@ fn main()
         leave.translate(Vector::new(10.0, 10.0));
 
         //event_receiver.fetch().for_each(|(_, input)| event_handling(&mut window, input));
-        for (_, input) in event_receiver.fetch() {
-            event_handling(&mut window, input);
+        for event in event_receiver.fetch() {
+            event_handling(&mut window, event);
         }
 
         window.clear();
@@ -42,9 +43,9 @@ fn main()
     }
 }
 
-fn event_handling(window: &mut Window, event: glfw::WindowEvent) {
+fn event_handling(window: &mut Window, event: Event) {
 
-    if let Some(key) = event::pressed(&event) {
+    if let Some(key) = event::pressed(event) {
         match key {
             Key::Escape => {
                 window.close();

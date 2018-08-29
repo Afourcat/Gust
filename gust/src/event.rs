@@ -6,6 +6,7 @@ use window::Window;
 use std::rc::Rc;
 use std::marker::Send;
 use std::sync::mpsc::Receiver;
+use std::any::Any;
 
 /// EventReceiver Wrapper for glfw
 /// ```
@@ -20,10 +21,27 @@ pub struct EventReceiver {
 	event: Rc<Receiver<(f64, WindowEvent)>>,
 }
 
+pub struct Event {
+	 wrapped: Box<Any + Send + 'static>
+}
+
+impl Event {
+    pub fn new<T: Send + 'static>(elem: T) -> Event {
+        Event {
+            wrapped: Box::new(elem)
+        }
+    }
+
+	pub fn into_window_event(self) -> Box<(f64, WindowEvent)> {
+		self.wrapped.downcast::<(f64, WindowEvent)>().unwrap()
+	}
+}
+
 /// Wrapper for flushed message iterator that is simplet to use
 pub struct EventIterator<'a, Message: 'a + Send> {
 	fmsg: FlushedMessages<'a, Message>,
 }
+
 
 impl<'a> From<&'a EventReceiver> for EventIterator<'a, (f64, WindowEvent)> {
 	fn from(var: &'a EventReceiver) -> EventIterator<'a, (f64, WindowEvent)> {
@@ -52,28 +70,35 @@ impl EventReceiver {
 }
 
 impl<'a, Message: 'static + Send> Iterator for EventIterator<'a, Message> {
-	type Item = Message;
+	type Item = Event;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		self.fmsg.next()
+		if let Some(elem) = self.fmsg.next() {
+			Some(Event::new(elem))
+		} else {
+			None
+		}
 	}
 }
 
 /// Get Pressed Key
-pub fn pressed(ref event: &WindowEvent) -> Option<Key> {
-	match event {
+pub fn pressed(event: Event) -> Option<Key> {
+	let elem = event.into_window_event();
+
+	match elem.1 {
 		WindowEvent::Key(value, _, Action::Press, _) => {
-			Some(*value)
+			Some(value)
 		},
 		_ => None,
 	}
 }
 
 /// Get Released Key
-pub fn released(ref event: &WindowEvent) -> Option<Key> {
-	match event {
+pub fn released(event: Event) -> Option<Key> {
+
+	match event.into_window_event().1 {
 		WindowEvent::Key(value, _, Action::Release, _) => {
-			Some(*value)
+			Some(value)
 		},
 		_ => None,
 	}
