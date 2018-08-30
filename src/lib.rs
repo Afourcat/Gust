@@ -85,10 +85,11 @@ pub mod event;
 pub mod shader;
 pub mod sprite;
 pub mod vertex;
+pub mod view;
 
-pub type Vector = nalgebra::Vector2<f32>;
-pub type Point  = Vector;
-pub type Coord  = Point;
+pub type Vector<T> = nalgebra::Vector2<T>;
+pub type Point<T>  = Vector<T>;
+pub type Coord  = nalgebra::Vector2<usize>;
 
 pub static HEIGHT: usize = 900;
 pub static WIDTH: usize = 1600;

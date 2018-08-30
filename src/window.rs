@@ -17,6 +17,7 @@ use std::ops::Drop;
 use draw::{Drawable,Drawer};
 use glfw::Context;
 use draw;
+use view::{View,Rect};
 use nalgebra::Matrix4;
 
 /// Window struct
@@ -29,8 +30,7 @@ pub struct Window {
     clear_color: Color,
     glf_window: glfw::Glfw,
     already_init: bool,
-    projection: Matrix4<f32>,
-//    view: Option<View>,
+    view: View,
 }
 
 /// Window structure implementation
@@ -68,7 +68,7 @@ impl<'a> Window {
         win.make_current();
 
         Window {
-            projection: Matrix4::new_orthographic(0.0, width as f32, 0.0, height as f32, -1.0, 1.0),
+            view: View::from(Rect::new(0, 0, width, height)),
             height: height,
             width: width,
             win: win,
@@ -123,6 +123,10 @@ impl<'a> Window {
         self.win.set_key_polling(is);
     }
 
+    pub fn set_view(&mut self, view: View) {
+        self.view = view;
+    }
+
     /// Display the screen
     pub fn display(&mut self) {
         self.win.swap_buffers();
@@ -166,7 +170,7 @@ impl Drawer for Window {
     }
 
     fn get_projection(&self) -> &Matrix4<f32> {
-        &self.projection
+        self.view.get_projection()
     }
 }
 
@@ -186,7 +190,7 @@ impl Default for Window {
         gl::load_with(|s| win.get_proc_address(s) as *const _);
 
         Window {
-            projection: Matrix4::new_orthographic(0.0, DEFAULT_WIDTH, 0.0, DEFAULT_HEIGHT, -14.0, 14.0),
+            view: View::from(Rect::new(0, 0, DEFAULT_WIDTH as usize, DEFAULT_HEIGHT as usize)),
             height: DEFAULT_HEIGHT as usize,
             width: DEFAULT_WIDTH as usize,
             win: win,

@@ -26,7 +26,7 @@ use shader::Shader;
 /// window.display();
 /// ```
 /// > A sprite is just attributes for textures to become printable ...
-#[derive(Debug,Clone,PartialEq,Eq)]
+#[derive(Debug,Clone,PartialEq)]
 pub struct Sprite {
     pos: Vector2<f32>,
     scale: Vector2<f32>,
