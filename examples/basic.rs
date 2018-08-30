@@ -30,7 +30,6 @@ fn main()
     if let Err(e) = leave.set_origin_to_center() { println!("{}", e) } else { println!("Ok") }
     while window.is_open() {
         window.poll_events();
-        //leave.translate(Vector::new(2.0, 2.0));
         leave.rotate(0.2);
         leave.update();
         //leave.rotate(0.2);

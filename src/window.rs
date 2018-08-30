@@ -37,7 +37,7 @@ pub struct Window {
 impl<'a> Window {
 
     /// Create a new window by default
-    pub fn new(height: usize, width: usize, name: &str) -> Window {
+    pub fn new(width: usize, height: usize, name: &str) -> Window {
         // Init the glfw system
 
         let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
@@ -49,7 +49,7 @@ impl<'a> Window {
         // Return the glfw::WindowEvent enum and a window
         // That we are trying to wrap in this code
         let (mut win, evt) = glfw.create_window(
-            height as u32, width as u32,
+            width as u32, height as u32,
             name,
             glfw::WindowMode::Windowed
         ).unwrap();
@@ -59,7 +59,7 @@ impl<'a> Window {
 
         unsafe {
             gl::Viewport(0, 0, width as i32, height as i32);
-            gl::Enable(gl::FRONT_FACE);
+            gl::Enable(gl::CULL_FACE);
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         }

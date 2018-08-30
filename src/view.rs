@@ -103,15 +103,20 @@ impl View {
 impl From<Rect<usize>> for View {
 
     fn from(rect: Rect<usize>) -> View {
-        View {
-            center: Vector::new(rect.width / 2, rect.height / 2),
-            projection: Matrix4::new_orthographic(
+        let mut proj = Matrix4::new_orthographic(
                 rect.left as f32,
                 rect.width as f32,
                 rect.bottom as f32,
                 rect.height as f32,
                 -1.0, 1.0
-            ),
+        );
+
+        // FUCKING NALGEBRA
+        proj[5] *= -1.0;
+        proj[13] = 0.0;
+        View {
+            center: Vector::new(rect.width / 2, rect.height / 2),
+            projection: proj,
             rect: rect,
         }
     }

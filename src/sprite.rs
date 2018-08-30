@@ -222,7 +222,7 @@ impl Drawable for Sprite {
                 )
             );
 
-            if (self.origin.x != 0.0 && self.origin.y != 0.0) {
+            if self.origin.x != 0.0 && self.origin.y != 0.0 {
                 self.model.append_translation_mut(
                     &Vector3::new(
                         self.origin.x,
