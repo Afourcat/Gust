@@ -26,10 +26,11 @@ fn main()
     leave.set_position(Point::new(100.0, 100.0));
     window.set_clear_color(Color::new(0.0, 0.0, 1.0));
     window.set_key_polling(true);
+    leave.rotate(45.0);
     while window.is_open() {
         window.poll_events();
         leave.update();
-        leave.translate(Vector::new(10.0, 10.0));
+        leave.translate(Vector::new(4.0, 4.0));
 
         //event_receiver.fetch().for_each(|(_, input)| event_handling(&mut window, input));
         for event in event_receiver.fetch() {

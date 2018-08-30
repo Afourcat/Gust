@@ -31,6 +31,7 @@ pub struct Sprite {
     pos: Vector2<f32>,
     scale: Vector2<f32>,
     vertice: Box<VertexBuffer>,
+    rotation: Option<Matrix4<f32>>,
     texture: Option<Rc<Texture>>,
     model: Matrix4<f32>,
     auto_update: bool,
@@ -53,6 +54,7 @@ impl Sprite {
             ),
             texture: None,
             model: Matrix4::identity(),
+            rotation: None,
             auto_update: false,
         }
     }
@@ -93,6 +95,7 @@ impl<'a> From<&'a Rc<Texture>> for Sprite {
             )),
             texture: Some(Rc::clone(tex)),
             model: Matrix4::identity().append_translation(&Vector3::new(pos.x, pos.y, 0.0)),
+            rotation: None,
             auto_update: false,
         }
     }
@@ -127,6 +130,29 @@ impl Movable for Sprite {
         self.pos.x = vec.x.into();
         self.pos.y = vec.y.into();
     }
+
+    fn rotate<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+        if let Some(mut rot) = self.rotation {
+            rot *= Matrix4::from_euler_angles(
+                0.0, 0.0, angle.into() * (3.14116 / 180.0));
+        } else {
+            self.set_rotation(angle);
+        }
+    }
+
+    fn set_rotation<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+        self.rotation = Some(Matrix4::from_euler_angles(
+                0.0, 0.0, angle.into() * (3.14116 / 180.0)
+        ));
+    }
+
+    fn get_rotation(&self) -> f32 {
+        if let Some(rot) = self.rotation {
+            rot[0]
+        } else {
+            0.0
+        }
+    }
 }
 //
 /// Drawing trait for sprite sturct
@@ -153,6 +179,14 @@ impl Drawable for Sprite {
         self.model = Matrix4::<f32>::identity().append_translation(
             &Vector3::new(self.pos.x, self.pos.y, 0.0)
         );
+
+        self.model.append_nonuniform_scaling(
+            &Vector3::new(self.scale.x, self.scale.y, 0.0)    
+        );
+
+        if let Some(rotation) = self.rotation {
+            self.model *= rotation;   
+        }
     }
 
     fn set_texture(&mut self, texture: &Rc<Texture>) {

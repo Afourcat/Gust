@@ -165,4 +165,10 @@ pub trait Movable {
 
     /// Get the current scale
     fn get_scale(&self) -> Vector2<f32>;
+    
+    fn rotate<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T);
+
+    fn set_rotation<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T);
+
+    fn get_rotation(&self) -> f32;
 }
