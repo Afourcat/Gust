@@ -171,4 +171,8 @@ pub trait Movable {
     fn set_rotation<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T);
 
     fn get_rotation(&self) -> f32;
+
+    fn set_origin<T: nalgebra::Scalar + Into<f32>>(&mut self, origin: Vector2<T>);
+
+    fn get_origin(&self) -> Vector2<f32>;
 }
