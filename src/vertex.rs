@@ -6,6 +6,7 @@ use gl;
 use std::ptr;
 use std::mem;
 use gl::types::*;
+use std::ops::{Index,IndexMut};
 
 /// Vertex structure defined by texture coord, space coors and color
 #[derive(Debug,Clone,PartialEq)]
@@ -169,5 +170,19 @@ impl VertexArray {
 
     pub unsafe fn get_ptr(&self) -> *const GLvoid {
         self.array.as_ptr() as *const GLvoid
+    }
+}
+
+impl Index<usize> for VertexArray {
+    type Output = Vertex;
+
+    fn index(&self, vertex_index: usize) -> &Vertex {
+        &self.array[vertex_index]
+    }
+}
+
+impl IndexMut<usize> for VertexArray {
+    fn index_mut<'a>(&'a mut self, vertex_index: usize) -> &'a mut Vertex {
+        &mut self.array[vertex_index]
     }
 }

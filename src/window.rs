@@ -132,6 +132,21 @@ impl<'a> Window {
     fn init_gl() {
         unimplemented!();
     }
+
+    /// Should not be used (low level glfw function)
+    fn set_input_mode(&self, im: InputMode) {
+        let (mode, value) = im.to_i32();
+        unsafe {
+            glfw::ffi::glfwSetInputMode(self.win.window_ptr() ,mode, value);
+        }
+    }
+
+    /// Should not be used (low level glfw function)
+    fn get_input_mode(&self, im: InputMode) -> InputMode {
+        unsafe {
+            InputMode::from(glfw::ffi::glfwGetInputMode(self.win.window_ptr(), im.to_i32().0))
+        }
+    }
 }
 
 impl Drop for Window {
@@ -182,3 +197,39 @@ impl Default for Window {
         }
     }
 }
+
+pub enum InputMode {
+    CursorMode(InputState),
+    StickMouseButtons,
+    StickKeys,
+    NotDefined,
+}
+
+impl InputMode {
+    fn to_i32(&self) -> (i32, i32) {
+        match self {
+            InputMode::CursorMode(a)        => { (0x00033001, a as *const _ as i32) },
+            InputMode::StickKeys            => { (0x00033002, 1) },
+            InputMode::StickMouseButtons    => { (0x00033003, 1) },
+            InputMode::NotDefined           => { (-1, -1) }
+        }
+    }
+}
+
+impl From<i32> for InputMode {
+    fn from(value: i32) -> InputMode {
+        match value {
+            0x00033001  => InputMode::CursorMode(InputState::Normal),
+            0x00033002  => InputMode::StickKeys,
+            0x00033003  => InputMode::StickMouseButtons,
+            _           => InputMode::NotDefined,
+        }
+    }
+}
+
+pub enum InputState {
+    Normal = 0x00034001,
+    Hidden =  0x00034002,
+    Disable = 0x00034003,
+}
+

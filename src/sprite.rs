@@ -26,7 +26,7 @@ use shader::Shader;
 /// window.display();
 /// ```
 /// > A sprite is just attributes for textures to become printable ...
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub struct Sprite {
     pos: Vector2<f32>,
     scale: Vector2<f32>,
@@ -55,6 +55,13 @@ impl Sprite {
             model: Matrix4::identity(),
             auto_update: false,
         }
+    }
+
+    pub fn set_color(&mut self, color: &Color) {
+        self.vertice[0].color = color.clone();
+        self.vertice[1].color = color.clone();
+        self.vertice[2].color = color.clone();
+        self.vertice[3].color = color.clone();
     }
 }
 

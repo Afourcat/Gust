@@ -17,8 +17,8 @@ use gust::draw::Drawable;
 fn main()
 {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
-    let tex_leave = Rc::new(Texture::new("texture/test.jpg"));
-    let tex_dirt = Rc::new(Texture::new("texture/Dirt.png"));
+    let tex_leave = Rc::new(Texture::new("examples/texture/test.jpg"));
+    let tex_dirt = Rc::new(Texture::new("examples/texture/Dirt.png"));
     let sprite = Sprite::from(&tex_dirt);
     let event_receiver = EventReceiver::from(&window);
     let mut leave = Sprite::from(&tex_leave);

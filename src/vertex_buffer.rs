@@ -9,6 +9,7 @@ use std::rc::Rc;
 use texture::Texture;
 use vertex::*;
 use shader;
+use std::ops::{Index,IndexMut};
 
 /// Vertex Buffer structure
 #[derive(Debug,Clone,PartialEq)]
@@ -19,7 +20,7 @@ pub struct VertexBuffer {
     primitive: GLenum,
 }
 
-#[derive(Debug,Clone,PartialEq,Copy)]
+#[derive(Debug,Clone,PartialEq,Copy,Hash)]
 pub enum Primitive {
     Triangles,
     Quads,
@@ -175,6 +176,21 @@ impl Drawable for VertexBuffer {
 
     fn set_texture(&mut self, texture: &Rc<Texture>) {
         self.texture = Some(Rc::clone(texture));
+    }
+}
+
+
+impl Index<usize> for VertexBuffer {
+    type Output = Vertex;
+
+    fn index(&self, vertex_index: usize) -> &Vertex {
+        &self.array[vertex_index]
+    }
+}
+
+impl IndexMut<usize> for VertexBuffer {
+    fn index_mut<'a>(&'a mut self, index: usize) -> &'a mut Vertex {
+        &mut self.array[index]
     }
 }
 

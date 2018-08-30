@@ -19,7 +19,7 @@ use std::mem;
 /// window.draw(&sprite);
 /// ...
 /// ```
-#[derive(Debug,Clone,PartialEq,Copy)]
+#[derive(Debug,Clone,PartialEq,Copy,Eq)]
 pub struct Texture {
 	pub id: u32,
 	width: u32,
