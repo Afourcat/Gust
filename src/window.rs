@@ -17,7 +17,8 @@ use std::ops::Drop;
 use draw::{Drawable,Drawer};
 use glfw::Context;
 use draw;
-use view::{View,Rect};
+use view::{View};
+use rect::Rect;
 use nalgebra::Matrix4;
 
 /// Window struct

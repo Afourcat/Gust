@@ -86,6 +86,7 @@ pub mod shader;
 pub mod sprite;
 pub mod vertex;
 pub mod view;
+pub mod rect;
 
 pub type Vector<T> = nalgebra::Vector2<T>;
 pub type Point<T>  = Vector<T>;
