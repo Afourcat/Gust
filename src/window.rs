@@ -151,6 +151,10 @@ impl<'a> Window {
             InputMode::from(glfw::ffi::glfwGetInputMode(self.win.window_ptr(), im.to_i32().0))
         }
     }
+
+    fn get_view(&self) -> &View {
+        &self.view
+    }
 }
 
 impl Drop for Window {

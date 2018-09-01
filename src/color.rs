@@ -30,7 +30,7 @@ impl Color {
     pub fn white() -> Color {
         Color(1.0, 1.0, 1.0, 1.0)
     }
- 
+
     pub fn red() -> Color {
         Color(1.0, 0.0, 0.0, 1.0)
     }
@@ -52,6 +52,7 @@ impl Color {
 
 impl Add for Color {
     type Output = Color;
+
     fn add(self, other: Color) -> Color {
         Color(
             self.0 + other.0,
@@ -64,6 +65,7 @@ impl Add for Color {
 
 impl Sub for Color {
     type Output = Color;
+
     fn sub(self, other: Color) -> Color {
         Color(
             self.0 - other.0,
@@ -76,6 +78,7 @@ impl Sub for Color {
 
 impl Mul for Color {
     type Output = Color;
+
     fn mul(self, other: Color) -> Color {
         Color(
             self.0 * other.0,
