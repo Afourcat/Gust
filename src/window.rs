@@ -69,7 +69,7 @@ impl<'a> Window {
         win.make_current();
 
         Window {
-            view: View::from(Rect::new(0, 0, width, height)),
+            view: View::from(Rect::new(0.0, 0.0, width as f32, height as f32)),
             height: height,
             width: width,
             win: win,
@@ -153,8 +153,12 @@ impl<'a> Window {
         }
     }
 
-    fn get_view(&self) -> &View {
+    pub fn get_view(&self) -> &View {
         &self.view
+    }
+
+    pub fn get_view_mut(&mut self) -> &mut View {
+        &mut self.view
     }
 }
 
@@ -195,7 +199,9 @@ impl Default for Window {
         gl::load_with(|s| win.get_proc_address(s) as *const _);
 
         Window {
-            view: View::from(Rect::new(0, 0, DEFAULT_WIDTH as usize, DEFAULT_HEIGHT as usize)),
+            view: View::from(
+                Rect::new(0.0, 0.0, DEFAULT_WIDTH as f32, DEFAULT_HEIGHT as f32)
+            ),
             height: DEFAULT_HEIGHT as usize,
             width: DEFAULT_WIDTH as usize,
             win: win,

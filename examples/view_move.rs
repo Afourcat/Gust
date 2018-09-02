@@ -12,20 +12,23 @@ use gust::color::Color;
 use gust::texture::{Texture};
 use gust::draw::{Drawer,Movable};
 use gust::draw::Drawable;
-use gust::view::{View,Rect};
+use gust::view::{View};
+use gust::rect::{Rect};
 
 fn main()
 {
     let mut window = Window::new(1600, 800, "Hello");
     let tex_dirt = Rc::new(Texture::new("examples/texture/Dirt.png"));
     let event_receiver = EventReceiver::from(&window);
+    let mut sprite = Sprite::from(&Rc::clone(&tex_dirt));
+    sprite.set_origin(Vector::new(10.0, 10.0));
 
     window.set_key_polling(true);
     while window.is_open() {
         window.poll_events();
-        //leave.rotate(0.2);
+        sprite.update();
+        window.get_view_mut().update();
 
-        //event_receiver.fetch().for_each(|(_, input)| event_handling(&mut window, input));
         for event in event_receiver.fetch() {
             event_handling(&mut window, event);
         }
@@ -44,6 +47,16 @@ fn event_handling(window: &mut Window, event: Event) {
             },
             Key::A  => {
                 println!("Hello A !");
+                window.get_view_mut().translate(Vector::new(-10.0, 0.0));
+            },
+            Key::W => {
+                window.get_view_mut().translate(Vector::new(0.0, -10.0));
+            },
+            Key::S => {
+                window.get_view_mut().translate(Vector::new(0.0, 10.0));
+            },
+            Key::D => {
+                window.get_view_mut().translate(Vector::new(10.0, 0.0));
             },
             Key::E => {
                 println!("TEST");

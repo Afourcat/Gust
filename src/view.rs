@@ -22,15 +22,15 @@ use rect::Rect;
 #[derive(Debug,Clone,PartialEq)]
 pub struct View {
     projection: Matrix4<f32>,
-    rect: Rect<usize>,
-    center: Point<usize>,
+    rect: Rect<f32>,
+    center: Point<f32>,
     need_update: bool,
 }
 
 impl View {
 
     /// Create a new View from a center point and a Rect
-    pub fn new(center: Point<usize>, rect: Rect<usize>) -> View {
+    pub fn new(center: Point<f32>, rect: Rect<f32>) -> View {
         View {
             projection: Matrix4::new_orthographic(
                 rect.left as f32,
@@ -46,9 +46,9 @@ impl View {
     }
 
     /// Reset the rect if you don't want to you can use (set_sizes)[]
-    pub fn reset(&mut self, rect: Rect<usize>) {
+    pub fn reset(&mut self, rect: Rect<f32>) {
         if self.rect == rect {
-            println!("Rect: reset with the same Rect<usize>. {:?}", rect);
+            println!("Rect: reset with the same Rect<f32>. {:?}", rect);
             return;
         }
         self.projection = Matrix4::new_orthographic(
@@ -62,16 +62,19 @@ impl View {
     }
 
     /// Set center of the view (usefull for game like 2D Zelda-Like)
-    pub fn set_center(&mut self, center: Point<usize>) {
+    pub fn set_center(&mut self, center: Point<f32>) {
         self.center = center;
     }
 
+    /// Set the viewport of the view (the viewport is given as a float factor 0.5 / 1.0 / 0.2 etc)
+    /// That way people can simply handle screen part.
     pub fn set_viewport(&mut self, viewport: Rect<f32>) {
-        self.rect *= viewport;
+        unimplemented!();
+        //self.rect *= viewport;
     }
 
     /// Set the size of the rect
-    pub fn set_sizes(&mut self, sizes: Vector<usize>) {
+    pub fn set_sizes(&mut self, sizes: Vector<f32>) {
         self.rect.width = sizes.x;
         self.rect.height = sizes.y;
     }
@@ -80,7 +83,7 @@ impl View {
         &self.projection
     }
 
-    pub fn translate<T: nalgebra::Scalar + Into<usize>>(&mut self, offset: Vector<T>) {
+    pub fn translate<T: nalgebra::Scalar + Into<f32>>(&mut self, offset: Vector<T>) {
         self.center.x += offset.x.into();
         self.center.y += offset.y.into();
     }
@@ -99,9 +102,9 @@ impl View {
     }
 }
 
-impl From<Rect<usize>> for View {
+impl From<Rect<f32>> for View {
 
-    fn from(rect: Rect<usize>) -> View {
+    fn from(rect: Rect<f32>) -> View {
         let mut proj = Matrix4::new_orthographic(
                 rect.left as f32,
                 rect.width as f32,
@@ -113,7 +116,7 @@ impl From<Rect<usize>> for View {
         // FUCKING NALGEBRA
         apply_proj_correction(&mut proj);
         View {
-            center: Vector::new(rect.width / 2, rect.height / 2),
+            center: Vector::new(rect.width / 2.0, rect.height / 2.0),
             projection: proj,
             rect: rect,
             need_update: false,
