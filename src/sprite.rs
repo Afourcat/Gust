@@ -54,7 +54,7 @@ impl Sprite {
                     Vertex::default(),
                 ]))
             ),
-            need_update: false,
+            need_update: true,
             texture: None,
             origin: Vector2::new(0.0, 0.0),
             model: Matrix4::identity(),
@@ -123,7 +123,7 @@ impl<'a> From<&'a Rc<Texture>> for Sprite {
                 ])
             )),
             texture: Some(Rc::clone(tex)),
-            need_update: false,
+            need_update: true,
             model: Matrix4::identity().append_translation(&Vector3::new(pos.x, pos.y, 0.0)),
             rotation: 0.0,
             origin: Vector2::new(0.0, 0.0),
@@ -249,6 +249,7 @@ impl Drawable for Sprite {
             self.model.append_nonuniform_scaling_mut(
                 &Vector3::new(self.scale.x, self.scale.y, 0.0)    
             );
+            self.need_update = false;
         }
     }
 

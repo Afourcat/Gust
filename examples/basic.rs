@@ -25,6 +25,7 @@ fn main()
     leave.set_position(Point::new(300.0, 300.0));
     window.set_clear_color(Color::new(0.0, 0.0, 1.0));
     window.set_key_polling(true);
+    sprite.set_position(Point::new(100.0, 100.0));
     leave.set_scale(Vector::new(0.5, 0.5));
     if let Err(e) = leave.set_origin_to_center() { println!("{}", e) } else { println!("Ok") }
     while window.is_open() {

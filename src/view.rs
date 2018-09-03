@@ -59,18 +59,19 @@ impl View {
                 -1.0, 1.0
         );
         self.rect = rect;
+        self.need_update = true;
     }
 
     /// Set center of the view (usefull for game like 2D Zelda-Like)
     pub fn set_center(&mut self, center: Point<f32>) {
         self.center = center;
+        self.need_update = true;
     }
 
     /// Set the viewport of the view (the viewport is given as a float factor 0.5 / 1.0 / 0.2 etc)
     /// That way people can simply handle screen part.
     pub fn set_viewport(&mut self, viewport: Rect<f32>) {
-        unimplemented!();
-        //self.rect *= viewport;
+        self.rect *= viewport;
     }
 
     /// Set the size of the rect
@@ -86,18 +87,20 @@ impl View {
     pub fn translate<T: nalgebra::Scalar + Into<f32>>(&mut self, offset: Vector<T>) {
         self.center.x += offset.x.into();
         self.center.y += offset.y.into();
+        self.need_update = true;
     }
 
     pub fn update(&mut self) {
         if self.need_update {
             self.projection = Matrix4::new_orthographic(
-                (self.rect.left as f32) - (self.center.x as f32),
-                (self.rect.width as f32) - (self.center.y as f32),
-                self.rect.bottom as f32,
-                self.rect.height as f32,
+                self.rect.left,
+                self.rect.width,
+                self.rect.bottom,
+                self.rect.height,
                 -1.0, 1.0
             );
             apply_proj_correction(&mut self.projection);
+            self.need_update = false;
         }
     }
 }
@@ -115,6 +118,7 @@ impl From<Rect<f32>> for View {
 
         // FUCKING NALGEBRA
         apply_proj_correction(&mut proj);
+        println!("{}", proj);
         View {
             center: Vector::new(rect.width / 2.0, rect.height / 2.0),
             projection: proj,
@@ -126,5 +130,6 @@ impl From<Rect<f32>> for View {
 
 fn apply_proj_correction(proj: &mut Matrix4<f32>) {
     proj[5] *= -1.0;
-    proj[13] = 0.0;
+    proj[13] *= -1.0;
+    proj[2] *- -1.0;
 }
