@@ -1,19 +1,17 @@
-image: "alpine"
-before_script:
-  - apk update && apk add cargo cmake make libx11-dev xorg-dev libglu1-mesa-dev && apk upgrade
-
 stages:
   - build
-  - test
-  - deploy
 
-job1:
+rust-latest:
   stage: build
-  script: "cargo build"
+  image: rust:latest
+  script:
+    - cargo build --verbose
+    - cargo test --verbose
 
-job2:
-  stage: test
-  script: "cargo test gitlab --lib"
-
-after_script:
-  - cargo clean
+rust-nightly:
+  stage: build
+  image: rustlang/rust:nightly
+  script:
+    - cargo build --verbose
+    - cargo test --verbose
+  allow_failure: true
