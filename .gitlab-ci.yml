@@ -5,6 +5,7 @@ rust-latest:
   stage: build
   image: rust:latest
   script:
+    - apt-get install cmake
     - cargo build --verbose
     - cargo test --verbose
 
@@ -12,6 +13,7 @@ rust-nightly:
   stage: build
   image: rustlang/rust:nightly
   script:
+    - apt-get install cmake
     - cargo build --verbose
     - cargo test --verbose
   allow_failure: true
