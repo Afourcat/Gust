@@ -5,29 +5,27 @@
 //! This project is based on learning purpose and abstract everything that put me in pain
 //! when I was trying to do computer graphics.
 //! Here is some gust code
-//! ```rust
-//! use sprite::Sprite;
-//! use gl::types::*;
-//! use glfw::{Action, Context, Key};
-//! use glfw;
-//! use window::Window;
-//! use event::{EventReceiver};
-//! use event;
-//! use std::cell::RefCell;
+//! ```no_run
+//! extern crate gust;
+//! extern crate glfw;
+//! extern crate nalgebra;
+//!
+//! use gust::sprite::Sprite;
+//! use glfw::Key;
+//! use gust::window::Window;
+//! use gust::event;
 //! use std::rc::Rc;
-//! use color::Color;
-//! use object::{VertexBuffer, Primitive};
-//! use texture::{Texture};
-//! use vertex::Vertex;
-//! use draw::Drawable;
+//! use gust::color::Color;
+//! use gust::texture::{Texture};
+//! use gust::draw::{Drawer,Drawable};
 //! use nalgebra::*;
-//! use draw::Drawer;
+//! use gust::event::{Event,EventReceiver};
 //!
 //! fn main() {
 //!     let mut window = Window::new(1920, 1080, "Hello");
 //!     let tex = Rc::new(Texture::new("texture/Z.png"));
 //!     let tex_leave = Rc::new(Texture::new("texture/test.jpg"));
-//!     let sprite = Sprite::from_texture(Rc::clone(&tex_leave));
+//!     let sprite = Sprite::from(&tex_leave);
 //!     let event_receiver = EventReceiver::from(&window);
 //!
 //!     window.set_clear_color(Color::new(1.0, 0.2, 0.7));
@@ -35,8 +33,8 @@
 //!     while window.is_open() {
 //!         window.poll_events();
 //!
-//!         for (_, input) in event_receiver.fetch() {
-//!             event_handling(&mut window, input);
+//!         for event in event_receiver.fetch() {
+//!             event_handling(&mut window, event);
 //!         }
 //!
 //!         window.clear();
@@ -45,9 +43,9 @@
 //!     }
 //! }
 //!
-//! fn event_handling(window: &mut Window, event: glfw::WindowEvent) {
+//! fn event_handling(window: &mut Window, event: Event) {
 //!
-//!     if let Some(key) = event::pressed(&event) {
+//!     if let Some(key) = event::pressed(event) {
 //!         match key {
 //!             Key::Escape => {
 //!                 window.close();

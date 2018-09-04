@@ -6,10 +6,13 @@
 //! View system.
 //! A view is a point of view on a 2D scene. It's like a camera filming paper.
 //! A view should be defined by sizes and left and down.
-//! ```
-//! ...
+//! ```no_run
+//! use gust::view::View;
+//! use gust::window::Window;
+//! use gust::rect::Rect;
 //!
-//! let view = View::new(1920, 1080, 0, 0);
+//! let window = Window::new(1920, 1080, "Example View");
+//! let view = View::from(Rect::new(500.0, 500.0, 10.0, 10.0));
 //!
 //! ```
 
@@ -131,5 +134,5 @@ impl From<Rect<f32>> for View {
 fn apply_proj_correction(proj: &mut Matrix4<f32>) {
     proj[5] *= -1.0;
     proj[13] *= -1.0;
-    proj[2] *- -1.0;
+    proj[2] *= -1.0;
 }

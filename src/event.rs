@@ -9,7 +9,7 @@ use std::sync::mpsc::Receiver;
 use std::any::Any;
 
 /// EventReceiver Wrapper for glfw
-/// ```
+/// ```ignore
 /// let event_r = EventReceiver::from(&window);
 ///
 /// for (_, event) in event_r.fetch() {

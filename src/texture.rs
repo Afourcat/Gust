@@ -11,13 +11,15 @@ use std::mem;
 /// # Texture structure
 /// A texture is an id inside openGL that can contain a array of byte
 /// this array can be spreaded to drawable object
-/// ```
+/// ```no_run
+/// use gust::window::Window;
+/// use gust::sprite::Sprite;
+/// use gust::texture::Texture;
+/// use std::rc::Rc;
+///
 /// let window = Window::new(1080, 1920, "Test");
-/// let leave = Texture.new("path/to/test");
+/// let leave = Rc::new(Texture::new("path/to/test"));
 ///	let sprite = Sprite::from(&leave);
-/// ...
-/// window.draw(&sprite);
-/// ...
 /// ```
 #[derive(Debug,Clone,PartialEq,Copy,Eq)]
 pub struct Texture {

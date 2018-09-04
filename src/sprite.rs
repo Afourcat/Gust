@@ -16,14 +16,13 @@ use shader::Shader;
 /// drawable sprite
 /// > Display a sprite from a texture
 /// ```Rust
+/// use texture::Texture;
+/// use sprite::Sprite;
+/// 
 /// let texture = Texture::new("assets/texture.jpg");
 /// let sprite = Sprite::from_texture(Rc::clone(&texutre));
-/// sprite.rotate(
-///     Rotation2::new(
-///         Vector2::new(0.1,-0.1,0.0)));
-/// window.clear();
-/// window.draw(sprite);
-/// window.display();
+/// sprite.rotate(45.0);
+/// sprite.set_position(Vector2::new(100.0, 200.0));
 /// ```
 /// > A sprite is just attributes for textures to become printable ...
 #[derive(Debug,Clone,PartialEq)]
@@ -99,13 +98,13 @@ impl Sprite {
 impl<'a> From<&'a Rc<Texture>> for Sprite {
 
     /// You can create sprite from texture (precisly Rc<Texture>)
-    /// ```
-    /// let personnage = Sprite::from(Rc::clone(&texture));
-    /// ...
-    /// window.clear();
-    /// window.draw(&personnage);
-    /// window.display();
-    /// ...
+    /// ```no_run
+    /// use gust::texture::Texture;
+    /// use gust::sprite::Sprite;
+    /// use std::rc::Rc;
+    ///
+    /// let texture = Rc::new(Texture::new("My great texture"));
+    /// let personnage = Sprite::from(&texture);
     /// ```
     fn from(tex: &'a Rc<Texture>) -> Sprite {
         let width = tex.get_width() as f32;
