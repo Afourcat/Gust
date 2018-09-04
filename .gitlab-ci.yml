@@ -5,7 +5,9 @@ rust-latest:
   stage: build
   image: rust:latest
   script:
-    - apt-get install cmake
+    - apt-get update
+    - apt-get install -y cmake
+    - apt-get install -y xorg-dev libglu1-mesa-dev
     - cargo build --verbose
     - cargo test --verbose
 
@@ -13,7 +15,8 @@ rust-nightly:
   stage: build
   image: rustlang/rust:nightly
   script:
-    - apt-get install cmake
+    - apt-get update
+    - apt-get install -y cmake xorg-dev libglu1-mesa-dev
     - cargo build --verbose
     - cargo test --verbose
   allow_failure: true
