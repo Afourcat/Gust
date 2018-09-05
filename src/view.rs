@@ -97,9 +97,9 @@ impl View {
         if self.need_update {
             println!("{:?} {:?}", self.center, self.sizes);
             self.projection = Matrix4::new_orthographic(
-                self.center.x - 800.0,
+                self.center.x - self.sizes.x / 2.0,
                 self.sizes.x,
-                self.center.y - 400.0,
+                self.center.y - self.sizes.y / 2.0,
                 self.sizes.y,
                 -1.0, 1.0
             );
