@@ -25,8 +25,10 @@ use rect::Rect;
 #[derive(Debug,Clone,PartialEq)]
 pub struct View {
     projection: Matrix4<f32>,
-    rect: Rect<f32>,
+    sizes: Vector<f32>,
     center: Point<f32>,
+    screen: Rect<f32>,
+    zoom: f32,
     need_update: bool,
 }
 
@@ -42,18 +44,16 @@ impl View {
                 rect.height as f32,
                 -1.0, 1.0
             ),
-            rect: rect,
+            zoom: 1.0,
+            sizes: Vector::new(rect.width, rect.height),
             center: center,
+            screen: Rect::new(1.0, 1.0, 1.0, 1.0),
             need_update: false,
         }
     }
 
     /// Reset the rect if you don't want to you can use (set_sizes)[]
     pub fn reset(&mut self, rect: Rect<f32>) {
-        if self.rect == rect {
-            println!("Rect: reset with the same Rect<f32>. {:?}", rect);
-            return;
-        }
         self.projection = Matrix4::new_orthographic(
                 rect.left as f32,
                 rect.width as f32,
@@ -61,7 +61,7 @@ impl View {
                 rect.height as f32,
                 -1.0, 1.0
         );
-        self.rect = rect;
+        self.sizes = Vector::new(rect.width, rect.height);
         self.need_update = true;
     }
 
@@ -74,13 +74,13 @@ impl View {
     /// Set the viewport of the view (the viewport is given as a float factor 0.5 / 1.0 / 0.2 etc)
     /// That way people can simply handle screen part.
     pub fn set_viewport(&mut self, viewport: Rect<f32>) {
-        self.rect *= viewport;
+        self.screen = viewport;
     }
 
     /// Set the size of the rect
     pub fn set_sizes(&mut self, sizes: Vector<f32>) {
-        self.rect.width = sizes.x;
-        self.rect.height = sizes.y;
+        self.sizes.x = sizes.x;
+        self.sizes.y = sizes.y;
     }
 
     pub fn get_projection(&self) -> &Matrix4<f32> {
@@ -95,16 +95,22 @@ impl View {
 
     pub fn update(&mut self) {
         if self.need_update {
+            println!("{:?} {:?}", self.center, self.sizes);
             self.projection = Matrix4::new_orthographic(
-                self.rect.left,
-                self.rect.width,
-                self.rect.bottom,
-                self.rect.height,
+                self.center.x - 800.0,
+                self.sizes.x,
+                self.center.y - 400.0,
+                self.sizes.y,
                 -1.0, 1.0
             );
+            println!("{}", self.projection);
             apply_proj_correction(&mut self.projection);
             self.need_update = false;
         }
+    }
+
+    pub fn set_zoom(&mut self, zoom: f32) {
+        self.zoom = zoom;
     }
 }
 
@@ -125,8 +131,10 @@ impl From<Rect<f32>> for View {
         View {
             center: Vector::new(rect.width / 2.0, rect.height / 2.0),
             projection: proj,
-            rect: rect,
+            sizes: Vector::new(rect.width, rect.height),
             need_update: false,
+            zoom: 1.0,
+            screen: Rect::new(0.0, 0.0, 1.0, 1.0),
         }
     }
 }

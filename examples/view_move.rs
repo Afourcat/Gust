@@ -20,14 +20,14 @@ fn main()
     let mut window = Window::new(1600, 800, "Hello");
     let tex_dirt = Rc::new(Texture::new("examples/texture/Dirt.png"));
     let event_receiver = EventReceiver::from(&window);
-    let mut sprite = Sprite::from(&Rc::clone(&tex_dirt));
+    let mut sprite = Sprite::from(&tex_dirt);
     sprite.set_position(Vector::new(100.0, 100.0));
 
     window.set_key_polling(true);
     while window.is_open() {
         window.poll_events();
         sprite.update();
-//        window.get_view_mut().update();
+        window.get_view_mut().update();
 
         for event in event_receiver.fetch() {
             event_handling(&mut window, event);
@@ -46,7 +46,7 @@ fn event_handling(window: &mut Window, event: Event) {
                 window.close();
             },
             Key::A  => {
-                println!("Hello A !");
+                println!("A !");
                 window.get_view_mut().translate(Vector::new(-10.0, 0.0));
             },
             Key::W => {
