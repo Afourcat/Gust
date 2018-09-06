@@ -69,7 +69,7 @@
 
 
 extern crate gl;
-pub extern crate glfw;
+extern crate glfw;
 extern crate nalgebra;
 #[macro_use]
 extern crate lazy_static;
@@ -85,6 +85,8 @@ pub mod sprite;
 pub mod vertex;
 pub mod view;
 pub mod rect;
+
+pub use glfw::Key;
 
 pub type Vector<T> = nalgebra::Vector2<T>;
 pub type Point<T>  = Vector<T>;
