@@ -1,7 +1,7 @@
 extern crate gust;
 
 use gust::sprite::Sprite;
-use gust::glfw::{Key};
+use gust::Key;
 use gust::window::Window;
 use gust::event::{EventReceiver};
 use gust::{Vector,Point};
