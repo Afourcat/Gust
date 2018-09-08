@@ -147,6 +147,10 @@ pub trait Drawer {
     fn draw_with_context<T: Drawable>(&mut self, drawable: &T, context: &mut Context);
 
     fn get_projection(&self) -> &Matrix4<f32>;
+
+    fn get_center(&self) -> Vector2<f32>;
+
+    fn get_sizes(&self) -> Vector2<f32>;
 }
 
 /// Trait that can be use to draw on window

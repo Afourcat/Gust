@@ -17,6 +17,7 @@ use std::ops::Drop;
 use draw::{Drawable,Drawer};
 use glfw::Context;
 use draw;
+use ::Vector;
 use view::{View};
 use rect::Rect;
 use nalgebra::Matrix4;
@@ -180,6 +181,14 @@ impl Drawer for Window {
 
     fn get_projection(&self) -> &Matrix4<f32> {
         self.view.get_projection()
+    }
+
+    fn get_sizes(&self) -> Vector<f32> {
+        Vector::new(self.width as f32, self.height as f32)
+    }
+
+    fn get_center(&self) -> Vector<f32> {
+        Vector::new(self.width as f32 / 2.0, self.height as f32 / 2.0)
     }
 }
 

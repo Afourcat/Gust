@@ -69,8 +69,8 @@ impl View {
 
     /// Set pos of the view (usefull for game like 2D Zelda-Like)
     pub fn set_center(&mut self, pos: Point<f32>) {
-        self.pos.x = pos.x + self.sizes.x / 2.0;
-        self.pos.y = pos.y + self.sizes.y / 2.0;
+        self.pos.x = pos.x - self.sizes.x / 2.0;
+        self.pos.y = pos.y - self.sizes.y / 2.0;
         self.need_update = true;
     }
 
@@ -98,7 +98,6 @@ impl View {
 
     pub fn update(&mut self) {
         if self.need_update {
-            println!("{:?} {:?}", self.pos, self.sizes);
             self.projection = Matrix4::new_ortho(
                 self.pos.x,
                 self.sizes.x + self.pos.x,
@@ -106,7 +105,6 @@ impl View {
                 self.pos.y,
                 -1.0, 1.0
             );
-            println!("{}", self.projection);
             self.need_update = false;
         }
     }
