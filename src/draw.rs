@@ -31,6 +31,29 @@ impl BlendMode {
 			_ => {},
 		}
 	}
+
+    pub fn unactive(&self) {
+        unsafe {
+            gl::Disable(gl::BLEND);
+        }
+    }
+
+    pub fn active(&self) {
+        unsafe {
+            gl::Enable(gl::BLEND);
+            match self {
+                BlendMode::Alpha => {
+                    gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+                },
+                BlendMode::Beta => {
+                    gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+                },
+                BlendMode::Ceta => {
+                    gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+                }
+            }
+        }
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -78,6 +101,11 @@ impl<'a> Context<'a> {
     /// Apply the graphical projection
     pub fn apply_projection(&mut self, projection: &Matrix4<f32>) {
         self.transform = projection * self.transform;
+    }
+
+    /// Apply the blendmode to the current context
+    pub fn apply_blendmode(&mut self) {
+        self.blend_mode.active();
     }
 
     /// Apply final shader (transformation)
@@ -141,7 +169,7 @@ pub trait Drawable {
     fn setup_draw<T: Drawer>(&self, context: &mut Context, window: &T) {
         context.apply_projection(window.get_projection());
         context.apply_texture(0);
-        //context.apply_blendmode();
+        context.apply_blendmode();
         context.setup_shader();
     }
 }

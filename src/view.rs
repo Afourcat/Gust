@@ -26,27 +26,29 @@ use rect::Rect;
 pub struct View {
     projection: Matrix4<f32>,
     sizes: Vector<f32>,
-    center: Point<f32>,
+    pos: Vector<f32>,
     screen: Rect<f32>,
+    angle: f32,
     zoom: f32,
     need_update: bool,
 }
 
 impl View {
 
-    /// Create a new View from a center point and a Rect
-    pub fn new(center: Point<f32>, rect: Rect<f32>) -> View {
+    /// Create a new View from a pos point and a Rect
+    pub fn new(pos: Point<f32>, rect: Rect<f32>) -> View {
         View {
-            projection: Matrix4::new_orthographic(
+            projection: Matrix4::new_ortho(
                 rect.left as f32,
                 rect.width as f32,
-                rect.bottom as f32,
+                rect.top as f32,
                 rect.height as f32,
                 -1.0, 1.0
             ),
             zoom: 1.0,
+            angle: 0.0,
             sizes: Vector::new(rect.width, rect.height),
-            center: center,
+            pos: pos,
             screen: Rect::new(1.0, 1.0, 1.0, 1.0),
             need_update: false,
         }
@@ -57,7 +59,7 @@ impl View {
         self.projection = Matrix4::new_orthographic(
                 rect.left as f32,
                 rect.width as f32,
-                rect.bottom as f32,
+                rect.top as f32,
                 rect.height as f32,
                 -1.0, 1.0
         );
@@ -65,9 +67,10 @@ impl View {
         self.need_update = true;
     }
 
-    /// Set center of the view (usefull for game like 2D Zelda-Like)
-    pub fn set_center(&mut self, center: Point<f32>) {
-        self.center = center;
+    /// Set pos of the view (usefull for game like 2D Zelda-Like)
+    pub fn set_center(&mut self, pos: Point<f32>) {
+        self.pos.x = pos.x + self.sizes.x / 2.0;
+        self.pos.y = pos.y + self.sizes.y / 2.0;
         self.need_update = true;
     }
 
@@ -88,23 +91,22 @@ impl View {
     }
 
     pub fn translate<T: nalgebra::Scalar + Into<f32>>(&mut self, offset: Vector<T>) {
-        self.center.x += offset.x.into();
-        self.center.y += offset.y.into();
+        self.pos.x += offset.x.into();
+        self.pos.y += offset.y.into();
         self.need_update = true;
     }
 
     pub fn update(&mut self) {
         if self.need_update {
-            println!("{:?} {:?}", self.center, self.sizes);
-            self.projection = Matrix4::new_orthographic(
-                self.center.x - self.sizes.x / 2.0,
-                self.sizes.x,
-                self.center.y - self.sizes.y / 2.0,
-                self.sizes.y,
+            println!("{:?} {:?}", self.pos, self.sizes);
+            self.projection = Matrix4::new_ortho(
+                self.pos.x,
+                self.sizes.x + self.pos.x,
+                self.sizes.y + self.pos.y,
+                self.pos.y,
                 -1.0, 1.0
             );
             println!("{}", self.projection);
-            apply_proj_correction(&mut self.projection);
             self.need_update = false;
         }
     }
@@ -112,35 +114,51 @@ impl View {
     pub fn set_zoom(&mut self, zoom: f32) {
         self.zoom = zoom;
     }
+
+    pub fn projection(&self) -> Matrix4<f32> {
+        self.projection
+    }
 }
 
 impl From<Rect<f32>> for View {
 
     fn from(rect: Rect<f32>) -> View {
-        let mut proj = Matrix4::new_orthographic(
-                rect.left as f32,
-                rect.width as f32,
-                rect.bottom as f32,
-                rect.height as f32,
-                -1.0, 1.0
-        );
-
-        // FUCKING NALGEBRA
-        apply_proj_correction(&mut proj);
-        println!("{}", proj);
+        let proj = Matrix4::new_ortho(
+            rect.left,
+            rect.width + rect.left,
+            rect.height + rect.top,
+            rect.top,
+            -1.0, 1.0);
         View {
-            center: Vector::new(rect.width / 2.0, rect.height / 2.0),
+            pos: Vector::new(rect.left, rect.top),
             projection: proj,
             sizes: Vector::new(rect.width, rect.height),
             need_update: false,
             zoom: 1.0,
+            angle: 0.0,
             screen: Rect::new(0.0, 0.0, 1.0, 1.0),
         }
     }
 }
 
-fn apply_proj_correction(proj: &mut Matrix4<f32>) {
-    proj[5] *= -1.0;
-    proj[13] *= -1.0;
-    proj[2] *= -1.0;
+impl Ortho for Matrix4<f32> {}
+
+trait Ortho {
+    fn new_ortho(left: f32, right: f32, bottom:f32, top: f32, near: f32, far: f32) -> Matrix4<f32> {
+        let width = right - left;
+        let height = top - bottom;
+        let a = 2.0 / width;
+        let b = 2.0 / height;
+        let c = -2.0 / (far - near);
+        let tx = -(right + left) / width;
+        let ty = -(top + bottom) / height;
+        let tz = -(far + near) / far - near;
+
+        Matrix4::new(
+            a   , 0.0, 0.0, tx,
+            0.0 ,   b, 0.0,  ty,
+            0.0 , 0.0,   c, tz,
+            0.0 , 0.0, 0.0, 1.0
+        )
+    }
 }
