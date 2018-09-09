@@ -39,7 +39,7 @@ fn main()
 
 fn event_handling(window: &mut Window, event: Event) {
 
-    if let Some(key) = event::pressed(event) {
+    if let Some(key) = event::repeat(event) {
         match key {
             Key::Escape => {
                 window.close();

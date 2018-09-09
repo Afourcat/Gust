@@ -21,6 +21,8 @@ pub struct EventReceiver {
 	event: Rc<Receiver<(f64, WindowEvent)>>,
 }
 
+/// The event struc is here to wrap glfw message that way
+/// the user doesn't have to use the glfw event implementation
 pub struct Event {
 	 wrapped: Box<Any + Send + 'static>
 }
@@ -102,4 +104,12 @@ pub fn released(event: Event) -> Option<Key> {
 		},
 		_ => None,
 	}
+}
+
+/// Get pressed once then keep pushed
+pub fn repeat(event: Event) -> Option<Key> {
+    match event.into_window_event().1 {
+        WindowEvent::Key(value, _, Action::Repeat, _) => Some(value),
+        _ => None,
+    }
 }
