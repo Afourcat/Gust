@@ -56,6 +56,7 @@ impl<'a> Window {
             glfw::WindowMode::Windowed
         ).unwrap();
 
+
         // Load all the gl function from the user configuration
         gl::load_with(|s| win.get_proc_address(s) as *const _);
 
@@ -68,6 +69,8 @@ impl<'a> Window {
 
         // Make this window usable
         win.make_current();
+
+        glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
 
         Window {
             view: View::from(Rect::new(0.0, 0.0, width as f32, height as f32)),

@@ -29,7 +29,7 @@ fn main()
     if let Err(e) = leave.set_origin_to_center() { println!("{}", e) } else { println!("Ok") }
     while window.is_open() {
         window.poll_events();
-        leave.rotate(0.2);
+        leave.rotate(1.0);
         leave.update();
         sprite.update();
         //leave.rotate(0.2);
