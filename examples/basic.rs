@@ -1,17 +1,17 @@
 extern crate gust;
+extern crate glfw;
 
 use gust::sprite::Sprite;
-use gust::Key;
 use gust::window::Window;
-use gust::event::{EventReceiver};
-use gust::{Vector,Point};
+use gust::{Vector,Point,Key};
 use gust::event;
-use gust::event::{Event};
+use gust::event::{EventHandler,Events,Event};
 use std::rc::Rc;
 use gust::color::Color;
 use gust::texture::{Texture};
 use gust::draw::{Drawer,Movable};
 use gust::draw::Drawable;
+use glfw::{Action,Modifiers};
 
 fn main()
 {
@@ -19,7 +19,7 @@ fn main()
     let tex_leave = Rc::new(Texture::new("examples/texture/Z.png"));
     let tex_dirt = Rc::new(Texture::new("examples/texture/Dirt.png"));
     let mut sprite = Sprite::from(&tex_dirt);
-    let event_receiver = EventReceiver::from(&window);
+    let mut event_handler = EventHandler::new(&window);
     let mut leave = Sprite::from(&tex_leave);
 
     leave.set_position(Point::new(300.0, 300.0));
@@ -35,9 +35,9 @@ fn main()
         //leave.rotate(0.2);
 
         //event_receiver.fetch().for_each(|(_, input)| event_handling(&mut window, input));
-        for event in event_receiver.fetch() {
-            event_handling(&mut window, event, &mut sprite);
-        }
+        event_handler.register_callback(handle_key,
+            Events::Key(Key::A, 1, Action::Press, Modifiers::Shift));
+        event_handler.handle();
 
         window.clear();
         window.draw(&sprite);
@@ -46,31 +46,11 @@ fn main()
     }
 }
 
-fn event_handling(window: &mut Window, event: Event, sprite: &mut Sprite) {
-
-    if let Some(key) = event::pressed(event) {
-        match key {
-            Key::Escape => {
-                window.close();
-            },
-            Key::W => {
-                sprite.translate(Vector::new(0.0, -10.0));
-            },
-            Key::A  => {
-                println!("Hello A !");
-                sprite.translate(Vector::new(-10.0, 0.0));
-            },
-            Key::D => {
-                sprite.translate(Vector::new(10.0, 0.0));
-            },
-            Key::S => {
-                sprite.translate(Vector::new(0.0, 10.0));
-            },
-            Key::E => {
-                println!("TEST");
-            },
-            _ => {}
-        };
+fn handle_key(event: Event) -> Result<(),String> {
+    match event::fetch(&event) {
+        _ => { 
+            println!("Test");
+            Ok(())
+        }
     }
 }
-

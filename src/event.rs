@@ -1,115 +1,75 @@
 //! Module to handle keyboard and mouse event one day
-
-use glfw::{WindowEvent, Key, Action, FlushedMessages};
-use glfw;
-use window::Window;
-use std::rc::Rc;
-use std::marker::Send;
 use std::sync::mpsc::Receiver;
-use std::any::Any;
+use glfw::{Key, Action, FlushedMessages, MouseButton};
+use glfw;
+pub use glfw::WindowEvent as Events;
+use std::rc::Rc;
 
-/// EventReceiver Wrapper for glfw
-/// ```ignore
-/// let event_r = EventReceiver::from(&window);
-///
-/// for (_, event) in event_r.fetch() {
-/// 	handle_events(/*  omited  */);
-/// }
-/// ```
-///
-pub struct EventReceiver {
-	event: Rc<Receiver<(f64, WindowEvent)>>,
+type EventFunction = fn(Event) -> Result<(),String>;
+
+pub type Event = (f64, Events);
+
+pub fn fetch(event: &Event) -> &Events {
+        &event.1
 }
 
-/// The event struc is here to wrap glfw message that way
-/// the user doesn't have to use the glfw event implementation
-pub struct Event {
-	 wrapped: Box<Any + Send + 'static>
+pub struct EventHandler {
+    handlers: Vec<EventFunction>,
+    receiver: Rc<Receiver<Event>>,
 }
 
-impl Event {
-    pub fn new<T: Send + 'static>(elem: T) -> Event {
-        Event {
-            wrapped: Box::new(elem)
+pub fn default_event(event: Event) -> Result<(),String> {
+    Ok(())
+}
+
+impl EventHandler {
+    pub fn new(window: &::window::Window) -> EventHandler {
+        let mut handlers = Vec::with_capacity(15);
+
+        for i in 0..14 {
+            handlers.push(default_event as EventFunction);
+        }
+
+        EventHandler {
+            handlers: handlers,
+            receiver: Rc::clone(&window.event)
         }
     }
 
-	pub fn into_window_event(self) -> Box<(f64, WindowEvent)> {
-		self.wrapped.downcast::<(f64, WindowEvent)>().unwrap()
-	}
-}
+    fn get_handlers(event: &Events) -> i32 {
+        return match event {
+            Events::Pos(_, _) => 0,
+            Events::Size(_, _) => 1,
+            Events::Close => 2,
+            Events::Refresh => 3,
+            Events::Focus(_) => 4,
+            Events::Iconify(_) => 5,
+            Events::FramebufferSize(_, _) => 6,
+            Events::MouseButton(_, _, _) => 7,
+            Events::CursorPos(_, _) => 8,
+            Events::CursorEnter(_) => 9,
+            Events::Scroll(_, _) => 10,
+            Events::Key(_, _, _, _) => 11,
+            Events::Char(_) => 12,
+            Events::CharModifiers(_, _) => 13,
+            Events::FileDrop(_) => 14
+        };
+    }
 
-/// Wrapper for flushed message iterator that is simplet to use
-pub struct EventIterator<'a, Message: 'a + Send> {
-	fmsg: FlushedMessages<'a, Message>,
-}
+    pub fn register_callback(&mut self, function: EventFunction, event: Events) {
+        let index = Self::get_handlers(&event) as usize;
 
-
-impl<'a> From<&'a EventReceiver> for EventIterator<'a, (f64, WindowEvent)> {
-	fn from(var: &'a EventReceiver) -> EventIterator<'a, (f64, WindowEvent)> {
-		EventIterator {
-			fmsg: glfw::flush_messages(&var.event)
-		}
-	}
-}
-
-impl EventReceiver {
-	pub fn new(event: Receiver<(f64, WindowEvent)>) -> EventReceiver {
-		EventReceiver {
-			event: Rc::new(event),
-		}
-	}
-
-	pub fn from(window: &Window) -> EventReceiver {
-		EventReceiver {
-			event: Rc::clone(&window.event),
-		}
-	}
-
-	pub fn fetch<'a>(&'a self) -> EventIterator<'a, (f64, WindowEvent)> {
-		EventIterator::from(&*self)
-	}
-}
-
-impl<'a, Message: 'static + Send> Iterator for EventIterator<'a, Message> {
-	type Item = Event;
-
-	fn next(&mut self) -> Option<Self::Item> {
-		if let Some(elem) = self.fmsg.next() {
-			Some(Event::new(elem))
-		} else {
-			None
-		}
-	}
-}
-
-/// Get Pressed Key
-pub fn pressed(event: Event) -> Option<Key> {
-	let elem = event.into_window_event();
-
-	match elem.1 {
-		WindowEvent::Key(value, _, Action::Press, _) => {
-			Some(value)
-		},
-		_ => None,
-	}
-}
-
-/// Get Released Key
-pub fn released(event: Event) -> Option<Key> {
-
-	match event.into_window_event().1 {
-		WindowEvent::Key(value, _, Action::Release, _) => {
-			Some(value)
-		},
-		_ => None,
-	}
-}
-
-/// Get pressed once then keep pushed
-pub fn repeat(event: Event) -> Option<Key> {
-    match event.into_window_event().1 {
-        WindowEvent::Key(value, _, Action::Repeat, _) => Some(value),
-        _ => None,
+        self.handlers[index] = function;
+    }
+    
+    pub fn handle(&self) -> Result<(),String> {
+        for event in glfw::flush_messages(&*self.receiver) { 
+            let index = Self::get_handlers(&event.1) as usize;
+        
+            if let Err(a) = self.handlers[index](event) {
+                return Err(a);
+            }
+        }
+        Ok(())
     }
 }

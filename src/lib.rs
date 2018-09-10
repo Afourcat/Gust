@@ -87,6 +87,10 @@ pub mod view;
 pub mod rect;
 
 pub use glfw::Key;
+pub use glfw::MouseButton;
+pub use glfw::MouseButtonLeft;
+pub use glfw::MouseButtonRight;
+pub use glfw::MouseButtonMiddle;
 
 pub type Vector<T> = nalgebra::Vector2<T>;
 pub type Point<T>  = Vector<T>;
