@@ -59,6 +59,7 @@ impl<'a> Window {
 
         // Load all the gl function from the user configuration
         gl::load_with(|s| win.get_proc_address(s) as *const _);
+        win.set_cursor_mode(glfw::CursorMode::Normal);
 
         unsafe {
             gl::Viewport(0, 0, width as i32, height as i32);
@@ -84,6 +85,22 @@ impl<'a> Window {
         }
     }
 
+    /// Change cursor to hidden mode
+    pub fn hide_cursor(&mut self) {
+        self.win.set_cursor_mode(glfw::CursorMode::Hidden);
+    }
+
+    /// Change cursor to disabled mode
+    pub fn disable_cursor(&mut self) {
+        self.win.set_cursor_mode(glfw::CursorMode::Disabled);
+    }
+
+    /// Change cursor to normal mode
+    pub fn enable_cursor(&mut self) {
+        self.win.set_cursor_mode(glfw::CursorMode::Normal);
+    }
+ 
+ 
     /// Check if the window is open
     pub fn is_open(&self) -> bool {
        !self.win.should_close()

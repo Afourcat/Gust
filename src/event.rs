@@ -27,7 +27,6 @@ impl EventHandler {
     }
 }
 
-
 impl<'a> Iterator for EventIterator<'a> {
 	type Item = Event;
 
