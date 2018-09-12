@@ -21,6 +21,7 @@ use ::Vector;
 use view::{View};
 use rect::Rect;
 use nalgebra::Matrix4;
+use event::EventType;
 
 /// Window struct
 /// Define a struct by many thing in glfw
@@ -85,6 +86,36 @@ impl<'a> Window {
         }
     }
 
+    pub fn poll<T: Into<Option<EventType>>>(&mut self, event: T) {
+        Self::match_event_type(self, event.into(), true);
+    }
+
+    pub fn unpoll<T: Into<Option<EventType>>>(&mut self, event: T) {
+        Self::match_event_type(self, event.into(), false);
+    }
+
+    fn match_event_type(window: &mut Window, event: Option<EventType>, active: bool) {
+        if event.is_none() {
+            window.win.set_all_polling(active);
+            return;
+        }
+        match event.unwrap() {                                                           
+            EventType::Key => window.win.set_key_polling(active),
+            EventType::Pos => window.win.set_pos_polling(active),
+            EventType::Close => window.win.set_close_polling(active),
+            EventType::Size => window.win.set_size_polling(active),
+            EventType::Refresh => window.win.set_refresh_polling(active),
+            EventType::Focus => window.win.set_focus_polling(active),
+            EventType::Char => window.win.set_char_polling(active),
+            EventType::CharMods => window.win.set_char_mods_polling(active),
+            EventType::MouseButton => window.win.set_mouse_button_polling(active),
+            EventType::CursorPos => window.win.set_cursor_pos_polling(active),
+            EventType::CursorEnter => window.win.set_cursor_enter_polling(active),
+            EventType::Scroll => window.win.set_scroll_polling(active),
+            EventType::FrameBuffer => window.win.set_framebuffer_size_polling(active)
+        }
+    }
+
     /// Change cursor to hidden mode
     pub fn hide_cursor(&mut self) {
         self.win.set_cursor_mode(glfw::CursorMode::Hidden);
@@ -138,11 +169,6 @@ impl<'a> Window {
     pub fn active(&mut self) -> bool {
         self.win.make_current();
         self.win.is_current()
-    }
-
-    /// Set the key polling mode on
-    pub fn set_key_polling(&mut self, is: bool) {
-        self.win.set_key_polling(is);
     }
 
     pub fn set_view(&mut self, view: View) {

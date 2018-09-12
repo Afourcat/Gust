@@ -51,3 +51,19 @@ impl<'a> From<&'a EventHandler> for EventIterator<'a> {
 		}
 	}
 }
+
+pub enum EventType {
+    Key,
+    Pos,
+    Close,
+    Size,
+    Refresh,
+    Focus,
+    Char,
+    CharMods,
+    MouseButton,
+    CursorPos,
+    CursorEnter,
+    Scroll,
+    FrameBuffer,
+}
