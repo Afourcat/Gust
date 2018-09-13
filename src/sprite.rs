@@ -68,7 +68,7 @@ impl Sprite {
         self.vertice[1].color = color.clone();
         self.vertice[2].color = color.clone();
         self.vertice[3].color = color.clone();
-        self.need_update = true;
+        self.vertice.update();
     }
 
     pub fn get_sizes(&self) -> Vector2<usize> {
@@ -263,7 +263,6 @@ impl Drawable for Sprite {
                 &Vector3::new(self.scale.x, self.scale.y, 0.0)    
             );
             self.need_update = false;
-            self.vertice.update();
         }
     }
 
