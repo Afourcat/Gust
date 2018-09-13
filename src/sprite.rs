@@ -11,6 +11,7 @@ use nalgebra;
 use draw::{Movable};
 use vertex::*;
 use shader::Shader;
+use rect::Rect;
 
 /// A sprite is a transformable
 /// drawable sprite
@@ -67,6 +68,7 @@ impl Sprite {
         self.vertice[1].color = color.clone();
         self.vertice[2].color = color.clone();
         self.vertice[3].color = color.clone();
+        self.need_update = true;
     }
 
     pub fn get_sizes(&self) -> Vector2<usize> {
@@ -132,6 +134,18 @@ impl<'a> From<&'a Rc<Texture>> for Sprite {
 }
 
 impl Movable for Sprite {
+
+    fn contain<T: nalgebra::Scalar + From<f32> + Into<f32>>(&self, vec: ::Point<T>) -> bool {
+        let sizes = self.get_sizes();
+        let vec: Vector2<f32> = Vector2::new(vec.x.into(), vec.y.into());
+
+        let a = Rect::new(self.pos.x as f32,
+                  self.pos.y as f32,
+                  sizes.x as f32,
+                  sizes.y as f32);
+        println!("{:?}", a);
+        a.contain(vec)
+    }
 
     fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>) {
         self.pos.x += vec.x.into();
@@ -249,6 +263,7 @@ impl Drawable for Sprite {
                 &Vector3::new(self.scale.x, self.scale.y, 0.0)    
             );
             self.need_update = false;
+            self.vertice.update();
         }
     }
 

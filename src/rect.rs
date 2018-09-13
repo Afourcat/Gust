@@ -78,13 +78,30 @@ impl<T: nalgebra::Scalar + MulAssign<T>> MulAssign<Rect<T>> for Rect<T> {
     }
 }
 
-impl<T: nalgebra::Scalar> Rect<T> {
+//------------------
+//
+//              Rect impl
+//
+//------------------
+
+impl<T: nalgebra::Scalar + Add<Output=T> + PartialOrd> Rect<T> {
     pub fn new(left: T, top: T, width: T, height: T) -> Rect<T> {
         Rect {
             top: top,
             left: left,
             width: width,
             height: height,
+        }
+    }
+
+    pub fn contain(&self, point: super::Point<T>) -> bool {
+        if point.x > self.left &&
+        point.x < self.left + self.width &&
+        point.y > self.top &&
+        point.y < self.top + self.height {
+            true
+        } else {
+            false
         }
     }
 }

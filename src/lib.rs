@@ -66,7 +66,7 @@
 //! ```
 
 #![allow(dead_code)]
-
+#![feature(extern_prelude)]
 
 extern crate gl;
 extern crate glfw;

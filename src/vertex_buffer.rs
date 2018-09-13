@@ -171,14 +171,24 @@ impl Drawable for VertexBuffer {
     }
 
 	fn update(&mut self) {
-		unimplemented!();
+        unsafe {
+            self.array.bind();
+            self.bind();
+            gl::BufferSubData(
+				gl::ARRAY_BUFFER,
+                0,
+				(std::mem::size_of::<GLfloat>() * self.array.len() * 8) as GLsizeiptr,
+				self.array.get_ptr(),
+			);
+            self.unbind();
+            self.array.unbind();
+        }
 	}
 
     fn set_texture(&mut self, texture: &Rc<Texture>) {
         self.texture = Some(Rc::clone(texture));
     }
 }
-
 
 impl Index<usize> for VertexBuffer {
     type Output = Vertex;

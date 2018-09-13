@@ -86,6 +86,10 @@ impl<'a> Window {
         }
     }
 
+    pub fn set_mouse_pos<T: nalgebra::Scalar + Into<f32>>(&mut self, vec: Vector<T>) {
+        self.win.set_cursor_pos(vec.x.into() as f64, vec.y.into() as f64)
+    }
+
     pub fn poll<T: Into<Option<EventType>>>(&mut self, event: T) {
         Self::match_event_type(self, event.into(), true);
     }
@@ -114,6 +118,11 @@ impl<'a> Window {
             EventType::Scroll => window.win.set_scroll_polling(active),
             EventType::FrameBuffer => window.win.set_framebuffer_size_polling(active)
         }
+    }
+
+    pub fn mouse_pos(&self) -> Vector<f32> {
+        let pos = self.win.get_cursor_pos();
+        Vector::new(pos.0 as f32, pos.1 as f32)
     }
 
     /// Change cursor to hidden mode

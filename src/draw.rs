@@ -181,6 +181,9 @@ pub trait Drawable {
 /// Trait defining movable structures as sprite or higher
 pub trait Movable {
     /// Move the sprite off the offset
+    fn contain<T: nalgebra::Scalar + From<f32> + Into<f32>>(&self, offset: Vector2<T>) -> bool;
+
+    /// Move the sprite off the offset
     fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, offset: Vector2<T>);
 
     /// Set position of the sprite
