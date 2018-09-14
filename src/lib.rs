@@ -34,7 +34,7 @@
 //!         window.poll_events();
 //!
 //!         for event in event_receiver.fetch() {
-//!             event_handling(&mut window, event);
+//!             event_handling(&mut window, event, &mut sprite);
 //!         }
 //!
 //!         window.clear();
@@ -43,7 +43,7 @@
 //!     }
 //! }
 //!
-//! fn event_handling(window: &mut Window, event: Event) {
+//! fn event_handling(window: &mut Window, event: Event, sprite: &mut Sprite) {
 //!
 //!     if let Some(key) = event::pressed(event) {
 //!         match key {
@@ -54,7 +54,7 @@
 //!                 println!("Hello A !");
 //!             },
 //!             Key::K => {
-//!                 println!("Je taime!");
+//!                 sprite.translate(Vector::new(10.0, 10.0));
 //!             },
 //!             Key::E => {
 //!                 println!("TEST");
@@ -91,6 +91,7 @@ pub use glfw::MouseButton;
 pub use glfw::MouseButtonLeft;
 pub use glfw::MouseButtonRight;
 pub use glfw::MouseButtonMiddle;
+pub use glfw::Action;
 
 pub type Vector<T> = nalgebra::Vector2<T>;
 pub type Point<T>  = Vector<T>;

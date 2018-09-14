@@ -25,6 +25,7 @@ pub enum Primitive {
     Triangles,
     Quads,
 	TrianglesStrip,
+    TriangleFan,
     Points,
     Lines,
 }
@@ -38,6 +39,7 @@ impl Primitive {
             Primitive::Points       	=> gl::POINTS,
             Primitive::Lines        	=> gl::LINES,
 			Primitive::TrianglesStrip	=> gl::TRIANGLE_STRIP,
+			Primitive::TriangleFan      => gl::TRIANGLE_STRIP,
         }
     }
 
@@ -47,6 +49,7 @@ impl Primitive {
 			gl::TRIANGLES   => Primitive::Triangles,
 			gl::TRIANGLE_STRIP => Primitive::TrianglesStrip,
 			gl::LINES       => Primitive::Lines,
+			gl::TRIANGLE_FAN => Primitive::TriangleFan,
 			_               => Primitive::Points,
         }
     }
@@ -117,6 +120,7 @@ impl VertexBuffer {
             Primitive::Points       	=> gl::POINTS,
             Primitive::Lines        	=> gl::LINES,
 			Primitive::TrianglesStrip	=> gl::TRIANGLE_STRIP,
+            Primitive::TriangleFan      => gl::TRIANGLE_FAN
         }
     }
 
@@ -126,6 +130,7 @@ impl VertexBuffer {
 			gl::TRIANGLES   => Primitive::Triangles,
 			gl::TRIANGLE_STRIP => Primitive::TrianglesStrip,
 			gl::LINES       => Primitive::Lines,
+            gl::TRIANGLE_FAN => Primitive::TriangleFan,
 			_               => Primitive::Points,
         }
     }
