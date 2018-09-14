@@ -20,6 +20,7 @@ use draw;
 use ::Vector;
 use view::{View};
 use rect::Rect;
+use nalgebra;
 use nalgebra::Matrix4;
 use event::EventType;
 
