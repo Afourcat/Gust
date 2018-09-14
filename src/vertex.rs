@@ -1,4 +1,47 @@
 //! This is a module for vertex
+//! # Vertex
+//!
+//! A vertex is a point in space giving information to opengl.
+//! x vertex form x point that can be drawed.
+//!
+//! ```Rust
+//! use gust::Vector;
+//!
+//! let position = Vector::new(100.0, 100.0);
+//! let texture_coord = Vector::new(0.0, 0.0);
+//! let color = Color::new(1.0, 0.3, 0.5);
+//!
+//! Vertex::new(position, texture_coord, color);
+//! ````
+//! # VertexArray
+//!
+//! A vertex array is a Vec of Vertex that can be drawn. It's the littlest
+//! object that can be printed.
+//!
+//! ```Rust
+//! let pos_vec vec![
+//!     Vector::new(0.0, 0.0);
+//!     Vector::new(10.0, 0.0);
+//!     Vector::new(10.0, 10.0);
+//!     Vector::new(0.0, 10.0);
+//! ];
+//!
+//! let coord_vec = vec![
+//!     Vector2::new(0.0, 0.0),
+//!     Vector2::new(1.0, 0.0),
+//!     Vector2::new(1.0, 1.0),
+//!     Vector2::new(0.0, 1.0),
+//! ];
+//!
+//! let vertice = vec![
+//!     Vertex::new(pos_vec[0], coord_vec[0], Color::white()),
+//!     Vertex::new(pos_vec[1], coord_vec[1], Color::white()),
+//!     Vertex::new(pos_vec[2], coord_vec[2], Color::white()),
+//!     Vertex::new(pos_vec[3], coord_vec[3], Color::white()),
+//! ];
+//!
+//! VertexArray::new(vertice);
+//! ```
 
 use nalgebra::{Vector2};
 use color::Color;
