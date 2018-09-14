@@ -73,6 +73,7 @@
 extern crate gl;
 extern crate glfw;
 extern crate nalgebra;
+extern crate freetype;
 #[macro_use]
 extern crate lazy_static;
 
@@ -87,6 +88,7 @@ pub mod sprite;
 pub mod vertex;
 pub mod view;
 pub mod rect;
+pub mod text;
 
 pub use glfw::Key;
 pub use glfw::MouseButton;
