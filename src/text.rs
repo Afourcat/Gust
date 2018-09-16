@@ -5,29 +5,64 @@
 //  module:
 //! text render utils
 
+use self::Vector;
 use texture::Texture;
 use draw::{Drawable,Drawer,Context,Movable};
 use ::{Point,Vector};
 use nalgebra;
 use std::{
-    sync::Mutex,
     rc::Rc,
+    path::Path,
+};
+
+extern crate freetype as ft;
+
+use self::ft::{
+    library::Library,
+    face::Face,
+    FtResult
 };
 
 
-struct Font {
-    jsp: i32
+pub struct FontHandler(Library);
+
+impl FontHandler {
+    pub fn new() -> FontHandler {
+        FontHandler(Library::init().unwrap())
+    }
+
+    pub fn create(&self, path: String) -> Font {
+        let face = self.0.new_face(path).unwrap();
+        Font::from();
+    }
 }
 
-struct Text {
-    font: Font,
+struct GraphicChar {
+    texture: Texture,
+    sizes: Vector<i32>,
+    bearing: Vector<i32>,
+    advance: u32
+}
+
+pub struct Font {
+    font: Hashmap<char,GraphicChar>
+}
+
+impl From<Face> for FontHandler {
+    
+}
+
+pub struct Text {
+    font: Rc<Font>,
     content: String,
-    size: f32,
 }
 
 impl Text {
-    pub fn new() {
-
+    pub fn new(font: &Rc<Font>) -> Text {
+        Text {
+            font: Rc::clone(font),
+            content: String::new(),
+        }
     }
 }
 
@@ -98,17 +133,3 @@ impl Drawable for Text {
         unimplemented!();
     }
 }
-
-fn init_ft() {
-    lazy_static! {
-        static ref init: Mutex<bool> = Mutex::new(false);
-    }
-
-    let mut locked = init.lock().unwrap();
-
-    if *locked == false {
-        // init freetype
-        *locked = true;
-    }
-}
-

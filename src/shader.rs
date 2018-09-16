@@ -22,6 +22,36 @@ pub struct Shader {
 	frag: u32,
 }
 
+static SPRITE_VS: &'static str =
+"#version 330 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec2 aTexCoord;
+layout (location = 2) in vec3 aColor;
+out vec3 ourColor;
+out vec2 TexCoord;
+uniform mat4 transform;
+
+void main()
+{
+   gl_Position = transform * vec4(aPos.xy, 0.0, 1.0);
+   ourColor = aColor;
+   TexCoord = aTexCoord;
+}";
+
+static SPRITE_FG: &'static str =
+"#version 330 core
+out vec4 FragColor;
+in vec3 ourColor;
+in vec2 TexCoord;
+uniform sampler2D ourTexture;
+
+void main()
+{
+   FragColor = texture(ourTexture, TexCoord) * vec4(ourColor, 1.0);
+}";
+
+
+
 static VS: &'static str =
 "#version 330 core
 layout (location = 0) in vec2 aPos;
