@@ -89,6 +89,7 @@ pub mod vertex;
 pub mod view;
 pub mod rect;
 pub mod text;
+pub mod font;
 
 pub use glfw::Key;
 pub use glfw::MouseButton;
