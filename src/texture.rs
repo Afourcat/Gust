@@ -155,6 +155,31 @@ impl Texture {
 	}
 }
 
+impl Default for Texture {
+    fn default() -> Texture {
+        let mut id = 0;
+        unsafe {
+            gl::GenTextures(1, &mut id);
+
+            let data = vec![255, 255, 255, 255];
+
+            gl::BindTexture(gl::TEXTURE_2D, id);
+
+            Texture::set_texture_parameter();
+
+            gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32,
+                        1, 1, 0, gl::RGBA,
+                        gl::UNSIGNED_BYTE, data.as_ptr() as *const c_void);
+        };
+
+        Texture {
+            id: id,
+            width: 1,
+            height: 1
+        }
+    }
+}
+
 /// Enum to wrap gl RGB modes
 #[derive(Clone,Copy,Debug)]
 pub enum RgbMode {

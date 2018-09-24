@@ -4,9 +4,11 @@ use gust::window::Window;
 use gust::{Vector,Key,Action};
 use gust::event::{EventHandler,Events,EventType};
 use gust::color::Color;
-use gust::draw::Drawer;
+use gust::draw::{Drawer,Drawable};
 use gust::vertex_buffer::{VertexBuffer,Primitive};
 use gust::vertex::{VertexArray,Vertex};
+use gust::texture::Texture;
+use std::rc::Rc;
 
 fn main()
 {
@@ -22,6 +24,7 @@ fn main()
     let vert_buf = VertexBuffer::new(Primitive::TriangleFan, vert_arr);
     let event_handler = EventHandler::new(&window);
 
+    window.set_clear_color(Color::red());
     window.poll(EventType::Key);
     while window.is_open() {
         window.poll_events();

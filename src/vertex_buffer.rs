@@ -8,7 +8,7 @@ use draw::{Drawable,Drawer,Context,BlendMode};
 use std::rc::Rc;
 use texture::Texture;
 use vertex::*;
-use shader;
+use shader::*;
 use std::ops::{Index,IndexMut};
 
 /// Vertex Buffer structure
@@ -152,14 +152,20 @@ impl VertexBuffer {
 
 impl Drawable for VertexBuffer {
 	fn draw<T: Drawer>(&self, target: &mut T) {
-
+    
+        let texture = if let Some(ref rc_texture) = self.texture {
+            Some(rc_texture.as_ref())
+        } else {
+            None
+        };
+            
 	    self.draw_with_context(target, &mut Context::new(
-			if let Some(ref rc_texture) = self.texture {
-                    Some(rc_texture.as_ref())
+            texture,
+			if texture.is_none() {
+                &*NO_TEXTURE_SHADER
             } else {
-                None
+                &*DEFAULT_SHADER
             },
-			shader::Shader::default(),
 			None,
 			BlendMode::Alpha,
 		));

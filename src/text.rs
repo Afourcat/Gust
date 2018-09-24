@@ -42,6 +42,7 @@ use self::ft::{
         LoadFlag
     },
     glyph::Glyph,
+    bitmap::Bitmap,
     FtResult
 };
 
@@ -71,6 +72,10 @@ impl GlyphMap {
     }
 }
 
+fn get_texture_rect(bitmap: &Bitmap, font_texture: &Texture) {
+    
+}
+
 /// rect: it's size
 /// texCoord: coord of the texture inside the parent texture
 pub struct CharInfo {
@@ -85,7 +90,7 @@ impl CharInfo {
         CharInfo {
             rect: Default::default(),
             texCoord: Default::default(),
-            advance: 0_f32
+            advance: 0.0
         }
     }
 
@@ -142,7 +147,20 @@ impl Font {
     fn create_glyph<'a>(&'a mut self, size: u32, code: u32) -> &'a CharInfo {
         {
             let glyph_map = self.map.entry(size).or_insert(GlyphMap::new());
-            glyph_map.map.insert(code, CharInfo::new());
+            self.face.load_char(size as usize, LoadFlag::DEFAULT).unwrap();
+
+            let mut to_insert = CharInfo::new();
+
+            let bitmap = self.face.glyph().bitmap();
+            to_insert.rect.width = (bitmap.width() + 2) as f32;
+            to_insert.rect.height = (bitmap.rows() + 2) as f32;
+
+            get_texture_rect(&bitmap, &glyph_map.texture);
+
+            glyph_map.map.insert(
+                code,
+                to_insert
+            );
             glyph_map.update();
         }
         self.get_map_mut()[&size].map.get(&code).unwrap()

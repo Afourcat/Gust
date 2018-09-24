@@ -10,7 +10,7 @@ use nalgebra::*;
 use nalgebra;
 use draw::{Movable};
 use vertex::*;
-use shader::Shader;
+use shader::{Shader,DEFAULT_SHADER};
 use rect::Rect;
 
 /// A sprite is a transformable
@@ -213,7 +213,7 @@ impl Drawable for Sprite {
                     } else {
                         None
                     },
-                    Shader::default(),
+                    &*DEFAULT_SHADER,
                     Some(Matrix4::<f32>::identity() * self.model),
                     BlendMode::Alpha
         ));
