@@ -4,11 +4,9 @@ use gust::window::Window;
 use gust::{Vector,Key,Action};
 use gust::event::{EventHandler,Events,EventType};
 use gust::color::Color;
-use gust::draw::{Drawer,Drawable};
+use gust::draw::Drawer;
 use gust::vertex_buffer::{VertexBuffer,Primitive};
 use gust::vertex::{VertexArray,Vertex};
-use gust::texture::Texture;
-use std::rc::Rc;
 
 fn main()
 {

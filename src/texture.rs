@@ -102,6 +102,27 @@ impl Texture {
 		}
 	}
 
+    /// Repeat mode texture wrap
+    pub fn repeat_mode(&self) {
+        self.active(0);
+        unsafe {
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+        }
+        self.unbind();
+    }
+
+    /// Linear mode for filter
+    pub fn linear_mode(&self) {
+        self.active(0);
+        unsafe {
+		    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+		    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+        }
+        self.unbind();
+    }
+
+    /// Create an empty texture
     pub fn empty() -> Texture {
         let mut id = 0;
         unsafe { gl::GenTextures(1, &mut id); };
@@ -112,6 +133,7 @@ impl Texture {
         }
     }
 
+    /// Update the data of the texture
     pub fn update(&mut self, data: Vec<u8>, sizes: Vector<i32>, rgb_mode: RgbMode) {
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, self.id);
@@ -139,6 +161,12 @@ impl Texture {
 	pub fn get_height(&self) -> u32 {
 		self.height
 	}
+
+    pub fn unbind(&self) {
+        unsafe {
+            gl::BindTexture(gl::TEXTURE_2D, 0);
+        }
+    }
 
     pub fn active(&self, num: i32) {
         unsafe {
