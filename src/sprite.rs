@@ -74,8 +74,8 @@ impl Sprite {
     pub fn get_sizes(&self) -> Vector2<usize> {
         if let Some(ref texture) = self.texture {
             Vector2::new(
-                texture.get_width() as usize,
-                texture.get_height() as usize
+                texture.width() as usize,
+                texture.height() as usize
             )
         } else {
             Vector2::new(0, 0)
@@ -109,8 +109,8 @@ impl<'a> From<&'a Rc<Texture>> for Sprite {
     /// let personnage = Sprite::from(&texture);
     /// ```
     fn from(tex: &'a Rc<Texture>) -> Sprite {
-        let width = tex.get_width() as f32;
-        let height = tex.get_height() as f32;
+        let width = tex.width() as f32;
+        let height = tex.height() as f32;
         let pos = Vector2::new(0.0, 0.0);
         Sprite {
             pos: pos,

@@ -38,7 +38,7 @@ extern crate freetype as ft;
 pub struct Text {
     font: Rc<Font>,
     content: String,
-    size: u32
+    actual_size: u32
 }
 
 impl Text {
@@ -46,7 +46,7 @@ impl Text {
         Text {
             font: Rc::clone(font),
             content: String::new(),
-            size: 14
+            actual_size: 14
         }
     }
 
@@ -59,11 +59,11 @@ impl Text {
     }
 
     pub fn set_size(&mut self, size: u32) {
-        self.size = size;
+        self.actual_size = size;
     }
 
     pub fn size(&self) -> u32 {
-        self.size
+        self.actual_size
     }
 }
 

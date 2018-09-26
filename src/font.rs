@@ -34,19 +34,20 @@ struct GlyphMap {
 impl GlyphMap {
     pub fn new() -> GlyphMap {
         GlyphMap {
-            texture: Texture::empty(),
+            texture: Texture::new(),
             map: Utf8Map::with_capacity(10)
         }
+    }
+
+    pub fn get_texture_rect
+    (&self, width: u32, height: u32, size: u32) -> Rect<f32> {
+        Rect::new(0f32, 0f32, 0f32, 0f32)
     }
 
     /// Create a new texture from Utf8Map
     pub fn update(&mut self) {
         
     }
-}
-
-fn get_texture_rect(bitmap: &Bitmap, font_texture: &Texture) {
-    
 }
 
 /// rect: it's size
@@ -128,13 +129,13 @@ impl Font {
             to_insert.rect.width = (bitmap.width() + 2) as f32;
             to_insert.rect.height = (bitmap.rows() + 2) as f32;
 
-            get_texture_rect(&bitmap, &glyph_map.texture);
+            to_insert.texCoord = glyph_map.get_texture_rect(
+                size, to_insert.rect.width as u32, to_insert.rect.height as u32);
 
             glyph_map.map.insert(
                 code,
                 to_insert
             );
-            glyph_map.update();
         }
         self.get_map_mut()[&size].map.get(&code).unwrap()
     }

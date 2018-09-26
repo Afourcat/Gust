@@ -33,21 +33,89 @@ pub struct Texture {
 
 impl Texture {
 
-    /// Create a texture from a raw data pointer needed for Font handling
-    pub fn from_data(data: *const c_void, rgb_mode: RgbMode, width: i32, height: i32) -> Texture {
+//-----------------------------CONSTRUCTOR--------------------------------//
+
+    /// Create an empty texture
+    pub fn new() -> Texture {
+        let mut id = 0;
+        unsafe { gl::GenTextures(1, &mut id); };
         Texture {
-            id: Self::create_texture(data, rgb_mode.as_gl(), width, height),
+            id: id,
+            width: 0,
+            height: 0
+        }
+    }
+
+    /// Create a texture from a raw data pointer needed for Font handling
+    pub unsafe fn from_data(data: *const c_void, rgb_mode: RgbMode, width: u32, height: u32) -> Texture {
+        Texture {
+            id: Self::create(data, rgb_mode.as_gl(), width as i32, height as i32),
             width: width as u32,
             height: height as u32,
         }
     }
 
-    fn create_texture(data: *const c_void, rgb_mode: GLenum, width: i32, height: i32) -> u32 {
+    /// Create an empty texture with a size
+    pub fn from_size(sizes: Vector<u32>) -> Texture {
+        let mut id = 0;
+
+        unsafe { gl::GenTextures(1, &mut id) };
+        Texture {
+            id: id,
+            width: sizes.x,
+            height: sizes.y
+        }
+    }
+
+    pub fn from_image(img: DynamicImage) -> Texture {
+        let mut id = 0;
+        let mut size = (0, 0);
+
+        match img {
+			DynamicImage::ImageRgba8(data) => unsafe {
+                size.0 = data.width();
+                size.1 = data.height();
+				id = Self::create(
+                    mem::transmute(&data.into_raw()[0]),
+                    gl::RGBA,
+                    size.0 as i32,
+                    size.1 as i32
+                );
+            },
+			DynamicImage::ImageRgb8(data) => unsafe {
+                size.0 = data.width();
+                size.1 = data.height();
+                id = Self::create(
+                    mem::transmute(&data.into_raw()[0]),
+                    gl::RGBA,
+                    size.0 as i32,
+                    size.1 as i32
+                );
+			},
+			_ => println!("Error while loading !"),
+		}
+
+        Texture {
+            id: id,
+            width: size.0,
+            height: size.1
+        }
+    }
+
+	/// Create new texture from file path
+	pub fn from_path(path_to_file: &str) -> Texture {
+		let img = image::open(path_to_file).unwrap();
+
+		Texture::from_image(img)
+	}
+
+    /// Create a texture with a
+    fn create(data: *const c_void, rgb_mode: GLenum, width: i32, height: i32) -> u32 {
         let mut id = 0;
         unsafe {
             gl::GenTextures(1, &mut id);
             gl::BindTexture(gl::TEXTURE_2D, id);
-            Texture::set_texture_parameter();
+            Texture::default_param();
             gl::TexImage2D(
                 gl::TEXTURE_2D,
 		    	0,
@@ -63,74 +131,6 @@ impl Texture {
 			gl::BindTexture(gl::TEXTURE_2D, 0);
 		}
         id
-    }
-
-	/// Create new texture from file path
-	pub fn new(path_to_file: &str) -> Texture {
-		let img = image::open(path_to_file).unwrap();
-		let mut id = 0;
-		let mut size = (0, 0);
-		
-		match img {
-			DynamicImage::ImageRgba8(data) => unsafe {
-                size.0 = data.width();
-                size.1 = data.height();
-				id = Self::create_texture(
-                    mem::transmute(&data.into_raw()[0]),
-                    gl::RGBA,
-                    size.0 as i32,
-                    size.1 as i32
-                );
-            },
-			DynamicImage::ImageRgb8(data) => unsafe {
-                size.0 = data.width();
-                size.1 = data.height();
-                id = Self::create_texture(
-                    mem::transmute(&data.into_raw()[0]),
-                    gl::RGBA,
-                    size.0 as i32,
-                    size.1 as i32
-                );
-			},
-			_ => println!("Error while loading !"),
-		}
-		
-		Texture {
-			id: id,
-			width: size.0,
-			height: size.1
-		}
-	}
-
-    /// Repeat mode texture wrap
-    pub fn repeat_mode(&self) {
-        self.active(0);
-        unsafe {
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-        }
-        self.unbind();
-    }
-
-    /// Linear mode for filter
-    pub fn linear_mode(&self) {
-        self.active(0);
-        unsafe {
-		    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
-		    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
-        }
-        self.unbind();
-    }
-
-    /// Create an empty texture
-    pub fn empty() -> Texture {
-        let mut id = 0;
-        unsafe { gl::GenTextures(1, &mut id); };
-        Texture {
-            id: id,
-            width: 0,
-            height: 0
-        }
     }
 
     /// Update the data of the texture
@@ -152,15 +152,27 @@ impl Texture {
         }
     }
 
-	/// Simple getter for width
-	pub fn get_width(&self) -> u32 {
-		self.width
-	}
+//------------------------------UTILS---------------------------------//
 
-	/// Simple getter for height
-	pub fn get_height(&self) -> u32 {
-		self.height
-	}
+    /// Repeat mode texture wrap
+    pub fn repeat_mode(&self) {
+        self.active(0);
+        unsafe {
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+        }
+        self.unbind();
+    }
+
+    /// Linear mode for filter
+    pub fn linear_mode(&self) {
+        self.active(0);
+        unsafe {
+		    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+		    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+        }
+        self.unbind();
+    }
 
     pub fn unbind(&self) {
         unsafe {
@@ -175,11 +187,23 @@ impl Texture {
         }
     }
 
-	unsafe fn set_texture_parameter() {
+	unsafe fn default_param() {
 		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
 		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
 		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
 		gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+	}
+
+    //-----------------------------------GETTER--------------------------------------//
+
+	/// Simple getter for width
+	pub fn width(&self) -> u32 {
+		self.width
+	}
+
+	/// Simple getter for height
+	pub fn height(&self) -> u32 {
+		self.height
 	}
 }
 
@@ -193,7 +217,7 @@ impl Default for Texture {
 
             gl::BindTexture(gl::TEXTURE_2D, id);
 
-            Texture::set_texture_parameter();
+            Texture::default_param();
 
             gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32,
                         1, 1, 0, gl::RGBA,
