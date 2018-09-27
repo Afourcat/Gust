@@ -26,6 +26,7 @@ type Utf8Map = HashMap<u32, CharInfo>;
 
 /// The texture inside is a wide texture representing a font for a size x
 /// and map is the map of utf-8 value linked to his GraphicalChar
+#[derive(Debug)]
 struct GlyphMap {
     pub texture: Texture,
     pub map: Utf8Map,
@@ -41,20 +42,25 @@ impl GlyphMap {
 
     pub fn get_texture_rect
     (&self, width: u32, height: u32, size: u32) -> Rect<f32> {
-        Rect::new(0f32, 0f32, 0f32, 0f32)
+        // Iter over all element
+        for ref elem in self.map.iter() {
+            println!("ELEM: {:?}", elem);
+        }
+        Rect::new(0.0, 0.0, 0.0, 0.0)
     }
 
     /// Create a new texture from Utf8Map
-    pub fn update(&mut self) {
-        
+    pub fn update_texture(&mut self, char_info: &CharInfo) {
+        unimplemented!();
     }
 }
 
 /// rect: it's size
 /// texCoord: coord of the texture inside the parent texture
+#[derive(Debug)]
 pub struct CharInfo {
     rect: Rect<f32>,
-    texCoord: Rect<f32>,
+    tex_coord: Rect<f32>,
     advance: f32
 }
 
@@ -63,7 +69,7 @@ impl CharInfo {
     pub fn new() -> CharInfo {
         CharInfo {
             rect: Default::default(),
-            texCoord: Default::default(),
+            tex_coord: Default::default(),
             advance: 0.0
         }
     }
@@ -71,7 +77,7 @@ impl CharInfo {
     pub fn from_data(rect: Rect<f32>, tex: Rect<f32>, adv: f32) -> CharInfo {
         CharInfo {
             rect: rect,
-            texCoord: tex,
+            tex_coord: tex,
             advance: adv
         }
     }
@@ -120,23 +126,35 @@ impl Font {
 
     fn create_glyph<'a>(&'a mut self, size: u32, code: u32) -> &'a CharInfo {
         {
+            // Get the glyph map
             let glyph_map = self.map.entry(size).or_insert(GlyphMap::new());
+            
+            // Load the right glyph
             self.face.load_char(size as usize, LoadFlag::DEFAULT).unwrap();
 
+            // Create the new Charinfo that will be inserted
             let mut to_insert = CharInfo::new();
 
+            // Get the glyph and informations
             let bitmap = self.face.glyph().bitmap();
             to_insert.rect.width = (bitmap.width() + 2) as f32;
             to_insert.rect.height = (bitmap.rows() + 2) as f32;
 
-            to_insert.texCoord = glyph_map.get_texture_rect(
+            // Look at the glyph texture and try to find a place inside it
+            to_insert.tex_coord = glyph_map.get_texture_rect(
                 size, to_insert.rect.width as u32, to_insert.rect.height as u32);
 
+            // Insert texture
+            glyph_map.update_texture(&to_insert);
+
+            // Insert the new glyph map into the hasmap
             glyph_map.map.insert(
                 code,
                 to_insert
             );
         }
+        
+        // Return the newly inserted charinfo
         self.get_map_mut()[&size].map.get(&code).unwrap()
     }
 
@@ -153,4 +171,3 @@ impl Font {
         }
     }
 }
-

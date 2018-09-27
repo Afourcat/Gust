@@ -2,14 +2,15 @@
 //! Importing, Loading, Pushing into OpenGl
 //! I'm using image crate that is really useful
 
-extern crate image;
 
-use self::image::{DynamicImage};
+use image::{DynamicImage};
+use image;
 use gl;
 use gl::types::*;
 use std::mem;
 use std::os::raw::c_void;
 use ::Vector;
+use std::error::Error;
 
 /// # Texture structure
 /// A texture is an id inside openGL that can contain a array of byte
@@ -67,6 +68,7 @@ impl Texture {
         }
     }
 
+    /// Create a texture from an image
     pub fn from_image(img: DynamicImage) -> Texture {
         let mut id = 0;
         let mut size = (0, 0);
@@ -103,10 +105,12 @@ impl Texture {
     }
 
 	/// Create new texture from file path
-	pub fn from_path(path_to_file: &str) -> Texture {
-		let img = image::open(path_to_file).unwrap();
-
-		Texture::from_image(img)
+	pub fn from_path(path_to_file: &str) -> Result<Texture,TextureError> {
+		if let Ok(img) = image::open(path_to_file) {
+		    Ok(Texture::from_image(img))
+        } else {
+            Err(TextureError::FileError)
+        }
 	}
 
     /// Create a texture with a
@@ -133,8 +137,49 @@ impl Texture {
         id
     }
 
+    /// Update a block of a texture with an offset and a size
+    /// return TextureError if the sizes are not correct. 
+    pub fn update_block(
+        &mut self,
+        data: Vec<u8>,
+        sizes: Vector<u32>,
+        pos: Vector<u32>,
+        rgb_mode: RgbMode
+    ) -> Result<(), TextureError> {
+        
+        // If sizes are fucked up return an error
+        if pos.x + sizes.x >= self.width || pos.y + sizes.y >= self.height {
+            Err(TextureError::UpdateSize)
+        } else {
+
+            // Bind the texture then give it to opengl
+            unsafe {
+                gl::BindTexture(gl::TEXTURE_2D, self.id);
+                gl::TexSubImage2D(
+                    gl::TEXTURE_2D,
+                    0,
+                    pos.x as i32,
+                    pos.y as i32,
+                    sizes.x as i32,
+                    sizes.y as i32,
+                    rgb_mode as u32,
+                    gl::UNSIGNED_BYTE,
+                    data.as_ptr() as *const c_void
+                    );
+                gl::BindTexture(gl::TEXTURE_2D, 0);
+            }
+            Ok(())
+        }
+    }
+
     /// Update the data of the texture
-    pub fn update(&mut self, data: Vec<u8>, sizes: Vector<i32>, rgb_mode: RgbMode) {
+    pub fn update(
+        &mut self,
+        data: Vec<u8>,
+        sizes: Vector<i32>,
+        rgb_mode: RgbMode
+    ) {
+        
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, self.id);
             gl::TexImage2D(
@@ -150,6 +195,9 @@ impl Texture {
             );
             gl::BindTexture(gl::TEXTURE_2D, 0);
         }
+
+        self.width = sizes.x as u32;
+        self.height= sizes.y as u32;
     }
 
 //------------------------------UTILS---------------------------------//
@@ -245,5 +293,32 @@ impl RgbMode {
             RgbMode::RGBA => { gl::RGBA },
             RgbMode::RGB => { gl::RGB },
         }
+    }
+}
+
+#[derive(Debug)]
+pub enum TextureError {
+    UpdateSize,
+    FileError   
+}
+
+use std::fmt;
+
+impl fmt::Display for TextureError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            TextureError::UpdateSize => {
+                write!(f, "Error while updating texture: Sizes are not okay with this texture.")
+            },
+            TextureError::FileError => {
+                write!(f, "Error while openning given file")
+            }
+        }
+    }
+}
+
+impl Error for TextureError {
+    fn cause(&self) -> Option<&Error> {
+        None
     }
 }

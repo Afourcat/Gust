@@ -23,7 +23,7 @@ use std::collections::HashMap;
 fn main()
 {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
-    let tex_dirt = Rc::new(Texture::new("examples/texture/Dirt.png"));
+    let tex_dirt = Rc::new(Texture::from_path("examples/texture/Dirt.png").unwrap());
     let event_handler = EventHandler::new(&window);
     let mut sprites = HashMap::new();
     sprites.insert("dirt_1", Sprite::from(&tex_dirt));

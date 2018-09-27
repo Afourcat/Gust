@@ -19,7 +19,7 @@ use rect::Rect;
 /// ```Rust
 /// use texture::Texture;
 /// use sprite::Sprite;
-/// 
+///
 /// let texture = Texture::new("assets/texture.jpg");
 /// let sprite = Sprite::from_texture(Rc::clone(&texutre));
 /// sprite.rotate(45.0);
@@ -260,7 +260,7 @@ impl Drawable for Sprite {
             }
 
             self.model.append_nonuniform_scaling_mut(
-                &Vector3::new(self.scale.x, self.scale.y, 0.0)    
+                &Vector3::new(self.scale.x, self.scale.y, 0.0)
             );
             self.need_update = false;
         }
