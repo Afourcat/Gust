@@ -16,6 +16,8 @@ use self::ft::{
 use rect::Rect;
 use texture::Texture;
 use std::collections::HashMap;
+use super::Vector;
+use std::fmt;
 
 extern crate freetype as ft;
 
@@ -29,29 +31,86 @@ type Utf8Map = HashMap<u32, CharInfo>;
 #[derive(Debug)]
 struct GlyphMap {
     pub texture: Texture,
+    pub rows: Vec<Row>,
     pub map: Utf8Map,
 }
 
+/// Give information about the texture used
+#[derive(Debug,Clone)]
+struct Row {
+    pub width: u32,
+    pub height: u32,
+    pub pos: u32
+}
+
+impl Row {
+    pub fn new(height: u32, pos: u32) -> Row {
+        Row {
+            width: 0,
+            height: height,
+            pos: pos
+        }
+    }
+}
+
+/// Contain the global texture and texture information
 impl GlyphMap {
     pub fn new() -> GlyphMap {
         GlyphMap {
-            texture: Texture::new(),
+            texture: Texture::from_size(Vector::new(500, 300)),
+            rows: Vec::with_capacity(1),
             map: Utf8Map::with_capacity(10)
         }
     }
 
     pub fn get_texture_rect
-    (&self, width: u32, height: u32, size: u32) -> Rect<f32> {
+    (&mut self, width: u32, height: u32, _size: u32) -> Rect<u32> {
+        let mut ret: Option<Rect<u32>> = None;
         // Iter over all element
-        for ref elem in self.map.iter() {
-            println!("ELEM: {:?}", elem);
+        for mut row in self.rows.iter_mut() {
+            if row.width + width  > self.texture.width() {
+                println!("Cannot get texture cause width = {} and row.width +
+                width = {}.", self.texture.width(), row.width + width);
+                continue;
+            } else if row.height < height {
+                println!("The letter is to high for this row.");
+                continue;
+            }
+            ret = Some(Rect::new(row.width, row.height, width, height));
+            row.width += width + 1;
         }
-        Rect::new(0.0, 0.0, 0.0, 0.0)
+
+        if let Some(rect) = ret {
+            // Return the rect
+            rect
+        } else {
+            // Create a new row
+            let mut last_pos = 0;
+
+            // Get the last y pos of the texture
+            for e in self.rows.iter() {
+                last_pos += e.height;
+            }
+            if last_pos + height + 10 > self.texture.height() {
+                let mut new = Texture::from_size(
+                    Vector::new(self.texture.width() * 2, self.texture.height() * 2)
+                );
+                new.update_from_texture(&self.texture);
+                self.texture = new;
+                println!("NEW TEXTURE !");
+            }
+            println!("last_pos = {}", last_pos);
+            let mut new_row = Row::new(height, last_pos);
+            let new_ret = Rect::new(new_row.width, new_row.height, width, height);
+            new_row.width += width + 1;
+            self.rows.push(new_row);
+            new_ret
+        }
     }
 
     /// Create a new texture from Utf8Map
-    pub fn update_texture(&mut self, char_info: &CharInfo) {
-        unimplemented!();
+    pub fn update_texture(&mut self, _char_info: &CharInfo) {
+        // Check if there is a place
     }
 }
 
@@ -59,9 +118,9 @@ impl GlyphMap {
 /// texCoord: coord of the texture inside the parent texture
 #[derive(Debug)]
 pub struct CharInfo {
-    rect: Rect<f32>,
-    tex_coord: Rect<f32>,
-    advance: f32
+    rect: Rect<u32>,
+    tex_coord: Rect<u32>,
+    advance: u32
 }
 
 impl CharInfo {
@@ -70,11 +129,12 @@ impl CharInfo {
         CharInfo {
             rect: Default::default(),
             tex_coord: Default::default(),
-            advance: 0.0
+            advance: 0
         }
     }
 
-    pub fn from_data(rect: Rect<f32>, tex: Rect<f32>, adv: f32) -> CharInfo {
+    pub fn from_data
+    (rect: Rect<u32>, tex: Rect<u32>, adv: u32) -> CharInfo {
         CharInfo {
             rect: rect,
             tex_coord: tex,
@@ -91,9 +151,21 @@ pub struct Font {
     map: FontMap
 }
 
+impl fmt::Display for Font {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Face: {:?}", self.face)
+    }
+}
+
+impl fmt::Debug for Font {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Face: {:?}", self.face)
+    }
+}
+
 impl Font {
     /// Create a new font from a filepath
-    pub fn new(path: &str) -> Option<Font> {
+    pub fn from_path(path: &str) -> Option<Font> {
         let lib = Library::init().unwrap();
         match lib.new_face(path, 0) {
             Err(err) => {
@@ -101,6 +173,7 @@ impl Font {
                 None
             },
             Ok(face) => {
+                face.set_char_size(40 * 64, 0, 50, 0).unwrap();
                 Some(Font {
                     face: face,
                     lib: lib,
@@ -113,7 +186,7 @@ impl Font {
 
     fn glyph_exist(&mut self, size: u32, code: u32) -> bool {
         if let Some(ref mut map_size) = self.map.get(&size) {
-            if let Some(ref mut char_info) = map_size.map.get(&code) {
+            if let Some(ref mut _char_info) = map_size.map.get(&code) {
                 return true;
             }
         }
@@ -128,24 +201,23 @@ impl Font {
         {
             // Get the glyph map
             let glyph_map = self.map.entry(size).or_insert(GlyphMap::new());
-            
-            // Load the right glyph
-            self.face.load_char(size as usize, LoadFlag::DEFAULT).unwrap();
 
+            // Load the right glyph
+            self.face.load_char(code as usize, LoadFlag::DEFAULT).unwrap();
+
+            let metrics = self.face.glyph().metrics();
+            let bitmap = self.face.glyph().bitmap();
             // Create the new Charinfo that will be inserted
             let mut to_insert = CharInfo::new();
 
             // Get the glyph and informations
-            let bitmap = self.face.glyph().bitmap();
-            to_insert.rect.width = (bitmap.width() + 2) as f32;
-            to_insert.rect.height = (bitmap.rows() + 2) as f32;
+            to_insert.rect.width = (metrics.width + 2) as u32;
+            to_insert.rect.height = (metrics.height + 2) as u32;
+            to_insert.advance = (metrics.vertAdvance + 2) as u32;
 
             // Look at the glyph texture and try to find a place inside it
             to_insert.tex_coord = glyph_map.get_texture_rect(
-                size, to_insert.rect.width as u32, to_insert.rect.height as u32);
-
-            // Insert texture
-            glyph_map.update_texture(&to_insert);
+                size, to_insert.rect.width, to_insert.rect.height);
 
             // Insert the new glyph map into the hasmap
             glyph_map.map.insert(
@@ -153,7 +225,7 @@ impl Font {
                 to_insert
             );
         }
-        
+
         // Return the newly inserted charinfo
         self.get_map_mut()[&size].map.get(&code).unwrap()
     }

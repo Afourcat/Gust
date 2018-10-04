@@ -21,28 +21,25 @@
 //! Text is drawable so you can use targer.draw(text);
 //! after initialising it.
 //!
-use rect::Rect;
 use texture::Texture;
 use draw::{Drawable,Drawer,Context,Movable};
 use ::{Point,Vector};
 use nalgebra;
-use std::{
-    rc::Rc,
-    path::Path,
-    collections::HashMap,
-};
+use std::rc::Rc;
 use font::Font;
+use std::cell::RefCell;
 
 extern crate freetype as ft;
 
+#[derive(Debug)]
 pub struct Text {
-    font: Rc<Font>,
+    font: Rc<RefCell<Font>>,
     content: String,
     actual_size: u32
 }
 
 impl Text {
-    pub fn new(font: &Rc<Font>) -> Text {
+    pub fn new(font: &Rc<RefCell<Font>>) -> Text {
         Text {
             font: Rc::clone(font),
             content: String::new(),
@@ -65,56 +62,83 @@ impl Text {
     pub fn size(&self) -> u32 {
         self.actual_size
     }
+
+    pub fn draw_test<T: Drawer>(&mut self, _target: &T) {
+        for elem in self.content.as_str().chars() {
+            self.font
+                .try_borrow_mut()
+                .unwrap()
+                .glyph(self.actual_size, elem as u32);
+        }
+    }
 }
 
 impl Movable for Text {
-    fn contain<T: nalgebra::Scalar + From<f32> + Into<f32>>(&self, point: Point<T>) -> bool {
+
+    fn contain<T>(&self, _point: Point<T>) -> bool
+    where
+        T: nalgebra::Scalar + From<f32> + Into<f32> {
         true
     }
 
-    fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, offset: Vector<T>) {
-
+    fn translate<T>(&mut self, _offset: Vector<T>)
+    where
+        T: nalgebra::Scalar + From<f32> + Into<f32> {
+        unimplemented!();
     }
 
-    fn set_position<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, pos: Vector<T>) {
-
+    fn set_position<T>(&mut self, _pos: Vector<T>)
+    where
+        T: nalgebra::Scalar + From<f32> + Into<f32> {
+        unimplemented!();
     }
 
     fn get_position(&self) -> Vector<f32> {
         Vector::new(0.0, 0.0)
     }
 
-    fn scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, factor: Vector<T>) {
-
+    fn scale<T>(&mut self, _factor: Vector<T>)
+    where
+        T: nalgebra::Scalar + From<f32> + Into<f32> {
+        unimplemented!();
     }
 
-    fn set_scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
-
+    fn set_scale<T>(&mut self, _vec: Vector<T>)
+    where
+        T: nalgebra::Scalar + From<f32> + Into<f32> {
+        unimplemented!();
     }
 
     fn get_scale(&self) -> Vector<f32> {
         Vector::new(0.0, 0.0)
     }
 
-    fn rotate<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) { 
-
+    fn rotate<T>(&mut self, _angle: T)
+    where
+        T: nalgebra::Scalar + Into<f32> {
+        unimplemented!();
     }
 
-    fn set_rotation<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
-
+    fn set_rotation<T>(&mut self, _angle: T)
+    where
+        T: nalgebra::Scalar + Into<f32> {
+        unimplemented!();
     }
 
     fn get_rotation(&self) -> f32 {
         0.0
     }
 
-    fn set_origin<T: nalgebra::Scalar + Into<f32>>(&mut self, origin: Vector<T>) {
-
+    fn set_origin<T>(&mut self, _origin: Vector<T>)
+    where
+        T: nalgebra::Scalar + Into<f32> {
+            unimplemented!();
     }
 
     fn get_origin(&self) -> Vector<f32> {
         Vector::new(0.0, 0.0)
     }
+
 }
 
 impl Drawable for Text {
@@ -122,14 +146,15 @@ impl Drawable for Text {
 
     }
 
-    fn draw<T: Drawer>(&self, target: &mut T) {
+    fn draw<T: Drawer>(&self, _target: &mut T) {
     }
 
-    fn draw_with_context<T: Drawer>(&self, target: &mut T, context: &mut Context) {
+    fn draw_with_context<T: Drawer>
+    (&self, _target: &mut T, _context: &mut Context) {
         unimplemented!();
     }
 
-    fn set_texture(&mut self, texture: &Rc<Texture>) {
+    fn set_texture(&mut self, _texture: &Rc<Texture>) {
         unimplemented!();
     }
 }

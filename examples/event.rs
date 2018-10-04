@@ -44,7 +44,7 @@ fn main()
 }
 
 fn draw(window: &mut Window, sprites: &mut HashMap<&'static str,Sprite>) {
-    for (name, sprite) in sprites.iter_mut() { sprite.update(); }
+    for (_name, sprite) in sprites.iter_mut() { sprite.update(); }
 
     window.clear();
     window.draw(&sprites["dirt_1"]);

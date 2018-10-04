@@ -12,12 +12,12 @@ fn main()
 {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
     let vert_arr = VertexArray::new(vec![
-            Vertex::new(Vector::new(800.0, 400.0), Vector::new(0.0, 0.0), Color::new(0.0, 1.0, 0.5)),
-            Vertex::new(Vector::new(1200.0, 700.0), Vector::new(0.0, 0.0), Color::new(0.0, 1.0, 0.5)),
-            Vertex::new(Vector::new(1000.0, 300.0), Vector::new(0.0, 0.0), Color::new(0.0, 1.0, 0.5)),
-            Vertex::new(Vector::new(800.0, 100.0), Vector::new(0.0, 0.0), Color::new(0.0, 1.0, 0.5)),
-            Vertex::new(Vector::new(600.0, 300.0), Vector::new(0.0, 0.0), Color::new(0.0, 1.0, 0.5)),
-            Vertex::new(Vector::new(400.0, 700.0), Vector::new(0.0, 0.0), Color::new(0.0, 1.0, 0.5)),
+            Vertex::new(Vector::new(800.0, 400.0), Vector::new(0.0, 0.0), Color::new(0.0, 1.0, 0.0)),
+            Vertex::new(Vector::new(1200.0, 700.0), Vector::new(0.0, 0.0), Color::new(0.0, 1.0, 1.0)),
+            Vertex::new(Vector::new(1000.0, 300.0), Vector::new(0.0, 0.0), Color::new(0.0, 0.2, 1.0)),
+            Vertex::new(Vector::new(800.0, 100.0), Vector::new(0.0, 0.0), Color::new(1.0, 1.0, 0.5)),
+            Vertex::new(Vector::new(600.0, 300.0), Vector::new(0.0, 0.0), Color::new(0.5, 0.2, 0.1)),
+            Vertex::new(Vector::new(400.0, 700.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
     ]);
     let vert_buf = VertexBuffer::new(Primitive::TriangleFan, vert_arr);
     let event_handler = EventHandler::new(&window);
