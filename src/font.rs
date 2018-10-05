@@ -251,24 +251,27 @@ impl Font {
                     panic!("Error while creating glyph");
                 },
                 PixelMode::Mono => {
+
+                    // If it's mono just change the alpha of each pixel to make it black or white
                     for y in 0..height {
                         for x in 0..width {
                             let index = ((x + y * width) * 4 + 3) as usize;
                             let pix = pixels[(offset + x / 8) as usize];
 
-                            data[index] = if (pix & (1 << (7 - (x % 8)))) == 1 {
-                                255 
-                            } else {
-                                0 
-                            };
+                            data[index] = if (pix & (1 << (7 - (x % 8)))) == 1 { 255 } else { 0 };
                         }
                         offset += bitmap.pitch();
                     }
                 },
                 _ => {
+                    // Just change the alpha to make thw whole blakc or white
                     for y in 0..height {
                         for x in 0..width {
-                            data[((x + y * width) * 4 + 3) as usize] = pixels[(offset + x / 8) as usize]
+                            let index = ((x + y * width) * 4 + 3) as usize;
+                            let pix = pixels[(offset + x / 8) as usize];
+
+                            data[index] = pix;
+                            // data[((x + y * width) * 4 + 3) as usize] = pixels[(offset + x / 8) as usize]
                         }
                         offset += bitmap.pitch();
                     }
