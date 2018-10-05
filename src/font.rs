@@ -85,21 +85,21 @@ impl GlyphMap {
             rect
         } else {
             // Create a new row
-            let mut last_pos = 0;
 
+            // TODO See todo behind
             // Get the last y pos of the texture
-            for e in self.rows.iter() {
-                last_pos += e.height;
-            }
+            //for e in self.rows.iter() {
+            //    last_pos += e.height;
+            //}
+            // TODO -> TEST
+            let last_pos = self.rows.iter().map(|x| x.height).sum();
             if last_pos + height + 10 > self.texture.height() {
                 let mut new = Texture::from_size(
                     Vector::new(self.texture.width() * 2, self.texture.height() * 2)
                 );
                 new.update_from_texture(&self.texture);
                 self.texture = new;
-                println!("NEW TEXTURE !");
             }
-            println!("last_pos = {}", last_pos);
             let mut new_row = Row::new(height, last_pos);
             let new_ret = Rect::new(new_row.width, new_row.height, width, height);
             new_row.width += width + 1;

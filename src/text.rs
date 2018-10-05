@@ -63,6 +63,10 @@ impl Text {
         self.actual_size
     }
 
+    pub fn add_to_buffer(&mut self, char_info: CharInfo, pos: Vector<u32>) {
+        unimplemented!();
+    }
+
     pub fn draw_test<T: Drawer>(&mut self, _target: &T) {
         for elem in self.content.as_str().chars() {
             self.font
