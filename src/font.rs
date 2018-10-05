@@ -11,13 +11,17 @@ use self::ft::{
         Face,
         LoadFlag
     },
-    bitmap::Bitmap,
+    bitmap::{Bitmap,PixelMode},
+
 };
 use rect::Rect;
-use texture::Texture;
-use std::collections::HashMap;
+use texture::{Texture,RgbMode};
 use super::Vector;
-use std::fmt;
+use std::{
+    fmt,
+    error::Error,
+    collections::HashMap
+};
 
 extern crate freetype as ft;
 
@@ -93,7 +97,7 @@ impl GlyphMap {
             //}
             // TODO -> TEST
             let last_pos = self.rows.iter().map(|x| x.height).sum();
-            if last_pos + height + 10 > self.texture.height() {
+            while last_pos + height + 10 > self.texture.height() || width > self.texture.width() {
                 let mut new = Texture::from_size(
                     Vector::new(self.texture.width() * 2, self.texture.height() * 2)
                 );
@@ -101,7 +105,7 @@ impl GlyphMap {
                 self.texture = new;
             }
             let mut new_row = Row::new(height, last_pos);
-            let new_ret = Rect::new(new_row.width, new_row.height, width, height);
+            let new_ret = Rect::new(new_row.width, last_pos, width, height);
             new_row.width += width + 1;
             self.rows.push(new_row);
             new_ret
@@ -109,8 +113,15 @@ impl GlyphMap {
     }
 
     /// Create a new texture from Utf8Map
-    pub fn update_texture(&mut self, _char_info: &CharInfo) {
-        // Check if there is a place
+    pub fn update_texture
+    (&mut self, char_info: &CharInfo, data: Vec<u8>) -> Result<(), Box<Error>> {
+        self.texture.update_block(
+            data,
+            Vector::new(char_info.tex_coord.width, char_info.tex_coord.height),
+            Vector::new(char_info.tex_coord.left, char_info.tex_coord.top),
+            RgbMode::RGBA
+        )?;
+        Ok(())
     }
 }
 
@@ -197,13 +208,13 @@ impl Font {
         &mut self.map
     }
 
-    fn create_glyph<'a>(&'a mut self, size: u32, code: u32) -> &'a CharInfo {
+    fn create_glyph<'a>(&'a mut self, size: u32, code: u32) -> Result<&'a CharInfo, Box<Error>> {
         {
             // Get the glyph map
             let glyph_map = self.map.entry(size).or_insert(GlyphMap::new());
 
             // Load the right glyph
-            self.face.load_char(code as usize, LoadFlag::DEFAULT).unwrap();
+            self.face.load_char(code as usize, LoadFlag::RENDER)?;
 
             let metrics = self.face.glyph().metrics();
             let bitmap = self.face.glyph().bitmap();
@@ -218,6 +229,54 @@ impl Font {
             // Look at the glyph texture and try to find a place inside it
             to_insert.tex_coord = glyph_map.get_texture_rect(
                 size, to_insert.rect.width, to_insert.rect.height);
+    
+            let height = bitmap.rows();
+            let width = bitmap.width();
+
+            let mut slice = vec![255; (height * width * 4) as usize];
+
+            for ref mut elem in slice.chunks_mut(4) {
+                elem[3] = 0;
+            }
+
+            let mut data = Vec::from(slice);
+
+            
+            // fill pixel buffer
+            println!("Buffer {:?}", bitmap.buffer());
+            let pixels: Vec<u8> = Vec::from(bitmap.buffer());
+            let mut offset = 0;
+            match bitmap.pixel_mode().unwrap() {
+                PixelMode::None => {
+                    panic!("Error while creating glyph");
+                },
+                PixelMode::Mono => {
+                    for y in 0..height {
+                        for x in 0..width {
+                            let index = ((x + y * width) * 4 + 3) as usize;
+                            let pix = pixels[(offset + x / 8) as usize];
+
+                            data[index] = if (pix & (1 << (7 - (x % 8)))) == 1 {
+                                255 
+                            } else {
+                                0 
+                            };
+                        }
+                        offset += bitmap.pitch();
+                    }
+                },
+                _ => {
+                    for y in 0..height {
+                        for x in 0..width {
+                            data[((x + y * width) * 4 + 3) as usize] = pixels[(offset + x / 8) as usize]
+                        }
+                        offset += bitmap.pitch();
+                    }
+                }
+            }
+                
+            // Update the texture at the right position
+            glyph_map.update_texture(&to_insert, data)?;
 
             // Insert the new glyph map into the hasmap
             glyph_map.map.insert(
@@ -227,7 +286,7 @@ impl Font {
         }
 
         // Return the newly inserted charinfo
-        self.get_map_mut()[&size].map.get(&code).unwrap()
+        Ok(self.get_map_mut()[&size].map.get(&code).unwrap())
     }
 
     /// Check if the glyph exist:
@@ -239,7 +298,7 @@ impl Font {
         if glyph_exist {
             self.map.get(&size).unwrap().map.get(&code).unwrap()
         } else {
-            self.create_glyph(size, code)
+            self.create_glyph(size, code).unwrap()
         }
     }
 }

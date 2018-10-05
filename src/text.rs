@@ -22,11 +22,11 @@
 //! after initialising it.
 //!
 use texture::Texture;
+use font::{Font,CharInfo};
 use draw::{Drawable,Drawer,Context,Movable};
 use ::{Point,Vector};
 use nalgebra;
 use std::rc::Rc;
-use font::Font;
 use std::cell::RefCell;
 
 extern crate freetype as ft;

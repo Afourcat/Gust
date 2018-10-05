@@ -172,6 +172,11 @@ impl Texture {
         pos: Vector<u32>,
         rgb_mode: RgbMode
     ) -> Result<(), TextureError> {
+        
+        println!("SIZES {:?}", sizes);
+        println!("POS {:?}", pos);
+        println!("Mode {:?}", rgb_mode);
+        println!("TEXTSIZES {:?}", Vector::new(self.width, self.height));
 
         // If sizes are fucked up return an error
         if pos.x + sizes.x >= self.width || pos.y + sizes.y >= self.height {
