@@ -31,9 +31,10 @@ fn main()
     window.set_clear_color(Color::new(0.0, 0.0, 1.0));
     window.enable_cursor();
     while window.is_open() {
+        text.update();
 
         window.clear();
-        text.draw_test(&window);
+        window.draw(&text);
         window.display();
     }
 }

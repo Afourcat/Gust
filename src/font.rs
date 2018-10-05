@@ -129,9 +129,9 @@ impl GlyphMap {
 /// texCoord: coord of the texture inside the parent texture
 #[derive(Debug)]
 pub struct CharInfo {
-    rect: Rect<u32>,
-    tex_coord: Rect<u32>,
-    advance: u32
+    pub rect: Rect<u32>,
+    pub tex_coord: Rect<u32>,
+    pub advance: u32
 }
 
 impl CharInfo {
@@ -302,6 +302,14 @@ impl Font {
             self.map.get(&size).unwrap().map.get(&code).unwrap()
         } else {
             self.create_glyph(size, code).unwrap()
+        }
+    }
+
+    pub fn texture(&self, font_size: u32) -> Result<&Texture,String> {
+        if let Some(t) = &self.map.get(&font_size) {
+            Ok(&t.texture)
+        } else {
+            Err(String::from("T'est serieux t'as pas update pti con"))
         }
     }
 }

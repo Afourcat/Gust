@@ -142,6 +142,14 @@ impl VertexArray {
 		}
     }
 
+    pub fn array(&self) -> &Vec<Vertex> {
+        &self.array
+    }
+
+    pub fn array_mut(&mut self) -> &mut Vec<Vertex> {
+        &mut self.array
+    }
+
     pub fn active(&self) {
         unsafe {
             gl::BindVertexArray(self.id);

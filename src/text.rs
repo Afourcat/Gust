@@ -23,11 +23,15 @@
 //!
 use texture::Texture;
 use font::{Font,CharInfo};
-use draw::{Drawable,Drawer,Context,Movable};
+use draw::{Drawable,Drawer,Context,Movable,BlendMode};
+use shader;
 use ::{Point,Vector};
 use nalgebra;
 use std::rc::Rc;
 use std::cell::RefCell;
+use vertex_buffer::{VertexBuffer,Primitive};
+use vertex::Vertex;
+use color::Color;
 
 extern crate freetype as ft;
 
@@ -35,7 +39,9 @@ extern crate freetype as ft;
 pub struct Text {
     font: Rc<RefCell<Font>>,
     content: String,
-    actual_size: u32
+    actual_size: u32,
+    vertex_buffer: VertexBuffer,
+    need_update: bool
 }
 
 impl Text {
@@ -43,7 +49,9 @@ impl Text {
         Text {
             font: Rc::clone(font),
             content: String::new(),
-            actual_size: 14
+            actual_size: 14,
+            vertex_buffer: VertexBuffer::default(),
+            need_update: true
         }
     }
 
@@ -65,15 +73,6 @@ impl Text {
 
     pub fn add_to_buffer(&mut self, char_info: CharInfo, pos: Vector<u32>) {
         unimplemented!();
-    }
-
-    pub fn draw_test<T: Drawer>(&mut self, _target: &T) {
-        for elem in self.content.as_str().chars() {
-            self.font
-                .try_borrow_mut()
-                .unwrap()
-                .glyph(self.actual_size, elem as u32);
-        }
     }
 }
 
@@ -147,15 +146,67 @@ impl Movable for Text {
 
 impl Drawable for Text {
     fn update(&mut self) {
+        
 
+        if !self.need_update {
+            return;
+        }
+        // For each elem create an entry
+        for elem in self.content.as_str().chars() {
+            let mut font_ref = self.font
+                        .try_borrow_mut()
+                        .unwrap();
+            let elem = font_ref.glyph(self.actual_size, elem as u32);
+
+            let padding = 0;
+
+            let left   = (elem.rect.left - padding) as f32;
+            let top    = (elem.rect.top - padding) as f32;
+            let right  = (elem.rect.left + elem.rect.width + padding) as f32;
+            let bottom = (elem.rect.top  + elem.rect.height + padding) as f32;
+    
+            let u1 = (elem.tex_coord.left - padding) as f32;
+            let v1 = (elem.tex_coord.top - padding) as f32;
+            let u2 = (elem.tex_coord.left + elem.tex_coord.width + padding) as f32;
+            let v2 = (elem.tex_coord.top  + elem.tex_coord.height + padding) as f32;
+
+
+            // Create vertex
+            let vertices = vec![
+                Vertex::new(Vector::new(left, top),     Vector::new(u1, v1), Color::white()),
+                Vertex::new(Vector::new(right, top),    Vector::new(u2, v1), Color::white()),
+                Vertex::new(Vector::new(left, bottom),  Vector::new(u1, v2), Color::white()),
+                Vertex::new(Vector::new(left, bottom),  Vector::new(u1, v2), Color::white()),
+                Vertex::new(Vector::new(right, top),    Vector::new(u2, v1), Color::white()),
+                Vertex::new(Vector::new(right, bottom), Vector::new(u2, v2), Color::white()),
+            ];
+            self.vertex_buffer.append(vertices);
+        }
     }
 
-    fn draw<T: Drawer>(&self, _target: &mut T) {
+    fn draw<T: Drawer>(&self, target: &mut T) {
+    
+        // If there is no text don't draw
+        if self.content.is_empty() {
+            return;
+        }
+
+        // Get the texture
+        let font_ref = self.font.try_borrow().unwrap();
+        let texture = font_ref.texture(self.actual_size).unwrap();
+
+        let mut context = Context::new(
+            Some(texture),
+            &*shader::DEFAULT_SHADER,
+            None,
+            BlendMode::Alpha
+        );
+
+        self.draw_with_context(target, &mut context)
     }
 
-    fn draw_with_context<T: Drawer>
-    (&self, _target: &mut T, _context: &mut Context) {
-        unimplemented!();
+    fn draw_with_context<T: Drawer> (&self, target: &mut T, context: &mut Context) {
+        self.vertex_buffer.draw_with_context(target, context)
     }
 
     fn set_texture(&mut self, _texture: &Rc<Texture>) {

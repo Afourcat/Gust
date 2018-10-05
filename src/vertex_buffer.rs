@@ -112,6 +112,10 @@ impl VertexBuffer {
 		vertex_buffer
 	}
 
+    pub fn append(&mut self, mut vertices: Vec<Vertex>) {
+        self.array.array_mut().append(&mut vertices)
+    }
+
     /// Get primitive type
     fn get_gl_type(prim: &Primitive) -> GLenum {
         match prim {
@@ -212,6 +216,12 @@ impl Index<usize> for VertexBuffer {
 impl IndexMut<usize> for VertexBuffer {
     fn index_mut<'a>(&'a mut self, index: usize) -> &'a mut Vertex {
         &mut self.array[index]
+    }
+}
+
+impl Default for VertexBuffer {
+    fn default() -> Self {
+        VertexBuffer::new(Primitive::Points, VertexArray::new(Vec::new()))
     }
 }
 
