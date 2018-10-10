@@ -3,7 +3,7 @@
 //! I'm using image crate that is really useful
 
 
-use image::{DynamicImage};
+use image::{DynamicImage,ImageBuffer};
 use image;
 use gl;
 use gl::types::*;
@@ -51,7 +51,7 @@ impl Texture {
 
     /// Create a texture from a raw data pointer needed for Font handling
     pub unsafe fn from_data
-    (data: *const c_void, mode: RgbMode, width: u32, height: u32) -> Texture {
+    (data: *mut c_void, mode: RgbMode, width: u32, height: u32) -> Texture {
         Texture {
             id: Self::create(data, mode.as_gl(), width as i32, height as i32),
             width: width as u32,
@@ -63,19 +63,12 @@ impl Texture {
     /// Create an empty texture with a size
     pub fn from_size(sizes: Vector<u32>) -> Texture {
         let mut id = 0;
+        let mut ve: Vec<u8> = vec![255; sizes.x as usize * sizes.y as usize * 4];
 
         unsafe {
             gl::GenTextures(1, &mut id);
             gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexSubImage2D(
-                gl::TEXTURE_2D,
-                0, 0,
-                gl::RGBA as i32,
-                sizes.x as i32, sizes.y as i32,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                vec![0; sizes.x as usize * sizes.y as usize * 4].as_ptr() as *const c_void
-            );
+            Self::from_data(ve.as_mut_ptr() as *mut c_void, RgbMode::RGBA, sizes.x, sizes.y);
             gl::BindTexture(gl::TEXTURE_2D, 0);
         };
         Texture {
@@ -138,25 +131,46 @@ impl Texture {
         }
     }
 
+    pub fn to_file(&self, path: &str) -> Result<(),&'static str> {
+        unsafe {
+            let data = self.get_data();
+            
+            let image = if self.rgb_mode == RgbMode::RGBA {
+                let image: image::RgbaImage = ImageBuffer::from_vec(self.width, self.height, data).unwrap();
+                image.save(path).unwrap();
+            } else {
+                let image: image::RgbImage = ImageBuffer::from_vec(self.width, self.height, data).unwrap();
+                image.save(path).unwrap();
+            };
+            Ok(())
+        }
+    }
+
     /// Create a texture with a
     fn create
-    (data: *const c_void, rgb_mode: GLenum, width: i32, height: i32) -> u32 {
+    (data: *mut c_void, rgb_mode: GLenum, width: i32, height: i32) -> u32 {
         let mut id = 0;
         unsafe {
             gl::GenTextures(1, &mut id);
             gl::BindTexture(gl::TEXTURE_2D, id);
-            Texture::default_param();
-            gl::TexImage2D(
+            gl::TexStorage2D(gl::TEXTURE_2D,
+                             1,
+                             if rgb_mode == gl::RGBA { gl::RGBA8 } else { gl::RGB8 },
+                             width,
+                             height
+            );
+            gl::TexSubImage2D(
                 gl::TEXTURE_2D,
                 0,
-                rgb_mode as i32,
+                0,
+                0,
                 width,
                 height,
-                0,
                 rgb_mode,
                 gl::UNSIGNED_BYTE,
                 data
             );
+            Texture::default_param();
             gl::GenerateMipmap(gl::TEXTURE_2D);
             gl::BindTexture(gl::TEXTURE_2D, 0);
         }
@@ -165,24 +179,25 @@ impl Texture {
 
     /// Update a block of a texture with an offset and a size
     /// return TextureError if the sizes are not correct.
-    pub fn update_block(
+    pub fn update_block<T, U>(
         &mut self,
-        data: Vec<u8>,
+        data: &[u8],
         sizes: Vector<u32>,
-        pos: Vector<u32>,
-        rgb_mode: RgbMode
-    ) -> Result<(), TextureError> {
-        
-        println!("SIZES {:?}", sizes);
-        println!("POS {:?}", pos);
-        println!("Mode {:?}", rgb_mode);
-        println!("TEXTSIZES {:?}", Vector::new(self.width, self.height));
-
+        pos: T,
+        rgb_mode: U
+    ) -> Result<(), TextureError> 
+    where 
+        T: Into<Option<Vector<u32>>>,
+        U: Into<Option<RgbMode>>
+    {
+        let pos = pos.into().unwrap_or(Vector::new(0, 0));
+        let rgb_mode = rgb_mode.into().unwrap_or(self.rgb_mode);
         // If sizes are fucked up return an error
-        if pos.x + sizes.x >= self.width || pos.y + sizes.y >= self.height {
+        if data.len() == 0 {
+            Ok(())
+        } else if pos.x + sizes.x > self.width || pos.y + sizes.y > self.height {
             Err(TextureError::UpdateSize)
         } else {
-
             // Bind the texture then give it to opengl
             unsafe {
                 gl::BindTexture(gl::TEXTURE_2D, self.id);
@@ -193,11 +208,20 @@ impl Texture {
                     pos.y as i32,
                     sizes.x as i32,
                     sizes.y as i32,
-                    rgb_mode as u32,
+                    rgb_mode.as_gl(),
                     gl::UNSIGNED_BYTE,
-                    data.as_ptr() as *const c_void
-                    );
+                    data as *const _ as *const c_void
+                    //mem::transmute(data.as_ptr())
+                );
+                let a = gl::GetError();
+                match a {
+                    gl::INVALID_ENUM => {println!("SALUT");},
+                    gl::NO_ERROR => {println!("TRKL");},
+                    _ => {println!("AUTRE");}
+                }
+                println!("{:?}", a);
                 gl::BindTexture(gl::TEXTURE_2D, 0);
+                gl::Flush();
             }
             Ok(())
         }
@@ -211,63 +235,128 @@ impl Texture {
             RgbMode::RGB => {
                 (self.height * self.width * 3) as usize
             }
-            _ => { panic!("Da fuck !") }
         }
     }
 
-    pub fn update_from_texture(&mut self, texture: &Texture) {
-        let size = texture.get_rawsize();
-        let data: Vec<u8> = Vec::with_capacity(size);
+    /// Unsafe for now
+    pub unsafe fn get_data(&self) -> Vec<u8> {
+        let size = self.get_rawsize();
+        let mut data: Vec<u8> = Vec::with_capacity(size);
 
-        if self.rgb_mode != texture.rgb_mode {
-            panic!("Try to assemble texture with different rgb_mode");
-        }
-        unsafe {
-            gl::GetTextureImage(
-                self.id,
+        println!("size {}", size);
+        if size == 0 { return Vec::new(); }
+        if true {
+            data.set_len(size);
+            gl::BindTexture(gl::TEXTURE_2D, self.id);
+            gl::GetTexImage(
+                gl::TEXTURE_2D,
                 0,
                 self.rgb_mode.as_gl(),
                 gl::UNSIGNED_BYTE,
-                size as i32,
-                data.as_ptr() as *mut c_void
+                data.as_mut_ptr() as *mut c_void
             );
+            gl::BindTexture(gl::TEXTURE_2D, 0);
+            return data;
+        } else {
+            let mut old = 0;
+            let mut new = 0;
+            let data: &mut [u8] = &mut [0];
+
+            gl::GenFramebuffers(1, &mut new);
+            gl::GetIntegerv(gl::FRAMEBUFFER_BINDING, &mut old);
+            gl::BindFramebuffer(gl::FRAMEBUFFER, new);
+            gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0,
+                gl::TEXTURE_2D, self.id, 0);
+            gl::ReadPixels(0, 0, self.width as i32, self.height as i32, self.rgb_mode.as_gl(),
+                gl::UNSIGNED_BYTE, mem::transmute(&mut data[0]));
+            gl::DeleteFramebuffers(1, &new);
+            gl::BindFramebuffer(gl::FRAMEBUFFER, old as u32);
+            return Vec::from(data);
         }
-        let h = self.height;
-        let w = self.width;
-        let mode = self.rgb_mode;
-        self.update(
-            data,
-            Vector::new(
-                w as i32,
-                h as i32
-            ),
-            mode
-        );
+    }
+
+    /// Two version for know using framebuffer
+    /// Will be another version created
+    pub fn update_from_texture(&mut self, texture: &Texture, pos: Vector<u32>) {
+
+        // TRYING FRAMEBUFFER
+        if false {
+            let mut read: i32 = 0;
+            let mut draw: i32 = 0;
+
+            unsafe {
+                gl::GetIntegerv(gl::READ_FRAMEBUFFER_BINDING, &mut read);
+                gl::GetIntegerv(gl::DRAW_FRAMEBUFFER_BINDING, &mut draw);
+            }
+
+            let mut source_frame = 0;
+            let mut dest_frame = 0;
+
+            unsafe {
+                gl::GenFramebuffers(1, &mut source_frame);
+                gl::GenFramebuffers(1, &mut dest_frame);
+
+                gl::BindFramebuffer(gl::READ_FRAMEBUFFER, source_frame);
+                gl::FramebufferTexture2D(gl::READ_FRAMEBUFFER, gl::COLOR_ATTACHMENT0,
+                                         gl::TEXTURE_2D, texture.id, 0);
+
+                gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, dest_frame);
+                gl::FramebufferTexture2D(gl::DRAW_FRAMEBUFFER, gl::COLOR_ATTACHMENT0,
+                                         gl::TEXTURE_2D, self.id, 0);
+
+                gl::BlitFramebuffer(
+                    0, 0, texture.width as i32, texture.height as i32,
+                    pos.x as i32, pos.y as i32,
+                    (pos.x + texture.width) as i32, (pos.y + texture.height) as i32,
+                    gl::COLOR_BUFFER_BIT, gl::NEAREST
+                );
+
+                gl::BindFramebuffer(gl::READ_FRAMEBUFFER, read as u32);
+                gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, draw as u32);
+
+                gl::BindTexture(gl::TEXTURE_2D, self.id);
+                Texture::default_param();
+                gl::BindTexture(gl::TEXTURE_2D, 0);
+
+                gl::Flush();
+            }
+        } else {
+            let size = texture.get_rawsize();
+            let mut data: Vec<u8> = Vec::with_capacity(size);
+
+            if self.rgb_mode != texture.rgb_mode {
+                panic!("Try to assemble texture with different rgb_mode");
+            }
+            unsafe {
+                data.set_len(size);
+                gl::BindTexture(gl::TEXTURE_2D, texture.id);
+                gl::GetTexImage(
+                    gl::TEXTURE_2D,
+                    0,
+                    self.rgb_mode.as_gl(),
+                    gl::UNSIGNED_BYTE,
+                    data.as_mut_ptr() as *mut c_void
+                );
+                gl::BindTexture(gl::TEXTURE_2D, 0);
+            }
+            let h = self.height;
+            let w = self.width;
+            let mode = self.rgb_mode;
+            // Then update block
+            self.update_block(data.as_slice(), Vector::new(w, h), pos, mode).unwrap();
+        }
     }
 
     /// Update the data of the texture
-    pub fn update
-    (&mut self, data: Vec<u8>, sizes: Vector<i32>, mode: RgbMode) {
+    pub fn update<T>(&mut self, mut data: &[u8], mode: T) 
+    where 
+        T: Into<Option<RgbMode>>,
+    {
+        let mode = mode.into().unwrap_or(self.rgb_mode);
+        let w = self.width;
+        let h = self.height;
 
-        unsafe {
-            gl::BindTexture(gl::TEXTURE_2D, self.id);
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                mode.clone() as i32,
-                sizes.x,
-                sizes.y,
-                0,
-                mode as u32,
-                gl::UNSIGNED_BYTE,
-                data.as_ptr() as *const c_void
-            );
-            gl::BindTexture(gl::TEXTURE_2D, 0);
-        }
-        
-        self.rgb_mode = mode;
-        self.width = sizes.x as u32;
-        self.height= sizes.y as u32;
+        self.update_block(data, Vector::new(w, h), Vector::new(0, 0), mode);
     }
 
 //--------------------------UTILS----------------------------//
@@ -297,12 +386,12 @@ impl Texture {
         self.unbind();
     }
 
+    #[inline]
     pub fn unbind(&self) {
-        unsafe {
-            gl::BindTexture(gl::TEXTURE_2D, 0);
-        }
+        unsafe { gl::BindTexture(gl::TEXTURE_2D, 0); }
     }
-
+    
+    #[inline]
     pub fn active(&self, num: i32) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0 + num as u32);

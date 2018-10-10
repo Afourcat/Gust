@@ -78,6 +78,7 @@ extern crate freetype;
 extern crate lazy_static;
 extern crate image;
 
+pub mod help;
 pub mod vertex_buffer;
 pub mod color;
 pub mod window;

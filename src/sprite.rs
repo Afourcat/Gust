@@ -219,8 +219,7 @@ impl Drawable for Sprite {
         ));
     }
 
-    fn draw_with_context<'a, T: Drawer>
-    (&self, window: &mut T, context: &'a mut Context) {
+    fn draw_with_context<'a, T: Drawer>(&self, window: &mut T, context: &'a mut Context) {
         self.vertice.draw_with_context(window, context);
     }
 

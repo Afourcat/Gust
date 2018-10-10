@@ -45,7 +45,16 @@ pub struct Text {
 }
 
 impl Text {
-    pub fn new(font: &Rc<RefCell<Font>>) -> Text {
+
+    pub fn dump_texture(&mut self) {
+        // Get the texture                                                                          
+        let font_ref = self.font.try_borrow().unwrap();                                             
+        let texture = font_ref.texture(self.actual_size).unwrap(); 
+
+        texture.to_file("test.png");
+    }
+
+	pub fn new(font: &Rc<RefCell<Font>>) -> Text {
         Text {
             font: Rc::clone(font),
             content: String::new(),

@@ -30,9 +30,14 @@ fn main()
 
     window.set_clear_color(Color::new(0.0, 0.0, 1.0));
     window.enable_cursor();
+    let a = true;
     while window.is_open() {
         text.update();
 
+        if a {
+            let a = false;
+            println!("Texture {:?}", text);
+        }
         window.clear();
         window.draw(&text);
         window.display();

@@ -73,11 +73,11 @@ impl GlyphMap {
         // Iter over all element
         for mut row in self.rows.iter_mut() {
             if row.width + width  > self.texture.width() {
-                println!("Cannot get texture cause width = {} and row.width +
-                width = {}.", self.texture.width(), row.width + width);
+                println!("Cannot get texture cause width = {} and row.width + width = {}.",
+                self.texture.width(), row.width + width);
                 continue;
             } else if row.height < height {
-                println!("The letter is to high for this row.");
+                println!("The letter is to high for this row. {}", height);
                 continue;
             }
             ret = Some(Rect::new(row.width, row.height, width, height));
@@ -89,19 +89,16 @@ impl GlyphMap {
             rect
         } else {
             // Create a new row
-
-            // TODO See todo behind
-            // Get the last y pos of the texture
-            //for e in self.rows.iter() {
-            //    last_pos += e.height;
-            //}
-            // TODO -> TEST
+            
+            // iter on row to have the most y
             let last_pos = self.rows.iter().map(|x| x.height).sum();
+
+            // while last_pos
             while last_pos + height + 10 > self.texture.height() || width > self.texture.width() {
                 let mut new = Texture::from_size(
                     Vector::new(self.texture.width() * 2, self.texture.height() * 2)
                 );
-                new.update_from_texture(&self.texture);
+                new.update_from_texture(&self.texture, Vector::new(0, 0));
                 self.texture = new;
             }
             let mut new_row = Row::new(height, last_pos);
@@ -114,7 +111,7 @@ impl GlyphMap {
 
     /// Create a new texture from Utf8Map
     pub fn update_texture
-    (&mut self, char_info: &CharInfo, data: Vec<u8>) -> Result<(), Box<Error>> {
+    (&mut self, char_info: &CharInfo, data: &[u8]) -> Result<(), Box<Error>> {
         self.texture.update_block(
             data,
             Vector::new(char_info.tex_coord.width, char_info.tex_coord.height),
@@ -239,11 +236,10 @@ impl Font {
                 elem[3] = 0;
             }
 
+            // Create the data vector from slice
             let mut data = Vec::from(slice);
-
             
             // fill pixel buffer
-            println!("Buffer {:?}", bitmap.buffer());
             let pixels: Vec<u8> = Vec::from(bitmap.buffer());
             let mut offset = 0;
             match bitmap.pixel_mode().unwrap() {
@@ -279,7 +275,7 @@ impl Font {
             }
                 
             // Update the texture at the right position
-            glyph_map.update_texture(&to_insert, data)?;
+            glyph_map.update_texture(&to_insert, data.as_slice())?;
 
             // Insert the new glyph map into the hasmap
             glyph_map.map.insert(

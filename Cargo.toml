@@ -14,3 +14,5 @@ freetype-rs = { git = "https://github.com/PistonDevelopers/freetype-rs" }
 [dependencies.glfw]
 git = "https://github.com/bjz/glfw-rs.git"
 
+debug=true
+
