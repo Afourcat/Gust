@@ -10,7 +10,7 @@ use nalgebra::*;
 use nalgebra;
 use draw::{Movable};
 use vertex::*;
-use shader::{Shader,DEFAULT_SHADER};
+use shader::DEFAULT_SHADER;
 use rect::Rect;
 
 /// A sprite is a transformable

@@ -35,7 +35,7 @@ fn main()
         text.update();
 
         if a {
-            let a = false;
+            let _a = false;
             println!("Texture {:?}", text);
         }
         window.clear();

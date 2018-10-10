@@ -16,20 +16,22 @@ use gust::texture::RgbMode;
 fn main()
 {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
-    let tex_leave = Rc::new( Texture::from_path("examples/texture/Z.png").unwrap());
-    let mut pixels: Vec<u8> = vec![255; 400 * 400 * 4];
-    let mut pix: Vec<u8> = vec![255; 100 * 100 * 3];
+    let _tex_leave = Rc::new( Texture::from_path("examples/texture/Z.png").unwrap());
+    let mut pixels: Vec<u8> = vec![125; 200 * 200 * 4];
+    let pix: Vec<u8> = vec![255; 100 * 100 * 3];
     let mut my_tex = Texture::from_path("examples/texture/New.png").unwrap();
     let mut blank;
+    let mut texture = Texture::from_path("examples/texture/Dirt.png").unwrap();
 
     unsafe {
         use std::os::raw::c_void; 
-        blank = Texture::from_data(pixels.as_mut_ptr() as *mut c_void, RgbMode::RGBA, 400, 400);
+        blank = Texture::from_data(pixels.as_mut_ptr() as *mut c_void, RgbMode::RGBA, 200, 200);
     }
 
-    my_tex.to_file("before.png");
+    texture.to_file("before.png");
     my_tex.update_block(pix.as_slice(), Vector::new(100, 100), Vector::new(10, 10), None);
-    my_tex.to_file("after.png");
+    texture.update_from_texture(&blank, Vector::new(10, 10));
+    texture.to_file("after.png");
 
     let blank_rc = Rc::new(blank);
     let tex_dirt = Rc::new(my_tex);

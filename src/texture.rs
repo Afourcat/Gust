@@ -135,7 +135,7 @@ impl Texture {
         unsafe {
             let data = self.get_data();
             
-            let image = if self.rgb_mode == RgbMode::RGBA {
+            if self.rgb_mode == RgbMode::RGBA {
                 let image: image::RgbaImage = ImageBuffer::from_vec(self.width, self.height, data).unwrap();
                 image.save(path).unwrap();
             } else {
@@ -153,13 +153,14 @@ impl Texture {
         unsafe {
             gl::GenTextures(1, &mut id);
             gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexStorage2D(gl::TEXTURE_2D,
-                             1,
-                             if rgb_mode == gl::RGBA { gl::RGBA8 } else { gl::RGB8 },
-                             width,
-                             height
+            gl::TexStorage2D(   // Create the storage
+                gl::TEXTURE_2D,
+                1,
+                if rgb_mode == gl::RGBA { gl::RGBA8 } else { gl::RGB8 },
+                width,
+                height
             );
-            gl::TexSubImage2D(
+            gl::TexSubImage2D(  // Put pixel inside the storage
                 gl::TEXTURE_2D,
                 0,
                 0,
@@ -196,6 +197,7 @@ impl Texture {
         if data.len() == 0 {
             Ok(())
         } else if pos.x + sizes.x > self.width || pos.y + sizes.y > self.height {
+            println!("Error {} {} | {} {}", sizes.x, self.width, sizes.y, self.height);
             Err(TextureError::UpdateSize)
         } else {
             // Bind the texture then give it to opengl
@@ -213,13 +215,6 @@ impl Texture {
                     data as *const _ as *const c_void
                     //mem::transmute(data.as_ptr())
                 );
-                let a = gl::GetError();
-                match a {
-                    gl::INVALID_ENUM => {println!("SALUT");},
-                    gl::NO_ERROR => {println!("TRKL");},
-                    _ => {println!("AUTRE");}
-                }
-                println!("{:?}", a);
                 gl::BindTexture(gl::TEXTURE_2D, 0);
                 gl::Flush();
             }
@@ -243,11 +238,34 @@ impl Texture {
         let size = self.get_rawsize();
         let mut data: Vec<u8> = Vec::with_capacity(size);
 
-        println!("size {}", size);
         if size == 0 { return Vec::new(); }
-        if true {
+        data.set_len(size);
+        gl::BindTexture(gl::TEXTURE_2D, self.id);
+        gl::GetTexImage(
+            gl::TEXTURE_2D,
+            0,
+            self.rgb_mode.as_gl(),
+            gl::UNSIGNED_BYTE,
+            data.as_mut_ptr() as *mut c_void
+        );
+        gl::BindTexture(gl::TEXTURE_2D, 0);
+        return data;
+    }
+
+    /// Two version for know using framebuffer
+    /// Will be another version created
+    pub fn update_from_texture(&mut self, texture: &Texture, pos: Vector<u32>) {
+
+        // TRYING FRAMEBUFFER
+        let size = texture.get_rawsize();
+        let mut data: Vec<u8> = Vec::with_capacity(size);
+
+        if self.rgb_mode.as_gl() != texture.rgb_mode.as_gl() {
+            panic!("Try to assemble texture with different rgb_mode");
+        }
+        unsafe {
             data.set_len(size);
-            gl::BindTexture(gl::TEXTURE_2D, self.id);
+            gl::BindTexture(gl::TEXTURE_2D, texture.id);
             gl::GetTexImage(
                 gl::TEXTURE_2D,
                 0,
@@ -256,99 +274,16 @@ impl Texture {
                 data.as_mut_ptr() as *mut c_void
             );
             gl::BindTexture(gl::TEXTURE_2D, 0);
-            return data;
-        } else {
-            let mut old = 0;
-            let mut new = 0;
-            let data: &mut [u8] = &mut [0];
-
-            gl::GenFramebuffers(1, &mut new);
-            gl::GetIntegerv(gl::FRAMEBUFFER_BINDING, &mut old);
-            gl::BindFramebuffer(gl::FRAMEBUFFER, new);
-            gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0,
-                gl::TEXTURE_2D, self.id, 0);
-            gl::ReadPixels(0, 0, self.width as i32, self.height as i32, self.rgb_mode.as_gl(),
-                gl::UNSIGNED_BYTE, mem::transmute(&mut data[0]));
-            gl::DeleteFramebuffers(1, &new);
-            gl::BindFramebuffer(gl::FRAMEBUFFER, old as u32);
-            return Vec::from(data);
         }
-    }
-
-    /// Two version for know using framebuffer
-    /// Will be another version created
-    pub fn update_from_texture(&mut self, texture: &Texture, pos: Vector<u32>) {
-
-        // TRYING FRAMEBUFFER
-        if false {
-            let mut read: i32 = 0;
-            let mut draw: i32 = 0;
-
-            unsafe {
-                gl::GetIntegerv(gl::READ_FRAMEBUFFER_BINDING, &mut read);
-                gl::GetIntegerv(gl::DRAW_FRAMEBUFFER_BINDING, &mut draw);
-            }
-
-            let mut source_frame = 0;
-            let mut dest_frame = 0;
-
-            unsafe {
-                gl::GenFramebuffers(1, &mut source_frame);
-                gl::GenFramebuffers(1, &mut dest_frame);
-
-                gl::BindFramebuffer(gl::READ_FRAMEBUFFER, source_frame);
-                gl::FramebufferTexture2D(gl::READ_FRAMEBUFFER, gl::COLOR_ATTACHMENT0,
-                                         gl::TEXTURE_2D, texture.id, 0);
-
-                gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, dest_frame);
-                gl::FramebufferTexture2D(gl::DRAW_FRAMEBUFFER, gl::COLOR_ATTACHMENT0,
-                                         gl::TEXTURE_2D, self.id, 0);
-
-                gl::BlitFramebuffer(
-                    0, 0, texture.width as i32, texture.height as i32,
-                    pos.x as i32, pos.y as i32,
-                    (pos.x + texture.width) as i32, (pos.y + texture.height) as i32,
-                    gl::COLOR_BUFFER_BIT, gl::NEAREST
-                );
-
-                gl::BindFramebuffer(gl::READ_FRAMEBUFFER, read as u32);
-                gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, draw as u32);
-
-                gl::BindTexture(gl::TEXTURE_2D, self.id);
-                Texture::default_param();
-                gl::BindTexture(gl::TEXTURE_2D, 0);
-
-                gl::Flush();
-            }
-        } else {
-            let size = texture.get_rawsize();
-            let mut data: Vec<u8> = Vec::with_capacity(size);
-
-            if self.rgb_mode != texture.rgb_mode {
-                panic!("Try to assemble texture with different rgb_mode");
-            }
-            unsafe {
-                data.set_len(size);
-                gl::BindTexture(gl::TEXTURE_2D, texture.id);
-                gl::GetTexImage(
-                    gl::TEXTURE_2D,
-                    0,
-                    self.rgb_mode.as_gl(),
-                    gl::UNSIGNED_BYTE,
-                    data.as_mut_ptr() as *mut c_void
-                );
-                gl::BindTexture(gl::TEXTURE_2D, 0);
-            }
-            let h = self.height;
-            let w = self.width;
-            let mode = self.rgb_mode;
-            // Then update block
-            self.update_block(data.as_slice(), Vector::new(w, h), pos, mode).unwrap();
-        }
+        let h = texture.height;
+        let w = texture.width;
+        let mode = texture.rgb_mode;
+        // Then update block
+        self.update_block(data.as_slice(), Vector::new(w, h), pos, mode).unwrap();
     }
 
     /// Update the data of the texture
-    pub fn update<T>(&mut self, mut data: &[u8], mode: T) 
+    pub fn update<T>(&mut self, data: &[u8], mode: T) -> Result<(),TextureError>
     where 
         T: Into<Option<RgbMode>>,
     {
@@ -356,7 +291,8 @@ impl Texture {
         let w = self.width;
         let h = self.height;
 
-        self.update_block(data, Vector::new(w, h), Vector::new(0, 0), mode);
+        self.update_block(data, Vector::new(w, h), Vector::new(0, 0), mode)?;
+        Ok(())
     }
 
 //--------------------------UTILS----------------------------//
@@ -411,6 +347,10 @@ impl Texture {
     }
 
     //-------------------------GETTER-----------------------//
+
+    pub fn rgb_mode(&self) -> &RgbMode {
+        &self.rgb_mode
+    }
 
     /// Simple getter for width
     pub fn width(&self) -> u32 {

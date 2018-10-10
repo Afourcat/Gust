@@ -80,7 +80,7 @@ impl Text {
         self.actual_size
     }
 
-    pub fn add_to_buffer(&mut self, char_info: CharInfo, pos: Vector<u32>) {
+    pub fn add_to_buffer(&mut self, _char_info: CharInfo, _pos: Vector<u32>) {
         unimplemented!();
     }
 }

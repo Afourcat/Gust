@@ -17,7 +17,7 @@
 //! ```
 
 use nalgebra;
-use nalgebra::{Matrix4,Vector3};
+use nalgebra::Matrix4;
 use ::{Point,Vector};
 use rect::Rect;
 
