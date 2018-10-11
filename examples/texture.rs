@@ -38,19 +38,20 @@ fn main()
     let event_handler = EventHandler::new(&window);
     let mut sprite = Sprite::from(&tex_dirt);
     let mut leave = Sprite::from(&blank_rc);
-
-    leave.set_origin_to_center().unwrap_or_else(|e| println!("{}", e));
-    leave.set_position(Point::new(2000.0, 300.0));
-    window.set_clear_color(Color::new(0.0, 0.0, 1.0));
-    window.enable_cursor();
-    window.poll(None);
+    let mut sprite2 = Sprite::from(&tex_dirt);
+        
+    leave.set_position(Point::new(600.0, 100.0));
     sprite.set_position(Vector::new(100.0, 100.0));
-    leave.set_scale(Vector::new(0.5, 0.5));
+    sprite2.set_position(Point::new(1000.0, 100.0));
+    sprite.update();
+    sprite2.update();
+    leave.update();
+
+    window.poll(None);
+    window.enable_cursor();
+    window.set_clear_color(Color::new(0.0, 0.0, 1.0));
     while window.is_open() {
         window.poll_events();
-        leave.rotate(1.0);
-        leave.update();
-        sprite.update();
 
         for event in event_handler.fetch() {
             event_process(event, &mut window, &tex_dirt, &mut sprite);
@@ -59,6 +60,7 @@ fn main()
         window.clear();
         window.draw(&sprite);
         window.draw(&leave);
+        window.draw(&sprite2);
         window.display();
     }
 }
@@ -69,12 +71,12 @@ fn event_process(event: Event, window: &mut Window, texture: &Texture, sprite: &
             window.close();
         },
         Events::MouseButton(_, _, _) => {
+            println!("Dumping texture to test.png");
             texture.to_file("test.png");
-            println!("Mouse button !");
         },
         Events::CursorPos(x, y) => {
             sprite.set_position(Vector::new(x as f32, y as f32));
         },
-        _ => { println!("Another event !") }
+        _ => {}
     }
 }

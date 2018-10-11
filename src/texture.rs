@@ -60,23 +60,23 @@ impl Texture {
         }
     }
 
+    /// Create a texture from a slice
+    pub fn from_slice
+    (data: &mut [u8], mode: RgbMode, width: u32, height: u32) -> Texture {
+        Texture {
+            id: Self::create(data.as_mut_ptr() as *mut c_void, mode.as_gl(), width as i32, height as i32),
+            width: width as u32,
+            height: height as u32,
+            rgb_mode: mode
+        }
+    }
+
     /// Create an empty texture with a size
     pub fn from_size(sizes: Vector<u32>) -> Texture {
         let mut id = 0;
         let mut ve: Vec<u8> = vec![255; sizes.x as usize * sizes.y as usize * 4];
 
-        unsafe {
-            gl::GenTextures(1, &mut id);
-            gl::BindTexture(gl::TEXTURE_2D, id);
-            Self::from_data(ve.as_mut_ptr() as *mut c_void, RgbMode::RGBA, sizes.x, sizes.y);
-            gl::BindTexture(gl::TEXTURE_2D, 0);
-        };
-        Texture {
-            id: id,
-            width: sizes.x,
-            height: sizes.y,
-            rgb_mode: RgbMode::RGBA
-        }
+        return Self::from_slice(ve.as_mut_slice(), RgbMode::RGBA, sizes.x, sizes.y);
     }
 
     /// Create a texture from an image
@@ -134,7 +134,7 @@ impl Texture {
     pub fn to_file(&self, path: &str) -> Result<(),&'static str> {
         unsafe {
             let data = self.get_data();
-            
+     
             if self.rgb_mode == RgbMode::RGBA {
                 let image: image::RgbaImage = ImageBuffer::from_vec(self.width, self.height, data).unwrap();
                 image.save(path).unwrap();
@@ -197,7 +197,7 @@ impl Texture {
         if data.len() == 0 {
             Ok(())
         } else if pos.x + sizes.x > self.width || pos.y + sizes.y > self.height {
-            println!("Error {} {} | {} {}", sizes.x, self.width, sizes.y, self.height);
+            println!("Error {} {} | {} {}", pos.x + sizes.x, self.width, pos.y + sizes.y, self.height);
             Err(TextureError::UpdateSize)
         } else {
             // Bind the texture then give it to opengl
@@ -255,8 +255,6 @@ impl Texture {
     /// Two version for know using framebuffer
     /// Will be another version created
     pub fn update_from_texture(&mut self, texture: &Texture, pos: Vector<u32>) {
-
-        // TRYING FRAMEBUFFER
         let size = texture.get_rawsize();
         let mut data: Vec<u8> = Vec::with_capacity(size);
 

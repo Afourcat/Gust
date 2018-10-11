@@ -167,17 +167,17 @@ impl Drawable for Text {
                         .unwrap();
             let elem = font_ref.glyph(self.actual_size, elem as u32);
 
-            let padding = 0;
+            let padding = 0.0;
 
-            let left   = (elem.rect.left - padding) as f32;
-            let top    = (elem.rect.top - padding) as f32;
-            let right  = (elem.rect.left + elem.rect.width + padding) as f32;
-            let bottom = (elem.rect.top  + elem.rect.height + padding) as f32;
+            let left   = (elem.rect.left - padding);
+            let top    = (elem.rect.top - padding);
+            let right  = (elem.rect.left + elem.rect.width + padding);
+            let bottom = (elem.rect.top  + elem.rect.height + padding);
     
-            let u1 = (elem.tex_coord.left - padding) as f32;
-            let v1 = (elem.tex_coord.top - padding) as f32;
-            let u2 = (elem.tex_coord.left + elem.tex_coord.width + padding) as f32;
-            let v2 = (elem.tex_coord.top  + elem.tex_coord.height + padding) as f32;
+            let u1 = (elem.tex_coord.left - padding as u32) as f32;
+            let v1 = (elem.tex_coord.top - padding as u32) as f32;
+            let u2 = (elem.tex_coord.left + elem.tex_coord.width + padding as u32) as f32;
+            let v2 = (elem.tex_coord.top  + elem.tex_coord.height + padding as u32) as f32;
 
 
             // Create vertex

@@ -60,15 +60,17 @@ impl Row {
 /// Contain the global texture and texture information
 impl GlyphMap {
     pub fn new() -> GlyphMap {
+        let mut data: Vec<u8> = vec![255; 128 * 128 * 4];
+        for elem in data.chunks_mut(4) { elem[3] = 0 };
+
         GlyphMap {
-            texture: Texture::from_size(Vector::new(500, 300)),
+            texture: Texture::from_slice(data.as_mut_slice(), RgbMode::RGBA, 128, 128),
             rows: Vec::with_capacity(1),
             map: Utf8Map::with_capacity(10)
         }
     }
 
-    pub fn get_texture_rect
-    (&mut self, width: u32, height: u32, _size: u32) -> Rect<u32> {
+    pub fn get_texture_rect(&mut self, width: u32, height: u32, size: u32) -> Rect<u32> {
         let mut ret: Option<Rect<u32>> = None;
         // Iter over all element
         for mut row in self.rows.iter_mut() {
@@ -80,7 +82,7 @@ impl GlyphMap {
                 println!("The letter is to high for this row. {}", height);
                 continue;
             }
-            ret = Some(Rect::new(row.width, row.height, width, height));
+            ret = Some(Rect::new(row.width, row.pos, width, height));
             row.width += width + 1;
         }
 
@@ -88,21 +90,19 @@ impl GlyphMap {
             // Return the rect
             rect
         } else {
-            // Create a new row
-            
             // iter on row to have the most y
             let last_pos = self.rows.iter().map(|x| x.height).sum();
 
             // while last_pos
-            while last_pos + height + 10 > self.texture.height() || width > self.texture.width() {
+            while last_pos + (height + height / 10) > self.texture.height() || width > self.texture.width() {
                 let mut new = Texture::from_size(
                     Vector::new(self.texture.width() * 2, self.texture.height() * 2)
                 );
                 new.update_from_texture(&self.texture, Vector::new(0, 0));
                 self.texture = new;
             }
-            let mut new_row = Row::new(height, last_pos);
-            let new_ret = Rect::new(new_row.width, last_pos, width, height);
+            let mut new_row = Row::new(height + height / 10, last_pos);
+            let new_ret = Rect::new(new_row.width, last_pos, width, height + height / 10);
             new_row.width += width + 1;
             self.rows.push(new_row);
             new_ret
@@ -126,9 +126,9 @@ impl GlyphMap {
 /// texCoord: coord of the texture inside the parent texture
 #[derive(Debug)]
 pub struct CharInfo {
-    pub rect: Rect<u32>,
+    pub rect: Rect<f32>,
     pub tex_coord: Rect<u32>,
-    pub advance: u32
+    pub advance: f32
 }
 
 impl CharInfo {
@@ -137,12 +137,12 @@ impl CharInfo {
         CharInfo {
             rect: Default::default(),
             tex_coord: Default::default(),
-            advance: 0
+            advance: 0.0
         }
     }
 
     pub fn from_data
-    (rect: Rect<u32>, tex: Rect<u32>, adv: u32) -> CharInfo {
+    (rect: Rect<f32>, tex: Rect<u32>, adv: f32) -> CharInfo {
         CharInfo {
             rect: rect,
             tex_coord: tex,
@@ -181,7 +181,7 @@ impl Font {
                 None
             },
             Ok(face) => {
-                face.set_char_size(40 * 64, 0, 50, 0).unwrap();
+                face.set_pixel_sizes(0, 30).unwrap();
                 Some(Font {
                     face: face,
                     lib: lib,
@@ -218,23 +218,22 @@ impl Font {
             // Create the new Charinfo that will be inserted
             let mut to_insert = CharInfo::new();
 
-            // Get the glyph and informations
-            to_insert.rect.width = (metrics.width + 2) as u32;
-            to_insert.rect.height = (metrics.height + 2) as u32;
-            to_insert.advance = (metrics.vertAdvance + 2) as u32;
-
-            // Look at the glyph texture and try to find a place inside it
-            to_insert.tex_coord = glyph_map.get_texture_rect(
-                size, to_insert.rect.width, to_insert.rect.height);
-    
             let height = bitmap.rows();
             let width = bitmap.width();
+            
+            // Get the glyph and informations
+            to_insert.rect.left = metrics.horiBearingX as f32 / (1 << 6) as f32;
+            to_insert.rect.top = metrics.horiBearingY as f32 / (1 << 6) as f32;
+            to_insert.rect.width = metrics.width as f32 / (1 << 6) as f32;
+            to_insert.rect.height = metrics.height as f32 / (1 << 6) as f32;
+            to_insert.advance = (metrics.horiAdvance + 2) as f32 / (1 << 6) as f32;
 
+            // Look at the glyph texture and try to find a place inside it
+            to_insert.tex_coord = glyph_map.get_texture_rect(width as u32, height as u32, size);
+    
+            // Resize buffer
             let mut slice = vec![255; (height * width * 4) as usize];
-
-            for ref mut elem in slice.chunks_mut(4) {
-                elem[3] = 0;
-            }
+            for ref mut elem in slice.chunks_mut(4) { elem[3] = 0; }
 
             // Create the data vector from slice
             let mut data = Vec::from(slice);
@@ -246,15 +245,15 @@ impl Font {
                 PixelMode::None => {
                     panic!("Error while creating glyph");
                 },
-                PixelMode::Mono => {
+                PixelMode::Mono => { 
 
                     // If it's mono just change the alpha of each pixel to make it black or white
                     for y in 0..height {
                         for x in 0..width {
                             let index = ((x + y * width) * 4 + 3) as usize;
-                            let pix = pixels[(offset + x / 8) as usize];
+                            let pix = pixels[(offset + (x / 8)) as usize];
 
-                            data[index] = if (pix & (1 << (7 - (x % 8)))) == 1 { 255 } else { 0 };
+                            data[index] = if (pix & (1 << (7 - (x % 8)))) != 0 { 255 } else { 0 };
                         }
                         offset += bitmap.pitch();
                     }
@@ -264,16 +263,15 @@ impl Font {
                     for y in 0..height {
                         for x in 0..width {
                             let index = ((x + y * width) * 4 + 3) as usize;
-                            let pix = pixels[(offset + x / 8) as usize];
+                            let pix = pixels[(offset + x) as usize];
 
                             data[index] = pix;
-                            // data[((x + y * width) * 4 + 3) as usize] = pixels[(offset + x / 8) as usize]
                         }
                         offset += bitmap.pitch();
                     }
                 }
             }
-                
+
             // Update the texture at the right position
             glyph_map.update_texture(&to_insert, data.as_slice())?;
 
