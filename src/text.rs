@@ -169,10 +169,10 @@ impl Drawable for Text {
 
             let padding = 0.0;
 
-            let left   = (elem.rect.left - padding);
-            let top    = (elem.rect.top - padding);
-            let right  = (elem.rect.left + elem.rect.width + padding);
-            let bottom = (elem.rect.top  + elem.rect.height + padding);
+            let left   = elem.rect.left - padding;
+            let top    = elem.rect.top - padding;
+            let right  = elem.rect.left + elem.rect.width + padding;
+            let bottom = elem.rect.top  + elem.rect.height + padding;
     
             let u1 = (elem.tex_coord.left - padding as u32) as f32;
             let v1 = (elem.tex_coord.top - padding as u32) as f32;
@@ -189,7 +189,7 @@ impl Drawable for Text {
                 Vertex::new(Vector::new(right, top),    Vector::new(u2, v1), Color::white()),
                 Vertex::new(Vector::new(right, bottom), Vector::new(u2, v2), Color::white()),
             ];
-            self.vertex_buffer.append(vertices);
+            self.vertex_buffer.append(vertices.as_slice());
         }
     }
 

@@ -39,7 +39,7 @@ fn main()
     let mut sprite = Sprite::from(&tex_dirt);
     let mut leave = Sprite::from(&blank_rc);
     let mut sprite2 = Sprite::from(&tex_dirt);
-        
+
     leave.set_position(Point::new(600.0, 100.0));
     sprite.set_position(Vector::new(100.0, 100.0));
     sprite2.set_position(Point::new(1000.0, 100.0));
@@ -56,7 +56,7 @@ fn main()
         for event in event_handler.fetch() {
             event_process(event, &mut window, &tex_dirt, &mut sprite);
         }
-        
+
         window.clear();
         window.draw(&sprite);
         window.draw(&leave);

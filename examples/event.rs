@@ -20,8 +20,7 @@ use gust::draw::{Drawer,Movable};
 use gust::draw::Drawable;
 use std::collections::HashMap;
 
-fn main()
-{
+fn main() {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
     let tex_dirt = Rc::new(Texture::from_path("examples/texture/Dirt.png").unwrap());
     let event_handler = EventHandler::new(&window);
@@ -38,7 +37,7 @@ fn main()
         for event in event_handler.fetch() {
             event_process(event, &mut window, &mut sprites);
         }
-        
+
         draw(&mut window, &mut sprites);
     }
 }
@@ -80,7 +79,7 @@ fn event_process(event: Event, window: &mut Window, sprites: &mut HashMap<&'stat
                 if sprite.contain(mouse_pos) {
                     sprite.set_color(&Color::blue());
                 }
-            }   
+            }
         },
         _ => {}
     }

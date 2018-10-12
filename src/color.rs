@@ -89,6 +89,15 @@ impl Mul for Color {
     }
 }
 
+impl Into<(u8, u8, u8, u8)> for Color {
+    fn into(self) -> (u8, u8, u8, u8) {
+        ((self.0 * 255.0) as u8,
+         (self.1 * 255.0) as u8,
+         (self.2 * 255.0) as u8,
+         (self.3 * 255.0) as u8)
+    }
+}
+
 impl Default for Color {
     fn default() -> Color {
         Color (1.0, 1.0, 1.0, 1.0)

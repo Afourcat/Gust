@@ -11,6 +11,7 @@ use std::mem;
 use std::os::raw::c_void;
 use ::Vector;
 use std::error::Error;
+use color::Color;
 
 /// # Texture structure
 /// A texture is an id inside openGL that can contain a array of byte
@@ -71,9 +72,24 @@ impl Texture {
         }
     }
 
+    pub fn from_color(color: Color, sizes: Vector<u32>) -> Texture {
+        let length: usize = (sizes.x * sizes.y * 4) as usize;
+        let mut data: Vec<u8> = Vec::with_capacity(length);
+        let mut i: usize = 0;
+        let color_u8: (u8, u8, u8, u8) = color.into();
+
+        while i < length {
+            data[0] = color_u8.0;
+            data[1] = color_u8.1;
+            data[2] = color_u8.2;
+            data[3] = color_u8.3;
+            i += 4;
+        }
+        Self::from_slice(data.as_mut_slice(), RgbMode::RGBA, sizes.x, sizes.y)
+    }
+
     /// Create an empty texture with a size
     pub fn from_size(sizes: Vector<u32>) -> Texture {
-        let mut id = 0;
         let mut ve: Vec<u8> = vec![255; sizes.x as usize * sizes.y as usize * 4];
 
         return Self::from_slice(ve.as_mut_slice(), RgbMode::RGBA, sizes.x, sizes.y);

@@ -29,10 +29,8 @@ fn main() {
 
     // Create text with font
     let mut text = Text::new(&font);
-    text.set_content(String::from("Example fonts 231yreq0uhr023 hfoiuefx29he1-fdzhx1290ncby2n09yxwfe7xyfads;dsaof   q !!!"));
-    text.update();
+    text.set_content(String::from("Night !"));
     // Dump the updated font
-    text.dump_texture();
 
     // Loop preparation
     window.set_clear_color(Color::new(0.0, 0.0, 1.0));

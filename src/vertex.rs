@@ -130,14 +130,14 @@ pub struct VertexArray {
 }
 
 impl VertexArray {
-	/// Create a new vertex array from a ... vertex array :D
-	pub fn new(array: Vec<Vertex>) -> VertexArray {
+	/// Create a empty vertex array
+	pub fn new() -> VertexArray {
         let mut id = 0;
-        unsafe {
-            gl::GenVertexArrays(1, &mut id);
-        }
+
+        unsafe { gl::GenVertexArrays(1, &mut id); }
+
 		VertexArray {
-			array: array,
+			array: Vec::new(),
             id: id,
 		}
     }
@@ -187,22 +187,6 @@ impl VertexArray {
         }
     }
 
-    pub fn from_slice(array: &[f32]) -> Result<VertexArray, &'static str> {
-        if array.len() == 0 {
-            Err("Array should have data inside.")
-        } else {
-            let mut arr = Vec::new();
-            for elem in array.windows(8) {
-                arr.push(Vertex::new(
-                                Vector2::new(elem[0],elem[1]),
-                                Vector2::new(elem[2], elem[3]),
-                                Color::new(elem[4], elem[5], elem[6])
-                ));
-            }
-            Ok(VertexArray::new(arr))
-        }
-    }
-
     pub fn len(&self) -> usize {
         self.array.len()
     }
@@ -222,6 +206,46 @@ impl VertexArray {
     pub unsafe fn get_ptr(&self) -> *const GLvoid {
         self.array.as_ptr() as *const GLvoid
     }
+}
+
+impl<'a> From<&'a [Vertex]> for VertexArray {
+    fn from(array: &[Vertex]) -> VertexArray {
+        if array.len() == 0 {
+            VertexArray::new()
+        } else {
+            let mut id = 0;
+            unsafe { gl::GenVertexArrays(1, &mut id) };
+            VertexArray {
+                array: Vec::from(array),
+                id: id
+            }
+        }
+    }
+}
+
+impl<'a> From<&'a [f32]> for VertexArray {
+    fn from(array: &[f32]) -> VertexArray {
+        if array.len() == 0 {
+            VertexArray::new()
+        } else {
+            let mut arr = Vec::new();
+            for elem in array.windows(8) {
+                arr.push(
+                        Vertex::new(
+                            Vector2::new(elem[0],elem[1]),
+                            Vector2::new(elem[2], elem[3]),
+                            Color::new(elem[4], elem[5], elem[6])
+                        )
+                );
+            }
+            let mut id = 0;
+            unsafe { gl::GenVertexArrays(1, &mut id) };
+            VertexArray {
+                array: arr,
+                id: id
+            }
+        }
+    }     
 }
 
 impl Index<usize> for VertexArray {

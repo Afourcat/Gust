@@ -112,8 +112,8 @@ impl VertexBuffer {
 		vertex_buffer
 	}
 
-    pub fn append(&mut self, mut vertices: Vec<Vertex>) {
-        self.array.array_mut().append(&mut vertices)
+    pub fn append(&mut self, vertices: &[Vertex]) {
+        self.array.array_mut().append(&mut Vec::from(vertices))
     }
 
     /// Get primitive type
@@ -221,7 +221,7 @@ impl IndexMut<usize> for VertexBuffer {
 
 impl Default for VertexBuffer {
     fn default() -> Self {
-        VertexBuffer::new(Primitive::Points, VertexArray::new(Vec::new()))
+        VertexBuffer::new(Primitive::Points, VertexArray::new())
     }
 }
 

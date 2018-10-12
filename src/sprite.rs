@@ -12,6 +12,7 @@ use draw::{Movable};
 use vertex::*;
 use shader::DEFAULT_SHADER;
 use rect::Rect;
+use std::convert::From;
 
 /// A sprite is a transformable
 /// drawable sprite
@@ -47,12 +48,12 @@ impl Sprite {
             pos: Vector2::new(0.0, 0.0),
             scale: Vector2::new(1.0, 1.0),
             vertice: Box::new(
-                VertexBuffer::new( Primitive::TrianglesStrip, VertexArray::new(vec! [
+                VertexBuffer::new(Primitive::TrianglesStrip, VertexArray::from(vec![
                     Vertex::default(),
                     Vertex::default(),
                     Vertex::default(),
                     Vertex::default(),
-                ]))
+                ].as_slice()))
             ),
             need_update: true,
             texture: None,
@@ -116,12 +117,12 @@ impl<'a> From<&'a Rc<Texture>> for Sprite {
             pos: pos,
             scale: Vector2::new(1.0, 1.0),
             vertice: Box::new(VertexBuffer::new(Primitive::TrianglesStrip,
-                VertexArray::new(vec![
+                VertexArray::from(vec![
                     Vertex::new(Vector2::new(0.0,      0.0), Vector2::new(0.0, 0.0), Color::white()),
                     Vertex::new(Vector2::new(0.0,   height), Vector2::new(0.0, 1.0), Color::white()),
                     Vertex::new(Vector2::new(width,    0.0), Vector2::new(1.0, 0.0), Color::white()),
                     Vertex::new(Vector2::new(width, height), Vector2::new(1.0, 1.0), Color::white()),
-                ])
+                ].as_slice())
             )),
             texture: Some(Rc::clone(tex)),
             need_update: true,
