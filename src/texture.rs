@@ -79,10 +79,10 @@ impl Texture {
         let color_u8: (u8, u8, u8, u8) = color.into();
 
         while i < length {
-            data[0] = color_u8.0;
-            data[1] = color_u8.1;
-            data[2] = color_u8.2;
-            data[3] = color_u8.3;
+            data.push(color_u8.0);
+            data.push(color_u8.1);
+            data.push(color_u8.2);
+            data.push(color_u8.3);
             i += 4;
         }
         Self::from_slice(data.as_mut_slice(), RgbMode::RGBA, sizes.x, sizes.y)

@@ -18,6 +18,7 @@ use shader::DEFAULT_SHADER;
 //
 //----------------------------------------------------------------------------
 
+#[derive(Debug)]
 /// Blend mode needed to draw
 pub enum BlendMode {
 	Alpha,
@@ -65,6 +66,7 @@ impl BlendMode {
 //
 //----------------------------------------------------------------------------
 
+#[derive(Debug)]
 /// Context needed to handle a draw of a vertex array
 /// A context is needed by the drawer to handle the drawing
 /// process a default context can be use ether

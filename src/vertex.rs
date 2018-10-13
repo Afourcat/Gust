@@ -146,6 +146,10 @@ impl VertexArray {
         &self.array
     }
 
+    pub fn clear(&mut self) {
+        self.array.clear();
+    }
+
     pub fn array_mut(&mut self) -> &mut Vec<Vertex> {
         &mut self.array
     }
@@ -245,7 +249,7 @@ impl<'a> From<&'a [f32]> for VertexArray {
                 id: id
             }
         }
-    }     
+    }
 }
 
 impl Index<usize> for VertexArray {

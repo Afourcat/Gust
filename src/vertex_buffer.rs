@@ -18,6 +18,7 @@ pub struct VertexBuffer {
     texture: Option<Rc<Texture>>,
     array: VertexArray,
     primitive: GLenum,
+    len: usize
 }
 
 #[derive(Debug,Clone,PartialEq,Copy,Hash)]
@@ -70,6 +71,10 @@ impl VertexBuffer {
 		}
 	}
 
+    pub fn clear(&mut self) {
+        self.array.clear();
+    }
+
 	/// Create new Vertex Buffer for vertices
 	pub fn new(t: Primitive, vertice: VertexArray) -> VertexBuffer {
 		let mut buffer_id: u32 = 0;
@@ -105,7 +110,8 @@ impl VertexBuffer {
 			id: buffer_id,
             texture: None,
             primitive: Self::get_gl_type(&t),
-            array: vertice,
+            len: vertice.len(),
+            array: vertice
 		};
 		Self::clear_gl();
 
@@ -113,7 +119,7 @@ impl VertexBuffer {
 	}
 
     pub fn append(&mut self, vertices: &[Vertex]) {
-        self.array.array_mut().append(&mut Vec::from(vertices))
+        self.array.array_mut().append(&mut Vec::from(vertices));
     }
 
     /// Get primitive type
@@ -139,6 +145,10 @@ impl VertexBuffer {
         }
     }
 
+    pub fn set_geometry(&mut self, vertice: &[Vertex]) {
+        self.array = VertexArray::from(vertice);
+    }
+
 	#[inline]
 	pub fn bind(&self) {
 		unsafe {
@@ -156,14 +166,13 @@ impl VertexBuffer {
 
 impl Drawable for VertexBuffer {
 	fn draw<T: Drawer>(&self, target: &mut T) {
-    
         let texture = if let Some(ref rc_texture) = self.texture {
             Some(rc_texture.as_ref())
         } else {
             None
         };
-            
-	    self.draw_with_context(target, &mut Context::new(
+        
+        self.draw_with_context(target, &mut Context::new(
             texture,
 			if texture.is_none() {
                 &*NO_TEXTURE_SHADER
@@ -179,8 +188,8 @@ impl Drawable for VertexBuffer {
 		unsafe {
 			self.setup_draw(context, target);
 			self.array.bind();
-			self.bind();
-			gl::DrawArrays(self.primitive, 0, self.array.len() as i32);
+            self.bind();
+            gl::DrawArrays(self.primitive, 0, self.array.len() as i32);
 			self.unbind();
 		}
     }
@@ -189,12 +198,23 @@ impl Drawable for VertexBuffer {
         unsafe {
             self.array.bind();
             self.bind();
+
+            if self.len != self.array.len() {
+                gl::BufferData(
+                    gl::ARRAY_BUFFER,
+                    (std::mem::size_of::<GLfloat>() * self.array.len() * 8) as GLsizeiptr,
+                    self.array.get_ptr(),
+                    gl::STATIC_DRAW
+                );
+                self.len = self.array.len();
+            }
             gl::BufferSubData(
 				gl::ARRAY_BUFFER,
                 0,
 				(std::mem::size_of::<GLfloat>() * self.array.len() * 8) as GLsizeiptr,
 				self.array.get_ptr(),
 			);
+            self.array.active();
             self.unbind();
             self.array.unbind();
         }
@@ -221,7 +241,7 @@ impl IndexMut<usize> for VertexBuffer {
 
 impl Default for VertexBuffer {
     fn default() -> Self {
-        VertexBuffer::new(Primitive::Points, VertexArray::new())
+        VertexBuffer::new(Primitive::Triangles, VertexArray::new())
     }
 }
 

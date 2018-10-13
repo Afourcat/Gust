@@ -29,8 +29,10 @@ fn main() {
 
     // Create text with font
     let mut text = Text::new(&font);
-    text.set_content(String::from("Night !"));
+    text.set_content(String::from("Alloin !"));
     // Dump the updated font
+    text.update();
+    text.dump_texture();
 
     // Loop preparation
     window.set_clear_color(Color::new(0.0, 0.0, 1.0));
@@ -43,7 +45,7 @@ fn main() {
 
         // Event handling
         event_handler.fetch().for_each(|event| handle(&event, &mut window));
-
+     
         // Draw process (Clear -> Draw -> Display)
         window.clear();
         window.draw(&text);

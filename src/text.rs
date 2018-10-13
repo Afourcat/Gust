@@ -27,7 +27,7 @@ use draw::{Drawable,Drawer,Context,Movable,BlendMode};
 use shader;
 use ::{Point,Vector};
 use nalgebra;
-use std::rc::Rc;
+use std::{error::Error, rc::Rc};
 use std::cell::RefCell;
 use vertex_buffer::{VertexBuffer,Primitive};
 use vertex::Vertex;
@@ -45,13 +45,16 @@ pub struct Text {
 }
 
 impl Text {
+    
 
-    pub fn dump_texture(&mut self) {
+
+    pub fn dump_texture(&mut self) -> Result<(),Box<Error>>{
         // Get the texture                                                                          
         let font_ref = self.font.try_borrow().unwrap();                                             
         let texture = font_ref.texture(self.actual_size).unwrap(); 
 
-        texture.to_file("test.png");
+        texture.to_file("test.png")?;
+        Ok(())
     }
 
 	pub fn new(font: &Rc<RefCell<Font>>) -> Text {
@@ -154,56 +157,72 @@ impl Movable for Text {
 }
 
 impl Drawable for Text {
-    fn update(&mut self) {
-        
 
-        if !self.need_update {
-            return;
-        }
-        // For each elem create an entry
-        for elem in self.content.as_str().chars() {
-            let mut font_ref = self.font
+    fn update(&mut self) {
+        // Si l'update n'est pas necessaire
+        if !self.need_update { return; }
+
+        // Relative position
+        let mut pos = Vector::new(0.0, 0.0);
+
+        // Get reference to the font that is a reference counter
+        let mut font_ref = self.font
                         .try_borrow_mut()
                         .unwrap();
-            let elem = font_ref.glyph(self.actual_size, elem as u32);
 
-            let padding = 0.0;
+        // Get the whitespace x size
+        let whitespace = font_ref.glyph(self.actual_size, 0x20_u32).advance;
 
-            let left   = elem.rect.left - padding;
-            let top    = elem.rect.top - padding;
-            let right  = elem.rect.left + elem.rect.width + padding;
-            let bottom = elem.rect.top  + elem.rect.height + padding;
+        // Setup padding
+        let padding = 0.0;
+
+        self.vertex_buffer.clear();
+        // Iter of character of the content to create a geometry for each one of them
+        for charr in self.content.as_str().chars() {
+
+            // If the char is a special one
+            if charr == '\n' {
+                pos.y += 20.0;
+                continue;
+            } else if charr == '\r' {
+                continue;
+            } else if charr == '\t' {
+                pos.x += 4.0 * whitespace;
+                continue;
+            } else if charr == ' ' {
+                pos.x += whitespace;
+                continue;
+            }
+           
+            // Get the glyph from the the font 
+            let char_info = font_ref.glyph(self.actual_size, charr as u32);
     
-            let u1 = (elem.tex_coord.left - padding as u32) as f32;
-            let v1 = (elem.tex_coord.top - padding as u32) as f32;
-            let u2 = (elem.tex_coord.left + elem.tex_coord.width + padding as u32) as f32;
-            let v2 = (elem.tex_coord.top  + elem.tex_coord.height + padding as u32) as f32;
+            // get vertices from char_info
+            let vertices = get_vertice_letter(&char_info, &pos, padding);
+            
+            // append vertice to vertex_buffer
+            self.vertex_buffer.append(&vertices);
 
-
-            // Create vertex
-            let vertices = vec![
-                Vertex::new(Vector::new(left, top),     Vector::new(u1, v1), Color::white()),
-                Vertex::new(Vector::new(right, top),    Vector::new(u2, v1), Color::white()),
-                Vertex::new(Vector::new(left, bottom),  Vector::new(u1, v2), Color::white()),
-                Vertex::new(Vector::new(left, bottom),  Vector::new(u1, v2), Color::white()),
-                Vertex::new(Vector::new(right, top),    Vector::new(u2, v1), Color::white()),
-                Vertex::new(Vector::new(right, bottom), Vector::new(u2, v2), Color::white()),
-            ];
-            self.vertex_buffer.append(vertices.as_slice());
+            // x position of the character
+            pos.x += char_info.advance as f32;
         }
+        
+        // Update final buffer
+        self.vertex_buffer.update();
+
+        // Set to false the boolean that contral this function
+        self.need_update = false;
     }
 
     fn draw<T: Drawer>(&self, target: &mut T) {
-    
         // If there is no text don't draw
-        if self.content.is_empty() {
-            return;
-        }
+        if self.content.is_empty() { return }
 
         // Get the texture
         let font_ref = self.font.try_borrow().unwrap();
         let texture = font_ref.texture(self.actual_size).unwrap();
 
+        // Create a new context with the Texture of the font
         let mut context = Context::new(
             Some(texture),
             &*shader::DEFAULT_SHADER,
@@ -211,6 +230,7 @@ impl Drawable for Text {
             BlendMode::Alpha
         );
 
+        // Draw the vertex_buffer with context
         self.draw_with_context(target, &mut context)
     }
 
@@ -221,4 +241,30 @@ impl Drawable for Text {
     fn set_texture(&mut self, _texture: &Rc<Texture>) {
         unimplemented!();
     }
+}
+
+fn get_vertice_letter(char_info: &CharInfo, pos: &Vector<f32>, padding: f32) -> [Vertex; 6] {
+    let x = pos.x;
+    let y = pos.y;
+
+    // Set geometry for 1 character
+    let left   = char_info.rect.left - padding;
+    let top    = char_info.rect.top - padding;
+    let right  = char_info.rect.left + char_info.rect.width + padding;
+    let bottom = char_info.rect.top  + char_info.rect.height + padding;
+
+    // Set texture coord for each character
+    let u1 = (char_info.tex_coord.left - padding as u32) as f32;
+    let v1 = (char_info.tex_coord.top - padding as u32) as f32;
+    let u2 = (char_info.tex_coord.left + char_info.tex_coord.width + padding as u32) as f32;
+    let v2 = (char_info.tex_coord.top  + char_info.tex_coord.height + padding as u32) as f32;
+
+    [
+        Vertex::new(Vector::new(x + left, y + top),     Vector::new(u1, v1), Color::white()),
+        Vertex::new(Vector::new(x + right, y + top),    Vector::new(u2, v1), Color::white()),
+        Vertex::new(Vector::new(x + left, y + bottom),  Vector::new(u1, v2), Color::white()),
+        Vertex::new(Vector::new(x + left, y + bottom),  Vector::new(u1, v2), Color::white()),
+        Vertex::new(Vector::new(x + right, y + top),    Vector::new(u2, v1), Color::white()),
+        Vertex::new(Vector::new(x + right, y + bottom), Vector::new(u2, v2), Color::white()),
+    ]
 }
