@@ -20,7 +20,18 @@ fn main()
             Vertex::new(Vector::new(400.0, 700.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
     ].as_slice());
 
+    let vert_arr_2 = VertexArray::from(vec![
+            Vertex::new(Vector::new(0.0, 0.0), Vector::new(0.0, 0.0), Color::blue()),
+            Vertex::new(Vector::new(0.0, 100.0), Vector::new(0.0, 0.0), Color::blue()),
+            Vertex::new(Vector::new(100.0, 100.0), Vector::new(0.0, 0.0), Color::blue()),
+            Vertex::new(Vector::new(0.0, 0.0), Vector::new(0.0, 0.0), Color::green()),
+            Vertex::new(Vector::new(100.0, 100.0), Vector::new(0.0, 0.0), Color::green()),
+            Vertex::new(Vector::new(100.0, 0.0), Vector::new(0.0, 0.0), Color::green()),
+    ].as_slice());
+
     let vert_buf = VertexBuffer::new(Primitive::TriangleFan, vert_arr);
+    let vert_buf2 = VertexBuffer::new(Primitive::Triangles, vert_arr_2);
+
     let event_handler = EventHandler::new(&window);
 
     window.set_clear_color(Color::red());
@@ -37,6 +48,7 @@ fn main()
 
         window.clear();
         window.draw(&vert_buf);
+        window.draw(&vert_buf2);
         window.display();
     }
 }

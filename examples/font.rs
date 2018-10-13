@@ -25,15 +25,12 @@ fn main() {
     let event_handler = EventHandler::new(&window);
 
     // Create font
-    let font = Rc::new(RefCell::new(Font::from_path("examples/font/test.ttf").unwrap()));
+    let font = Rc::new(RefCell::new(Font::from_path("examples/font/terminus.ttf").unwrap()));
 
     // Create text with font
     let mut text = Text::new(&font);
-    text.set_content(String::from("Alloin !"));
-    // Dump the updated font
-    text.update();
-    text.dump_texture();
-
+    text.set_content(String::from("Herbosan salut, tu vas bien ? Je trouve que tu suce bien <3"));
+    text.set_position(Vector::new(500.0, 500.0));
     // Loop preparation
     window.set_clear_color(Color::new(0.0, 0.0, 1.0));
     window.enable_cursor();

@@ -41,7 +41,8 @@ pub struct Text {
     content: String,
     actual_size: u32,
     vertex_buffer: VertexBuffer,
-    need_update: bool
+    need_update: bool,
+    pos: Vector<f32>
 }
 
 impl Text {
@@ -63,7 +64,8 @@ impl Text {
             content: String::new(),
             actual_size: 14,
             vertex_buffer: VertexBuffer::default(),
-            need_update: true
+            need_update: true,
+            pos: Vector::new(0.0, 0.0)
         }
     }
 
@@ -102,10 +104,11 @@ impl Movable for Text {
         unimplemented!();
     }
 
-    fn set_position<T>(&mut self, _pos: Vector<T>)
+    fn set_position<T>(&mut self, pos: Vector<T>)
     where
         T: nalgebra::Scalar + From<f32> + Into<f32> {
-        unimplemented!();
+        self.pos.x = pos.x.into();
+        self.pos.y = pos.y.into();
     }
 
     fn get_position(&self) -> Vector<f32> {
@@ -163,7 +166,7 @@ impl Drawable for Text {
         if !self.need_update { return; }
 
         // Relative position
-        let mut pos = Vector::new(0.0, 0.0);
+        let mut pos = self.pos;
 
         // Get reference to the font that is a reference counter
         let mut font_ref = self.font
@@ -206,7 +209,6 @@ impl Drawable for Text {
             // x position of the character
             pos.x += char_info.advance as f32;
         }
-        
         // Update final buffer
         self.vertex_buffer.update();
 
@@ -254,17 +256,17 @@ fn get_vertice_letter(char_info: &CharInfo, pos: &Vector<f32>, padding: f32) -> 
     let bottom = char_info.rect.top  + char_info.rect.height + padding;
 
     // Set texture coord for each character
-    let u1 = (char_info.tex_coord.left - padding as u32) as f32;
-    let v1 = (char_info.tex_coord.top - padding as u32) as f32;
-    let u2 = (char_info.tex_coord.left + char_info.tex_coord.width + padding as u32) as f32;
-    let v2 = (char_info.tex_coord.top  + char_info.tex_coord.height + padding as u32) as f32;
+    let u1 = ((char_info.tex_coord.left - padding as u32) as f32) / 128.0;
+    let v1 = ((char_info.tex_coord.top - padding as u32) as f32) / 128.0;
+    let u2 = ((char_info.tex_coord.left + char_info.tex_coord.width + padding as u32) as f32) / 128.0;
+    let v2 = ((char_info.tex_coord.top  + char_info.tex_coord.height + padding as u32) as f32) / 128.0;
 
     [
-        Vertex::new(Vector::new(x + left, y + top),     Vector::new(u1, v1), Color::white()),
-        Vertex::new(Vector::new(x + right, y + top),    Vector::new(u2, v1), Color::white()),
-        Vertex::new(Vector::new(x + left, y + bottom),  Vector::new(u1, v2), Color::white()),
-        Vertex::new(Vector::new(x + left, y + bottom),  Vector::new(u1, v2), Color::white()),
-        Vertex::new(Vector::new(x + right, y + top),    Vector::new(u2, v1), Color::white()),
-        Vertex::new(Vector::new(x + right, y + bottom), Vector::new(u2, v2), Color::white()),
+        Vertex::new(Vector::new(x + left,   y + top),       Vector::new(u1, v1), Color::red()),
+        Vertex::new(Vector::new(x + left,   y + bottom),    Vector::new(u1, v2), Color::red()),
+        Vertex::new(Vector::new(x + right,  y + bottom),    Vector::new(u2, v2), Color::red()),
+        Vertex::new(Vector::new(x + left,   y + top),       Vector::new(u1, v1), Color::red()),
+        Vertex::new(Vector::new(x + right,   y + bottom),    Vector::new(u2, v2), Color::red()),
+        Vertex::new(Vector::new(x + right,  y + top),       Vector::new(u2, v1), Color::red()),
     ]
 }

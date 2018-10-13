@@ -208,6 +208,7 @@ impl Drawable for VertexBuffer {
                 );
                 self.len = self.array.len();
             }
+            println!("SELF {:?}", self);
             gl::BufferSubData(
 				gl::ARRAY_BUFFER,
                 0,
