@@ -20,7 +20,8 @@
 //! ```
 //! Text is drawable so you can use targer.draw(text);
 //! after initialising it.
-//!
+//! The text is made from Text.cpp of SFML
+
 use texture::Texture;
 use font::{Font,CharInfo};
 use draw::{Drawable,Drawer,Context,Movable,BlendMode};
@@ -29,7 +30,7 @@ use ::{Point,Vector};
 use nalgebra;
 use std::{error::Error, rc::Rc};
 use std::cell::RefCell;
-use vertex_buffer::{VertexBuffer,Primitive};
+use vertex_buffer::VertexBuffer;
 use vertex::Vertex;
 use color::Color;
 
@@ -46,13 +47,11 @@ pub struct Text {
 }
 
 impl Text {
-    
-
 
     pub fn dump_texture(&mut self) -> Result<(),Box<Error>>{
-        // Get the texture                                                                          
-        let font_ref = self.font.try_borrow().unwrap();                                             
-        let texture = font_ref.texture(self.actual_size).unwrap(); 
+        // Get the texture
+        let font_ref = self.font.try_borrow().unwrap();
+        let texture = font_ref.texture(self.actual_size).unwrap();
 
         texture.to_file("test.png")?;
         Ok(())
@@ -75,6 +74,10 @@ impl Text {
 
     pub fn content(&self) -> &String {
         &self.content
+    }
+
+    pub fn content_mut(&mut self) -> &mut String {
+        &mut self.content
     }
 
     pub fn set_size(&mut self, size: u32) {
@@ -109,6 +112,7 @@ impl Movable for Text {
         T: nalgebra::Scalar + From<f32> + Into<f32> {
         self.pos.x = pos.x.into();
         self.pos.y = pos.y.into();
+        self.need_update = true;
     }
 
     fn get_position(&self) -> Vector<f32> {
@@ -179,7 +183,9 @@ impl Drawable for Text {
         // Setup padding
         let padding = 0.0;
 
+        // Clear the buffer of the data
         self.vertex_buffer.clear();
+
         // Iter of character of the content to create a geometry for each one of them
         for charr in self.content.as_str().chars() {
 
@@ -196,13 +202,13 @@ impl Drawable for Text {
                 pos.x += whitespace;
                 continue;
             }
-           
-            // Get the glyph from the the font 
+
+            // Get the glyph from the the font
             let char_info = font_ref.glyph(self.actual_size, charr as u32);
-    
+
             // get vertices from char_info
             let vertices = get_vertice_letter(&char_info, &pos, padding);
-            
+
             // append vertice to vertex_buffer
             self.vertex_buffer.append(&vertices);
 
@@ -262,11 +268,11 @@ fn get_vertice_letter(char_info: &CharInfo, pos: &Vector<f32>, padding: f32) -> 
     let v2 = ((char_info.tex_coord.top  + char_info.tex_coord.height + padding as u32) as f32) / 128.0;
 
     [
-        Vertex::new(Vector::new(x + left,   y + top),       Vector::new(u1, v1), Color::red()),
-        Vertex::new(Vector::new(x + left,   y + bottom),    Vector::new(u1, v2), Color::red()),
-        Vertex::new(Vector::new(x + right,  y + bottom),    Vector::new(u2, v2), Color::red()),
-        Vertex::new(Vector::new(x + left,   y + top),       Vector::new(u1, v1), Color::red()),
-        Vertex::new(Vector::new(x + right,   y + bottom),    Vector::new(u2, v2), Color::red()),
-        Vertex::new(Vector::new(x + right,  y + top),       Vector::new(u2, v1), Color::red()),
+        Vertex::new(Vector::new(x + left,   y + top),       Vector::new(u1, v1), Color::white()),
+        Vertex::new(Vector::new(x + left,   y + bottom),    Vector::new(u1, v2), Color::white()),
+        Vertex::new(Vector::new(x + right,  y + bottom),    Vector::new(u2, v2), Color::white()),
+        Vertex::new(Vector::new(x + left,   y + top),       Vector::new(u1, v1), Color::white()),
+        Vertex::new(Vector::new(x + right,   y + bottom),    Vector::new(u2, v2), Color::white()),
+        Vertex::new(Vector::new(x + right,  y + top),       Vector::new(u2, v1), Color::white()),
     ]
 }

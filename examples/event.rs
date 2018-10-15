@@ -9,9 +9,8 @@ extern crate glfw;
 
 use gust::sprite::Sprite;
 use gust::window::Window;
-use gust::{Vector,Point,Key};
+use gust::{Vector,Key};
 use glfw::Action;
-use gust::event;
 use gust::event::{EventHandler,Events,Event};
 use std::rc::Rc;
 use gust::color::Color;

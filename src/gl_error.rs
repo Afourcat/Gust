@@ -6,7 +6,6 @@
 //! gl error system
 
 use std::error::Error;
-use gl::*;
 use gl;
 
 #[derive(Debug)]

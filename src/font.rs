@@ -3,7 +3,7 @@
 //  Author: Alexandre Fourcat
 //  font.rs
 //  module:
-//! font datastructures and fonctions
+//! font datastructures and fonctions made from Font.cpp of SFML
 
 use self::ft::{
     library::Library,
@@ -11,7 +11,7 @@ use self::ft::{
         Face,
         LoadFlag
     },
-    bitmap::{Bitmap,PixelMode},
+    bitmap::PixelMode,
 
 };
 use rect::Rect;
@@ -70,7 +70,7 @@ impl GlyphMap {
         }
     }
 
-    pub fn get_texture_rect(&mut self, width: u32, height: u32, size: u32) -> Rect<u32> {
+    pub fn get_texture_rect(&mut self, width: u32, height: u32) -> Rect<u32> {
         let mut ret: Option<Rect<u32>> = None;
         // Iter over all element
         for mut row in self.rows.iter_mut() {
@@ -216,12 +216,13 @@ impl Font {
             let metrics = self.face.glyph().metrics();
             let bitmap = self.face.glyph().bitmap();
             // Create the new Charinfo that will be inserted
-            let mut to_insert = CharInfo::new();
 
             let height = bitmap.rows();
             let width = bitmap.width();
-            
+
+            // TODO: Add letter bearing to make them looks normal when drawn
             // Get the glyph and informations
+            let mut to_insert = CharInfo::new();
             to_insert.rect.left = metrics.horiBearingX as f32 / (1 << 6) as f32;
             to_insert.rect.top = metrics.horiBearingY as f32 / (1 << 6) as f32;
             to_insert.rect.width = metrics.width as f32 / (1 << 6) as f32;
@@ -229,15 +230,15 @@ impl Font {
             to_insert.advance = (metrics.horiAdvance + 2) as f32 / (1 << 6) as f32;
 
             // Look at the glyph texture and try to find a place inside it
-            to_insert.tex_coord = glyph_map.get_texture_rect(width as u32, height as u32, size);
-    
+            to_insert.tex_coord = glyph_map.get_texture_rect(width as u32, height as u32);
+
             // Resize buffer
             let mut slice = vec![255; (height * width * 4) as usize];
             for ref mut elem in slice.chunks_mut(4) { elem[3] = 0; }
 
             // Create the data vector from slice
             let mut data = Vec::from(slice);
-            
+
             // fill pixel buffer
             let pixels: Vec<u8> = Vec::from(bitmap.buffer());
             let mut offset = 0;
@@ -245,7 +246,7 @@ impl Font {
                 PixelMode::None => {
                     panic!("Error while creating glyph");
                 },
-                PixelMode::Mono => { 
+                PixelMode::Mono => {
 
                     // If it's mono just change the alpha of each pixel to make it black or white
                     for y in 0..height {

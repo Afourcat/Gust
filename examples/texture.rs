@@ -4,7 +4,6 @@ extern crate glfw;
 use gust::sprite::Sprite;
 use gust::window::Window;
 use gust::{Vector,Point,Key};
-use gust::event;
 use gust::event::{EventHandler,Events,Event};
 use std::rc::Rc;
 use gust::color::Color;
@@ -20,18 +19,16 @@ fn main()
     let mut pixels: Vec<u8> = vec![125; 200 * 200 * 4];
     let pix: Vec<u8> = vec![255; 100 * 100 * 3];
     let mut my_tex = Texture::from_path("examples/texture/New.png").unwrap();
-    let mut blank;
+    let blank;
     let mut texture = Texture::from_path("examples/texture/Dirt.png").unwrap();
 
     unsafe {
-        use std::os::raw::c_void; 
+        use std::os::raw::c_void;
         blank = Texture::from_data(pixels.as_mut_ptr() as *mut c_void, RgbMode::RGBA, 200, 200);
     }
 
-    texture.to_file("before.png");
-    my_tex.update_block(pix.as_slice(), Vector::new(100, 100), Vector::new(10, 10), None);
+    my_tex.update_block(pix.as_slice(), Vector::new(100, 100), Vector::new(10, 10), None).unwrap();
     texture.update_from_texture(&blank, Vector::new(10, 10));
-    texture.to_file("after.png");
 
     let blank_rc = Rc::new(blank);
     let tex_dirt = Rc::new(my_tex);
@@ -72,7 +69,7 @@ fn event_process(event: Event, window: &mut Window, texture: &Texture, sprite: &
         },
         Events::MouseButton(_, _, _) => {
             println!("Dumping texture to test.png");
-            texture.to_file("test.png");
+            texture.to_file("test.png").unwrap();
         },
         Events::CursorPos(x, y) => {
             sprite.set_position(Vector::new(x as f32, y as f32));
