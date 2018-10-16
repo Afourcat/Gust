@@ -171,6 +171,7 @@ impl Drawable for Text {
 
         // Relative position
         let mut pos = self.pos;
+        let mut offset = 0.0;
 
         // Get reference to the font that is a reference counter
         let mut font_ref = self.font
@@ -178,7 +179,16 @@ impl Drawable for Text {
                         .unwrap();
 
         // Get the whitespace x size
-        let whitespace = font_ref.glyph(self.actual_size, 0x20_u32).advance;
+        let whitespace;
+        let height;
+        { 
+            let space_glyph = font_ref.glyph(self.actual_size, 0x20_u32);
+            whitespace = space_glyph.advance;
+        }
+        {
+            let a_glyph = font_ref.glyph(self.actual_size, 0x41_u32);
+            height = a_glyph.rect.height + a_glyph.rect.height / 5.0;
+        }
 
         // Setup padding
         let padding = 0.0;
@@ -191,15 +201,16 @@ impl Drawable for Text {
 
             // If the char is a special one
             if charr == '\n' {
-                pos.y += 20.0;
+                pos.y += height;
+                offset = 0.0;
                 continue;
             } else if charr == '\r' {
                 continue;
             } else if charr == '\t' {
-                pos.x += 4.0 * whitespace;
+                offset += 4.0 * whitespace;
                 continue;
             } else if charr == ' ' {
-                pos.x += whitespace;
+                offset += whitespace;
                 continue;
             }
 
@@ -207,13 +218,13 @@ impl Drawable for Text {
             let char_info = font_ref.glyph(self.actual_size, charr as u32);
 
             // get vertices from char_info
-            let vertices = get_vertice_letter(&char_info, &pos, padding);
+            let vertices = get_vertice_letter(&char_info, &pos, padding, offset);
 
             // append vertice to vertex_buffer
             self.vertex_buffer.append(&vertices);
 
             // x position of the character
-            pos.x += char_info.advance as f32;
+            offset += char_info.advance as f32;
         }
         // Update final buffer
         self.vertex_buffer.update();
@@ -251,8 +262,8 @@ impl Drawable for Text {
     }
 }
 
-fn get_vertice_letter(char_info: &CharInfo, pos: &Vector<f32>, padding: f32) -> [Vertex; 6] {
-    let x = pos.x;
+fn get_vertice_letter(char_info: &CharInfo, pos: &Vector<f32>, padding: f32, offset: f32) -> [Vertex; 6] {
+    let x = pos.x + offset;
     let y = pos.y;
 
     // Set geometry for 1 character
@@ -272,7 +283,7 @@ fn get_vertice_letter(char_info: &CharInfo, pos: &Vector<f32>, padding: f32) -> 
         Vertex::new(Vector::new(x + left,   y + bottom),    Vector::new(u1, v2), Color::white()),
         Vertex::new(Vector::new(x + right,  y + bottom),    Vector::new(u2, v2), Color::white()),
         Vertex::new(Vector::new(x + left,   y + top),       Vector::new(u1, v1), Color::white()),
-        Vertex::new(Vector::new(x + right,   y + bottom),    Vector::new(u2, v2), Color::white()),
+        Vertex::new(Vector::new(x + right,  y + bottom),    Vector::new(u2, v2), Color::white()),
         Vertex::new(Vector::new(x + right,  y + top),       Vector::new(u2, v1), Color::white()),
     ]
 }

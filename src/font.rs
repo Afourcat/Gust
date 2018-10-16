@@ -223,11 +223,11 @@ impl Font {
             // TODO: Add letter bearing to make them looks normal when drawn
             // Get the glyph and informations
             let mut to_insert = CharInfo::new();
-            to_insert.rect.left = metrics.horiBearingX as f32 / (1 << 6) as f32;
-            to_insert.rect.top = metrics.horiBearingY as f32 / (1 << 6) as f32;
-            to_insert.rect.width = metrics.width as f32 / (1 << 6) as f32;
-            to_insert.rect.height = metrics.height as f32 / (1 << 6) as f32;
-            to_insert.advance = (metrics.horiAdvance + 2) as f32 / (1 << 6) as f32;
+            to_insert.rect.left     = metrics.horiBearingX as f32 / (1 << 6) as f32;
+            to_insert.rect.top      = -metrics.horiBearingY as f32 / (1 << 6) as f32;
+            to_insert.rect.width    = metrics.width as f32 / (1 << 6) as f32;
+            to_insert.rect.height   = metrics.height as f32 / (1 << 6) as f32;
+            to_insert.advance       = (metrics.horiAdvance + 2) as f32 / (1 << 6) as f32;
 
             // Look at the glyph texture and try to find a place inside it
             to_insert.tex_coord = glyph_map.get_texture_rect(width as u32, height as u32);
