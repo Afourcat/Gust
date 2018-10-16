@@ -98,7 +98,7 @@ impl GlyphMap {
                 let mut new = Texture::from_size(
                     Vector::new(self.texture.width() * 2, self.texture.height() * 2)
                 );
-                new.update_from_texture(&self.texture, Vector::new(0, 0));
+                new.update_from_texture(&self.texture, Vector::new(0, 0)).unwrap();
                 self.texture = new;
             }
             let mut new_row = Row::new(height + height / 10, last_pos);
