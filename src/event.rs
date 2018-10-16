@@ -1,14 +1,12 @@
 //! Module to handle keyboard and mouse event one day
 use std::sync::mpsc::Receiver;
-use glfw::{Key, Action, FlushedMessages, MouseButton};
 use glfw;
 pub use glfw::WindowEvent as Events;
 use std::rc::Rc;
 
-type EventFunction = fn(Event) -> Result<(),String>;
-
 pub type EventMessage<'a> = glfw::FlushedMessages<'a, (f64, Events)>;
 
+/// Event Wrap glfwEvent data
 pub type Event = (f64, Events);
 
 pub struct EventHandler {
@@ -39,6 +37,7 @@ impl<'a> Iterator for EventIterator<'a> {
 	}
 }
 
+/// EventIterator is an iterator on eventMessage to glob glfw Event system
 pub struct EventIterator<'a> {
 	fmsg: EventMessage<'a>
 }

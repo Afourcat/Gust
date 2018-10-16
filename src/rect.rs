@@ -117,4 +117,13 @@ impl Into<Rect<f32>> for Rect<usize> {
     }
 }
 
-
+impl<T: Default + nalgebra::Scalar> Default for Rect<T> {
+    fn default() -> Rect<T> {
+        Rect {
+            top: T::default(),
+            left: T::default(),
+            width: T::default(),
+            height: T::default()
+        }
+    }
+}

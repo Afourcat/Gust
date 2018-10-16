@@ -10,8 +10,9 @@ use nalgebra::*;
 use nalgebra;
 use draw::{Movable};
 use vertex::*;
-use shader::Shader;
+use shader::DEFAULT_SHADER;
 use rect::Rect;
+use std::convert::From;
 
 /// A sprite is a transformable
 /// drawable sprite
@@ -19,7 +20,7 @@ use rect::Rect;
 /// ```Rust
 /// use texture::Texture;
 /// use sprite::Sprite;
-/// 
+///
 /// let texture = Texture::new("assets/texture.jpg");
 /// let sprite = Sprite::from_texture(Rc::clone(&texutre));
 /// sprite.rotate(45.0);
@@ -47,12 +48,12 @@ impl Sprite {
             pos: Vector2::new(0.0, 0.0),
             scale: Vector2::new(1.0, 1.0),
             vertice: Box::new(
-                VertexBuffer::new( Primitive::TrianglesStrip, VertexArray::new(vec! [
+                VertexBuffer::new(Primitive::TrianglesStrip, VertexArray::from(vec![
                     Vertex::default(),
                     Vertex::default(),
                     Vertex::default(),
                     Vertex::default(),
-                ]))
+                ].as_slice()))
             ),
             need_update: true,
             texture: None,
@@ -74,8 +75,8 @@ impl Sprite {
     pub fn get_sizes(&self) -> Vector2<usize> {
         if let Some(ref texture) = self.texture {
             Vector2::new(
-                texture.get_width() as usize,
-                texture.get_height() as usize
+                texture.width() as usize,
+                texture.height() as usize
             )
         } else {
             Vector2::new(0, 0)
@@ -109,19 +110,19 @@ impl<'a> From<&'a Rc<Texture>> for Sprite {
     /// let personnage = Sprite::from(&texture);
     /// ```
     fn from(tex: &'a Rc<Texture>) -> Sprite {
-        let width = tex.get_width() as f32;
-        let height = tex.get_height() as f32;
+        let width = tex.width() as f32;
+        let height = tex.height() as f32;
         let pos = Vector2::new(0.0, 0.0);
         Sprite {
             pos: pos,
             scale: Vector2::new(1.0, 1.0),
             vertice: Box::new(VertexBuffer::new(Primitive::TrianglesStrip,
-                VertexArray::new(vec![
+                VertexArray::from(vec![
                     Vertex::new(Vector2::new(0.0,      0.0), Vector2::new(0.0, 0.0), Color::white()),
                     Vertex::new(Vector2::new(0.0,   height), Vector2::new(0.0, 1.0), Color::white()),
                     Vertex::new(Vector2::new(width,    0.0), Vector2::new(1.0, 0.0), Color::white()),
                     Vertex::new(Vector2::new(width, height), Vector2::new(1.0, 1.0), Color::white()),
-                ])
+                ].as_slice())
             )),
             texture: Some(Rc::clone(tex)),
             need_update: true,
@@ -213,14 +214,13 @@ impl Drawable for Sprite {
                     } else {
                         None
                     },
-                    Shader::default(),
+                    &*DEFAULT_SHADER,
                     Some(Matrix4::<f32>::identity() * self.model),
                     BlendMode::Alpha
         ));
     }
 
-    fn draw_with_context<'a, T: Drawer>
-    (&self, window: &mut T, context: &'a mut Context) {
+    fn draw_with_context<'a, T: Drawer>(&self, window: &mut T, context: &'a mut Context) {
         self.vertice.draw_with_context(window, context);
     }
 
@@ -260,7 +260,7 @@ impl Drawable for Sprite {
             }
 
             self.model.append_nonuniform_scaling_mut(
-                &Vector3::new(self.scale.x, self.scale.y, 0.0)    
+                &Vector3::new(self.scale.x, self.scale.y, 0.0)
             );
             self.need_update = false;
         }

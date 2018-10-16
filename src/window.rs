@@ -20,8 +20,15 @@ use draw;
 use ::Vector;
 use view::{View};
 use rect::Rect;
+use nalgebra;
 use nalgebra::Matrix4;
 use event::EventType;
+
+static DEFAULT_FPS: u32 = 60;
+
+lazy_static! {
+    static ref DEFAULT_DELTA: f64 = 1.0 / DEFAULT_FPS as f64;
+}
 
 /// Window struct
 /// Define a struct by many thing in glfw
@@ -34,6 +41,7 @@ pub struct Window {
     glf_window: glfw::Glfw,
     already_init: bool,
     view: View,
+    fps_limit: u32
 }
 
 /// Window structure implementation
@@ -83,6 +91,7 @@ impl<'a> Window {
             clear_color: Color::new(1.0, 1.0, 1.0),
             glf_window: glfw,
             already_init: true,
+            fps_limit: self::DEFAULT_FPS
         }
     }
 
@@ -103,7 +112,7 @@ impl<'a> Window {
             window.win.set_all_polling(active);
             return;
         }
-        match event.unwrap() {                                                           
+        match event.unwrap() {
             EventType::Key => window.win.set_key_polling(active),
             EventType::Pos => window.win.set_pos_polling(active),
             EventType::Close => window.win.set_close_polling(active),
@@ -216,6 +225,29 @@ impl<'a> Window {
     pub fn get_view_mut(&mut self) -> &mut View {
         &mut self.view
     }
+
+    pub fn set_fps_limit(&mut self, limit: u32) -> u32 {
+        let old = self.fps_limit;
+        self.fps_limit = limit;
+        old
+    }
+
+    pub fn fps_limit(&self) -> u32 {
+        self.fps_limit
+    }
+
+    pub fn limit_fps(&mut self) -> f64 {
+        let time = self.glf_window.get_time();
+        let limit = 1.0_f64 / self.fps_limit as f64;
+        
+        if limit <= time {
+            self.glf_window.set_time(0_f64);
+            limit - time 
+        } else {
+            0.0
+        }
+    }
+
 }
 
 impl Drop for Window {
@@ -227,6 +259,7 @@ impl Drop for Window {
 impl Drawer for Window {
 
     fn draw<T: Drawable>(&mut self, drawable: &T) {
+        //let time = self.limit_fps();
         drawable.draw(self);
     }
 
@@ -273,6 +306,7 @@ impl Default for Window {
             clear_color: Color::new(1.0, 1.0, 1.0),
             glf_window: glfw,
             already_init: true,
+            fps_limit: self::DEFAULT_FPS,
         }
     }
 }

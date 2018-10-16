@@ -14,6 +14,26 @@ lazy_static! {
 	pub static ref DEFAULT_SHADER: Shader = Shader::default();
 }
 
+lazy_static! {
+    pub static ref NO_TEXTURE_SHADER: Shader = {
+        let (vert, frag, id);
+        unsafe {
+            let (v, f, i) = Shader::do_shader(
+                    CString::new(VS.as_bytes()).unwrap(),
+                    CString::new(NO_TEXTURE_FS.as_bytes()).unwrap()
+            ).unwrap();
+            vert = v;
+            frag = f;
+            id = i;
+        }
+        return Shader {
+            id: id,
+            frag: frag,
+            vert: vert
+        }
+    };
+}
+
 /// Shader object that abstract openGl type
 #[derive(Debug)]
 pub struct Shader {
@@ -21,6 +41,36 @@ pub struct Shader {
 	vert: u32,
 	frag: u32,
 }
+
+static SPRITE_VS: &'static str =
+"#version 330 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec2 aTexCoord;
+layout (location = 2) in vec3 aColor;
+out vec3 ourColor;
+out vec2 TexCoord;
+uniform mat4 transform;
+
+void main()
+{
+   gl_Position = transform * vec4(aPos.xy, 0.0, 1.0);
+   ourColor = aColor;
+   TexCoord = aTexCoord;
+}";
+
+static SPRITE_FG: &'static str =
+"#version 330 core
+out vec4 FragColor;
+in vec3 ourColor;
+in vec2 TexCoord;
+uniform sampler2D ourTexture;
+
+void main()
+{
+   FragColor = texture(ourTexture, TexCoord) * vec4(ourColor, 1.0);
+}";
+
+
 
 static VS: &'static str =
 "#version 330 core
@@ -48,6 +98,16 @@ uniform sampler2D ourTexture;
 void main()
 {
    FragColor = texture(ourTexture, TexCoord) * vec4(ourColor, 1.0);
+}";
+
+static NO_TEXTURE_FS: &'static str =
+"#version 330 core
+out vec4 FragColor;
+in vec3 ourColor;
+
+void main()
+{
+   FragColor = vec4(ourColor, 1.0);
 }";
 
 /// Return a string from a filename

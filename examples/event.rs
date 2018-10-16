@@ -9,9 +9,8 @@ extern crate glfw;
 
 use gust::sprite::Sprite;
 use gust::window::Window;
-use gust::{Vector,Point,Key};
+use gust::{Vector,Key};
 use glfw::Action;
-use gust::event;
 use gust::event::{EventHandler,Events,Event};
 use std::rc::Rc;
 use gust::color::Color;
@@ -20,10 +19,9 @@ use gust::draw::{Drawer,Movable};
 use gust::draw::Drawable;
 use std::collections::HashMap;
 
-fn main()
-{
+fn main() {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
-    let tex_dirt = Rc::new(Texture::new("examples/texture/Dirt.png"));
+    let tex_dirt = Rc::new(Texture::from_path("examples/texture/Dirt.png").unwrap());
     let event_handler = EventHandler::new(&window);
     let mut sprites = HashMap::new();
     sprites.insert("dirt_1", Sprite::from(&tex_dirt));
@@ -38,13 +36,13 @@ fn main()
         for event in event_handler.fetch() {
             event_process(event, &mut window, &mut sprites);
         }
-        
+
         draw(&mut window, &mut sprites);
     }
 }
 
 fn draw(window: &mut Window, sprites: &mut HashMap<&'static str,Sprite>) {
-    for (name, sprite) in sprites.iter_mut() { sprite.update(); }
+    for (_name, sprite) in sprites.iter_mut() { sprite.update(); }
 
     window.clear();
     window.draw(&sprites["dirt_1"]);
@@ -80,7 +78,7 @@ fn event_process(event: Event, window: &mut Window, sprites: &mut HashMap<&'stat
                 if sprite.contain(mouse_pos) {
                     sprite.set_color(&Color::blue());
                 }
-            }   
+            }
         },
         _ => {}
     }

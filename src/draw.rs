@@ -8,6 +8,7 @@ use shader::Shader;
 use std::rc::Rc;
 use nalgebra::Matrix4;
 use gl;
+use shader::DEFAULT_SHADER;
 
 //----------------------------------------------------------------------------
 //
@@ -17,6 +18,7 @@ use gl;
 //
 //----------------------------------------------------------------------------
 
+#[derive(Debug)]
 /// Blend mode needed to draw
 pub enum BlendMode {
 	Alpha,
@@ -64,12 +66,13 @@ impl BlendMode {
 //
 //----------------------------------------------------------------------------
 
+#[derive(Debug)]
 /// Context needed to handle a draw of a vertex array
 /// A context is needed by the drawer to handle the drawing
 /// process a default context can be use ether
 pub struct Context<'a> {
 	texture: Option<&'a Texture>,
-	shader: Shader,
+	shader: &'a Shader,
     transform: Matrix4<f32>,
 	blend_mode: BlendMode,
 }
@@ -79,7 +82,7 @@ impl<'a> Context<'a> {
     /// Create a new context from texture, shader, transform, blend_mode
     pub fn new(
         texture: Option<&'a Texture>,
-        shader: Shader,
+        shader: &'a Shader,
         transform: Option<Matrix4<f32>>,
         blend_mode: BlendMode
     ) -> Context<'a> {
@@ -92,7 +95,7 @@ impl<'a> Context<'a> {
     }
 
     /// Apply texture on the context
-    pub fn apply_texture(&self, id: i32) {
+    pub fn apply_texture(&mut self, id: i32) {
         if let Some(texture) = self.texture {
             texture.active(id);
         }
@@ -121,7 +124,7 @@ impl<'a> Default for Context<'a> {
 	fn default() -> Context<'a> {
 		Context {
 			texture: None,
-			shader: Shader::default(),
+			shader: &*DEFAULT_SHADER,
             transform: Matrix4::identity(),
 			blend_mode: BlendMode::Alpha,
 		}
