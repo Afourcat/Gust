@@ -70,6 +70,7 @@ impl Text {
 
     pub fn set_content(&mut self, content: String) {
         self.content = content;
+        self.need_update = true;
     }
 
     pub fn content(&self) -> &String {
@@ -167,7 +168,7 @@ impl Drawable for Text {
 
     fn update(&mut self) {
         // Si l'update n'est pas necessaire
-        if !self.need_update { return; }
+        if !self.need_update { return }
 
         // Relative position
         let mut pos = self.pos;

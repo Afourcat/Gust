@@ -11,6 +11,7 @@ use gust::draw::Drawable;
 use gust::text::Text;
 use gust::font::Font;
 use std::cell::RefCell;
+use std::time::SystemTime;
 
 fn main() {
     // Create drawer window
@@ -24,7 +25,7 @@ fn main() {
 
     // Create text with font
     let mut text = Text::new(&font);
-    text.set_content(String::from("Hello !\nReturn example !\tTabs = 4spaces\n"));
+    text.set_content(String::from("Emma !"));
 
     // Loop preparation
     window.set_clear_color(Color::new(0.0, 0.0, 0.0));
@@ -36,7 +37,11 @@ fn main() {
 
         // Poll event
         window.poll_events();
-
+        if text.content() == "AAA" {
+            text.set_content(String::from("BBB"))
+        } else {
+            text.set_content(String::from("AAA"))
+        }
         event_handler.fetch().for_each(|event| handle(&event, &mut window, &mut text));
 
         // Draw process (Clear -> Draw -> Display)

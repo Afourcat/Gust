@@ -75,11 +75,8 @@ impl GlyphMap {
         // Iter over all element
         for mut row in self.rows.iter_mut() {
             if row.width + width  > self.texture.width() {
-                println!("Cannot get texture cause width = {} and row.width + width = {}.",
-                self.texture.width(), row.width + width);
                 continue;
             } else if row.height < height {
-                println!("The letter is to high for this row. {}", height);
                 continue;
             }
             ret = Some(Rect::new(row.width, row.pos, width, height));
