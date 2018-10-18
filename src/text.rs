@@ -48,7 +48,8 @@ pub struct Text {
 
 impl Text {
 
-    pub fn dump_texture(&mut self) -> Result<(),Box<Error>>{
+    /// Dump the font texture to a file
+    pub fn dump_texture(&mut self) -> Result<(), Box<Error>>{
         // Get the texture
         let font_ref = self.font.try_borrow().unwrap();
         let texture = font_ref.texture(self.actual_size).unwrap();
@@ -57,6 +58,7 @@ impl Text {
         Ok(())
     }
 
+    /// Create a new text from a font previously created
 	pub fn new(font: &Rc<RefCell<Font>>) -> Text {
         Text {
             font: Rc::clone(font),
@@ -68,29 +70,46 @@ impl Text {
         }
     }
 
-    pub fn set_content(&mut self, content: String) {
-        self.content = content;
+    pub fn from_str(font: &Rc<RefCell<Font>>, content: &str) -> Text {
+        Text {
+            font: Rc::clone(font),
+            content: String::from(content),
+            actual_size: 14,
+            vertex_buffer: VertexBuffer::default(),
+            need_update: true,
+            pos: Vector::new(0.0, 0.0)
+        }
+    }
+
+    /// Set the content of the text
+    pub fn set_content<'a, T>(&mut self, content: T)
+    where
+        T: AsRef<str>
+    {
+        self.content = String::from(content.as_ref());
         self.need_update = true;
     }
 
+    /// Get the content of the text as &String
     pub fn content(&self) -> &String {
         &self.content
     }
 
+    /// Get the content of the text as &mut String
     pub fn content_mut(&mut self) -> &mut String {
+        self.need_update = true;
         &mut self.content
     }
 
+    /// Set the local font size
     pub fn set_size(&mut self, size: u32) {
         self.actual_size = size;
+        self.need_update = true;
     }
 
+    /// Get the local font size
     pub fn size(&self) -> u32 {
         self.actual_size
-    }
-
-    pub fn add_to_buffer(&mut self, _char_info: CharInfo, _pos: Vector<u32>) {
-        unimplemented!();
     }
 }
 
@@ -98,19 +117,22 @@ impl Movable for Text {
 
     fn contain<T>(&self, _point: Point<T>) -> bool
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32> {
+        T: nalgebra::Scalar + From<f32> + Into<f32>
+    {
         true
     }
 
     fn translate<T>(&mut self, _offset: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32> {
+        T: nalgebra::Scalar + From<f32> + Into<f32>
+    {
         unimplemented!();
     }
 
     fn set_position<T>(&mut self, pos: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32> {
+        T: nalgebra::Scalar + From<f32> + Into<f32>
+    {
         self.pos.x = pos.x.into();
         self.pos.y = pos.y.into();
         self.need_update = true;
@@ -122,13 +144,15 @@ impl Movable for Text {
 
     fn scale<T>(&mut self, _factor: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32> {
+        T: nalgebra::Scalar + From<f32> + Into<f32>
+    {
         unimplemented!();
     }
 
     fn set_scale<T>(&mut self, _vec: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32> {
+        T: nalgebra::Scalar + From<f32> + Into<f32>
+    {
         unimplemented!();
     }
 
@@ -138,13 +162,15 @@ impl Movable for Text {
 
     fn rotate<T>(&mut self, _angle: T)
     where
-        T: nalgebra::Scalar + Into<f32> {
+        T: nalgebra::Scalar + Into<f32>
+    {
         unimplemented!();
     }
 
     fn set_rotation<T>(&mut self, _angle: T)
     where
-        T: nalgebra::Scalar + Into<f32> {
+        T: nalgebra::Scalar + Into<f32>
+    {
         unimplemented!();
     }
 
@@ -154,7 +180,8 @@ impl Movable for Text {
 
     fn set_origin<T>(&mut self, _origin: Vector<T>)
     where
-        T: nalgebra::Scalar + Into<f32> {
+        T: nalgebra::Scalar + Into<f32>
+    {
             unimplemented!();
     }
 
@@ -182,7 +209,7 @@ impl Drawable for Text {
         // Get the whitespace x size
         let whitespace;
         let height;
-        { 
+        {
             let space_glyph = font_ref.glyph(self.actual_size, 0x20_u32);
             whitespace = space_glyph.advance;
         }
@@ -263,6 +290,7 @@ impl Drawable for Text {
     }
 }
 
+/// Get a vertice from a character information, padding and offset
 fn get_vertice_letter(char_info: &CharInfo, pos: &Vector<f32>, padding: f32, offset: f32) -> [Vertex; 6] {
     let x = pos.x + offset;
     let y = pos.y;

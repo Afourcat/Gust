@@ -13,6 +13,7 @@ use vertex::*;
 use shader::DEFAULT_SHADER;
 use rect::Rect;
 use std::convert::From;
+use std::error::Error;
 
 /// A sprite is a transformable
 /// drawable sprite
@@ -36,7 +37,6 @@ pub struct Sprite {
     vertice: Box<VertexBuffer>,
     texture: Option<Rc<Texture>>,
     model: Matrix4<f32>,
-    auto_update: bool,
     need_update: bool
 }
 
@@ -60,10 +60,10 @@ impl Sprite {
             origin: Vector2::new(0.0, 0.0),
             model: Matrix4::identity(),
             rotation: 0.0,
-            auto_update: false,
         }
     }
 
+    /// Set texture color
     pub fn set_color(&mut self, color: &Color) {
         self.vertice[0].color = color.clone();
         self.vertice[1].color = color.clone();
@@ -72,6 +72,7 @@ impl Sprite {
         self.vertice.update();
     }
 
+    /// Get texture sizes
     pub fn get_sizes(&self) -> Vector2<usize> {
         if let Some(ref texture) = self.texture {
             Vector2::new(
@@ -83,7 +84,10 @@ impl Sprite {
         }
     }
 
-    pub fn set_origin_to_center(&mut self) -> Result<(),&'static str> {
+    /// Set origin to center of the sprite. Can fail because a sprite sizes
+    /// are defined by it's texture, sometimes it can happend that there isn't.
+    /// So it return an SpriteError::NoTexture
+    pub fn set_origin_to_center(&mut self) -> Result<(), SpriteError> {
 
         if let Some(_) = self.texture {
             let mut center = Vector2::new(0.0, 0.0);
@@ -93,7 +97,7 @@ impl Sprite {
             self.set_origin(center);
             Ok(())
         } else {
-            return Err("You should set a texture before !")
+            Err(SpriteError::NoTexture)
         }
     }
 }
@@ -129,7 +133,6 @@ impl<'a> From<&'a Rc<Texture>> for Sprite {
             model: Matrix4::identity().append_translation(&Vector3::new(pos.x, pos.y, 0.0)),
             rotation: 0.0,
             origin: Vector2::new(0.0, 0.0),
-            auto_update: false,
         }
     }
 }
@@ -144,7 +147,6 @@ impl Movable for Sprite {
                   self.pos.y as f32,
                   sizes.x as f32,
                   sizes.y as f32);
-        println!("{:?}", a);
         a.contain(vec)
     }
 
@@ -204,7 +206,22 @@ impl Movable for Sprite {
         self.rotation
     }
 }
-//
+
+impl Default for Sprite {
+    fn default() -> Self {
+        Sprite {
+            pos: Vector2::new(0.0, 0.0),
+            scale: Vector2::new(0.0, 0.0),
+            rotation: 0.0,
+            origin: Vector2::new(0.0, 0.0),
+            vertice: Box::new(VertexBuffer::default()),
+            texture: None,
+            model: Matrix4::<f32>::identity(),
+            need_update: false
+        }
+    }
+}
+
 /// Drawing trait for sprite sturct
 impl Drawable for Sprite {
     fn draw<T: Drawer>(&self, window: &mut T) {
@@ -267,6 +284,30 @@ impl Drawable for Sprite {
     }
 
     fn set_texture(&mut self, texture: &Rc<Texture>) {
-        self.texture = Some(Rc::clone(texture))
+        self.texture = Some(Rc::clone(texture));
+        self.need_update = true;
+    }
+}
+
+#[derive(Debug)]
+pub enum SpriteError {
+    NoTexture,
+}
+
+use std::fmt;
+
+impl fmt::Display for SpriteError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            SpriteError::NoTexture => write!(f, "There is no texture linked to this Sprite"),
+        }
+    }
+}
+
+impl Error for SpriteError {
+    fn cause(&self) -> Option<&Error> {
+        match self {
+            SpriteError::NoTexture => None,
+        }
     }
 }

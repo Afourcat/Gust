@@ -28,7 +28,7 @@ fn main()
     }
 
     my_tex.update_block(pix.as_slice(), Vector::new(100, 100), Vector::new(10, 10), None).unwrap();
-    texture.update_from_texture(&blank, Vector::new(10, 10));
+    texture.update_from_texture(&blank, Vector::new(10, 10)).unwrap();
 
     let blank_rc = Rc::new(blank);
     let tex_dirt = Rc::new(my_tex);

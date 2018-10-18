@@ -59,6 +59,8 @@ impl Row {
 
 /// Contain the global texture and texture information
 impl GlyphMap {
+
+    /// Create a new glyph_map
     pub fn new() -> GlyphMap {
         let mut data: Vec<u8> = vec![255; 128 * 128 * 4];
         for elem in data.chunks_mut(4) { elem[3] = 0 };
@@ -70,6 +72,7 @@ impl GlyphMap {
         }
     }
 
+    /// Get texture rect from width and height of a char
     pub fn get_texture_rect(&mut self, width: u32, height: u32) -> Rect<u32> {
         let mut ret: Option<Rect<u32>> = None;
         // Iter over all element
@@ -130,6 +133,7 @@ pub struct CharInfo {
 
 impl CharInfo {
 
+    /// Create an empty CharInfo
     pub fn new() -> CharInfo {
         CharInfo {
             rect: Default::default(),
@@ -138,8 +142,8 @@ impl CharInfo {
         }
     }
 
-    pub fn from_data
-    (rect: Rect<f32>, tex: Rect<u32>, adv: f32) -> CharInfo {
+    /// Create CharInfo from data
+    pub fn from_data(rect: Rect<f32>, tex: Rect<u32>, adv: f32) -> CharInfo {
         CharInfo {
             rect: rect,
             tex_coord: tex,
@@ -169,6 +173,7 @@ impl fmt::Debug for Font {
 }
 
 impl Font {
+
     /// Create a new font from a filepath
     pub fn from_path(path: &str) -> Option<Font> {
         let lib = Library::init().unwrap();
@@ -189,7 +194,8 @@ impl Font {
         }
     }
 
-    fn glyph_exist(&mut self, size: u32, code: u32) -> bool {
+    /// Check if a glyph exist.
+    pub fn glyph_exist(&mut self, size: u32, code: u32) -> bool {
         if let Some(ref mut map_size) = self.map.get(&size) {
             if let Some(ref mut _char_info) = map_size.map.get(&code) {
                 return true;
@@ -198,10 +204,12 @@ impl Font {
         return false;
     }
 
+    /// Get mutable FontMap.
     fn get_map_mut(&mut self) -> &mut FontMap {
         &mut self.map
     }
 
+    /// Create a glyph if the previously asked isn't already created.
     fn create_glyph<'a>(&'a mut self, size: u32, code: u32) -> Result<&'a CharInfo, Box<Error>> {
         {
             // Get the glyph map
@@ -217,7 +225,6 @@ impl Font {
             let height = bitmap.rows();
             let width = bitmap.width();
 
-            // TODO: Add letter bearing to make them looks normal when drawn
             // Get the glyph and informations
             let mut to_insert = CharInfo::new();
             to_insert.rect.left     = metrics.horiBearingX as f32 / (1 << 6) as f32;
@@ -297,11 +304,32 @@ impl Font {
         }
     }
 
-    pub fn texture(&self, font_size: u32) -> Result<&Texture,String> {
+    pub fn texture(&self, font_size: u32) -> Result<&Texture, TextError> {
         if let Some(t) = &self.map.get(&font_size) {
             Ok(&t.texture)
         } else {
-            Err(String::from("T'est serieux t'as pas update pti con"))
+            Err(TextError::NoTexture)
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum TextError {
+    NoTexture
+}
+
+impl fmt::Display for TextError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            TextError::NoTexture => write!(f, "No texture try updating before."),
+        }
+    }
+}
+
+impl Error for TextError {
+    fn cause(&self) -> Option<&Error> {
+        match self {
+            TextError::NoTexture => None,
         }
     }
 }
