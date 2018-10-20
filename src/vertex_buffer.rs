@@ -5,17 +5,17 @@ use gl;
 use gl::types::*;
 use std;
 use draw::{Drawable,Drawer,Context,BlendMode};
-use std::rc::Rc;
 use texture::Texture;
 use vertex::*;
 use shader::*;
 use std::ops::{Index,IndexMut};
+use resources::Resource;
 
 /// Vertex Buffer structure
 #[derive(Debug,Clone,PartialEq)]
 pub struct VertexBuffer {
 	id: u32,
-    texture: Option<Rc<Texture>>,
+    texture: Option<Resource<Texture>>,
     array: VertexArray,
     primitive: GLenum,
     len: usize
@@ -220,8 +220,8 @@ impl Drawable for VertexBuffer {
         }
 	}
 
-    fn set_texture(&mut self, texture: &Rc<Texture>) {
-        self.texture = Some(Rc::clone(texture));
+    fn set_texture(&mut self, texture: &Resource<Texture>) {
+        self.texture = Some(Resource::clone(texture));
     }
 }
 

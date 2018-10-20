@@ -2,7 +2,6 @@
 
 use texture::Texture;
 use vertex_buffer::{VertexBuffer,Primitive};
-use std::rc::Rc;
 use draw::{Drawable,Drawer,Context,BlendMode};
 use color::Color;
 use vertex::Vertex;
@@ -14,6 +13,8 @@ use shader::DEFAULT_SHADER;
 use rect::Rect;
 use std::convert::From;
 use std::error::Error;
+use std::fmt;
+use resources::Resource;
 
 /// A sprite is a transformable
 /// drawable sprite
@@ -35,7 +36,7 @@ pub struct Sprite {
     rotation: f32,
     origin: Vector2<f32>,
     vertice: Box<VertexBuffer>,
-    texture: Option<Rc<Texture>>,
+    texture: Option<Resource<Texture>>,
     model: Matrix4<f32>,
     need_update: bool
 }
@@ -102,7 +103,7 @@ impl Sprite {
     }
 }
 
-impl<'a> From<&'a Rc<Texture>> for Sprite {
+impl<'a> From<&'a Resource<Texture>> for Sprite {
 
     /// You can create sprite from texture (precisly Rc<Texture>)
     /// ```no_run
@@ -113,7 +114,7 @@ impl<'a> From<&'a Rc<Texture>> for Sprite {
     /// let texture = Rc::new(Texture::new("My great texture"));
     /// let personnage = Sprite::from(&texture);
     /// ```
-    fn from(tex: &'a Rc<Texture>) -> Sprite {
+    fn from(tex: &'a Resource<Texture>) -> Sprite {
         let width = tex.width() as f32;
         let height = tex.height() as f32;
         let pos = Vector2::new(0.0, 0.0);
@@ -128,7 +129,7 @@ impl<'a> From<&'a Rc<Texture>> for Sprite {
                     Vertex::new(Vector2::new(width, height), Vector2::new(1.0, 1.0), Color::white()),
                 ].as_slice())
             )),
-            texture: Some(Rc::clone(tex)),
+            texture: Some(Resource::clone(tex)),
             need_update: true,
             model: Matrix4::identity().append_translation(&Vector3::new(pos.x, pos.y, 0.0)),
             rotation: 0.0,
@@ -283,8 +284,8 @@ impl Drawable for Sprite {
         }
     }
 
-    fn set_texture(&mut self, texture: &Rc<Texture>) {
-        self.texture = Some(Rc::clone(texture));
+    fn set_texture(&mut self, texture: &Resource<Texture>) {
+        self.texture = Some(Resource::clone(texture));
         self.need_update = true;
     }
 }
@@ -293,8 +294,6 @@ impl Drawable for Sprite {
 pub enum SpriteError {
     NoTexture,
 }
-
-use std::fmt;
 
 impl fmt::Display for SpriteError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

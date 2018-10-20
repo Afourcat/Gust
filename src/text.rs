@@ -54,7 +54,7 @@ impl Text {
         let font_ref = self.font.try_borrow().unwrap();
         let texture = font_ref.texture(self.actual_size).unwrap();
 
-        texture.to_file("test.png")?;
+        texture.to_file("font_dump.png")?;
         Ok(())
     }
 

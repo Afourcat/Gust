@@ -299,7 +299,7 @@ impl Texture {
         let size = texture.get_rawsize();
         let mut data: Vec<u8> = Vec::with_capacity(size);
 
-        if self.rgb_mode.as_gl() != texture.rgb_mode.as_gl() {
+        if self.rgb_mode != texture.rgb_mode {
             return Err(TextureError::UpdateMode(self.rgb_mode, texture.rgb_mode));
         }
         unsafe {

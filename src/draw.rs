@@ -5,7 +5,7 @@ use nalgebra::{Vector2};
 use nalgebra;
 use texture::Texture;
 use shader::Shader;
-use std::rc::Rc;
+use resources::Resource;
 use nalgebra::Matrix4;
 use gl;
 use shader::DEFAULT_SHADER;
@@ -166,7 +166,7 @@ pub trait Drawable {
     fn draw_with_context<T: Drawer>(&self, window: &mut T, context: &mut Context);
 
     /// Assign a texture to a drawable
-    fn set_texture(&mut self, texture: &Rc<Texture>);
+    fn set_texture(&mut self, texture: &Resource<Texture>);
 
     /// Update the openGL state of the drawable entity
     /// Should be call often so be carefull when implementing.

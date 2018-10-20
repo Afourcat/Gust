@@ -78,6 +78,7 @@ extern crate freetype;
 extern crate lazy_static;
 extern crate image;
 
+pub mod resources;
 pub mod gl_error;
 pub mod vertex_buffer;
 pub mod color;
@@ -99,6 +100,7 @@ pub use glfw::MouseButtonLeft;
 pub use glfw::MouseButtonRight;
 pub use glfw::MouseButtonMiddle;
 pub use glfw::Action;
+pub use resources::{Resource, MutResource, ThreadResource, MutThreadResource};
 
 pub type Vector<T> = nalgebra::Vector2<T>;
 pub type Point<T>  = Vector<T>;
