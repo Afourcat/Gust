@@ -29,11 +29,7 @@ impl<'a> Iterator for EventIterator<'a> {
 	type Item = Event;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		if let Some(elem) = self.fmsg.next() {
-			Some(elem)
-		} else {
-			None
-		}
+		self.fmsg.next()
 	}
 }
 
