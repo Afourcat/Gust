@@ -4,23 +4,27 @@
 //  text.rs
 //  module:
 //! text render utils
-//! # How it works
-//! When you create a font you create a face from freetype
-//! This face is stocked inside the Font struct.
-//! When you trigger glyph from Text component. The font look if the glyph from
-//! this size and this letter exist. Else it loadIt from the Face and Add it to
-//! a globaltexture linked to the font size.
-//! This way it load only a rect from the same texture when you draw text.
-//! # Example
-//! ```no_run
-//! use text::{Font,Text};
-//! let font = Rc::new(Font::new("examples/fonts/Monaco.ttf"));
-//! let text = Text::new(&font);
-//! text.set_content("This is the text content");
-//! ```
-//! Text is drawable so you can use targer.draw(text);
-//! after initialising it.
-//! The text is made from Text.cpp of SFML
+/// # How to use
+/// ```no_run
+/// use gust::text::Text;
+/// use gust::font::Font;
+/// use gust::window::Window;
+///
+/// fn draw(score: u32) {
+///     let window = Default::default();
+///     let arial = MutResource::new(Font::from_path("resources/font/arial.ttf"));
+///     let score = Text::new(&arial);
+///
+///     score.set_content(format!("Score: {}", score));
+///     score.set_position(Vector::new(10.0, 10.0));
+///     while window.is_open() {
+///         window.clear();
+///         window.draw(&score);
+///         window.display();
+///     }
+/// }
+/// ```
+/// It's made from the Text system of the C++ library SFML.
 
 use texture::Texture;
 use font::{Font,CharInfo};
@@ -37,6 +41,10 @@ use color::Color;
 extern crate freetype as ft;
 
 #[derive(Debug)]
+/// # Text struct
+/// Text is a drawable entity that can be used to display text.
+/// The text need a MutResource<Font> because the text mut the
+/// internal texture of his font.
 pub struct Text {
     font: Rc<RefCell<Font>>,
     content: String,
@@ -70,6 +78,7 @@ impl Text {
         }
     }
 
+    /// Create a text from it's content and a font
     pub fn from_str(font: &Rc<RefCell<Font>>, content: &str) -> Text {
         Text {
             font: Rc::clone(font),

@@ -109,22 +109,22 @@ impl<'a> Window {
     fn match_event_type(window: &mut Window, event: Option<EventType>, active: bool) {
         if event.is_none() {
             window.win.set_all_polling(active);
-            return;
-        }
-        match event.unwrap() {
-            EventType::Key => window.win.set_key_polling(active),
-            EventType::Pos => window.win.set_pos_polling(active),
-            EventType::Close => window.win.set_close_polling(active),
-            EventType::Size => window.win.set_size_polling(active),
-            EventType::Refresh => window.win.set_refresh_polling(active),
-            EventType::Focus => window.win.set_focus_polling(active),
-            EventType::Char => window.win.set_char_polling(active),
-            EventType::CharMods => window.win.set_char_mods_polling(active),
-            EventType::MouseButton => window.win.set_mouse_button_polling(active),
-            EventType::CursorPos => window.win.set_cursor_pos_polling(active),
-            EventType::CursorEnter => window.win.set_cursor_enter_polling(active),
-            EventType::Scroll => window.win.set_scroll_polling(active),
-            EventType::FrameBuffer => window.win.set_framebuffer_size_polling(active)
+        } else {
+            match event.unwrap() {
+                EventType::Key => window.win.set_key_polling(active),
+                EventType::Pos => window.win.set_pos_polling(active),
+                EventType::Close => window.win.set_close_polling(active),
+                EventType::Size => window.win.set_size_polling(active),
+                EventType::Refresh => window.win.set_refresh_polling(active),
+                EventType::Focus => window.win.set_focus_polling(active),
+                EventType::Char => window.win.set_char_polling(active),
+                EventType::CharMods => window.win.set_char_mods_polling(active),
+                EventType::MouseButton => window.win.set_mouse_button_polling(active),
+                EventType::CursorPos => window.win.set_cursor_pos_polling(active),
+                EventType::CursorEnter => window.win.set_cursor_enter_polling(active),
+                EventType::Scroll => window.win.set_scroll_polling(active),
+                EventType::FrameBuffer => window.win.set_framebuffer_size_polling(active)
+            }
         }
     }
 
@@ -295,9 +295,7 @@ impl Default for Window {
         gl::load_with(|s| win.get_proc_address(s) as *const _);
 
         Window {
-            view: View::from(
-                Rect::new(0.0, 0.0, DEFAULT_WIDTH as f32, DEFAULT_HEIGHT as f32)
-            ),
+            view: View::from(Rect::new(0.0, 0.0, DEFAULT_WIDTH as f32, DEFAULT_HEIGHT as f32)),
             height: DEFAULT_HEIGHT as usize,
             width: DEFAULT_WIDTH as usize,
             win: win,

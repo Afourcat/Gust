@@ -13,6 +13,30 @@ use resources::Resource;
 
 /// Vertex Buffer structure
 #[derive(Debug,Clone,PartialEq)]
+/// A vertexbuffer is an buffer object in OpenGl.
+/// Here it's linked with VertexArray for data.
+/// The VertexBuffer is the 'low levelest' object that is drawable.
+/// You can create it from Vertice slice or VertexArray
+/// ```no_run
+/// use gust::window::Window;
+/// use gust::vertex::{VertexArray, Vertex};
+/// use gust::Drawable;
+///
+/// fn main() {
+///     let win = Window::default();
+///     let vertice = &[
+///     Vertex::new(Vector::new(0.0, 0.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
+///     Vertex::new(Vector::new(1.0, 0.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
+///     Vertex::new(Vector::new(0.0, 1.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
+///     ];
+///     let triangle = VertexBuffer::from(vertice);
+///     while window.is_open() {
+///         window.clear();
+///         window.draw(&triangle);
+///         window.display();
+///     }
+/// }
+/// ```
 pub struct VertexBuffer {
 	id: u32,
     texture: Option<Resource<Texture>>,
@@ -71,11 +95,12 @@ impl VertexBuffer {
 		}
 	}
 
+    /// Clear all data from VertexArray
     pub fn clear(&mut self) {
         self.array.clear();
     }
 
-	/// Create new Vertex Buffer for vertices
+	/// Create new Vertex Buffer from vertices
 	pub fn new(t: Primitive, vertice: VertexArray) -> VertexBuffer {
 		let mut buffer_id: u32 = 0;
 
@@ -118,6 +143,7 @@ impl VertexBuffer {
 		vertex_buffer
 	}
 
+    /// Append data to the actual VertexArray while be updated internaly.
     pub fn append(&mut self, vertices: &[Vertex]) {
         self.array.array_mut().append(&mut Vec::from(vertices));
     }

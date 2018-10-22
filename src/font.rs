@@ -27,19 +27,30 @@ extern crate freetype as ft;
 
 static SIZE: u32 = 10;
 
+/// Map defining a font <size -> Glyphmap>
 type FontMap = HashMap<u32, GlyphMap>;
+
+/// Map for each character <code -> Graphical Informations>
 type Utf8Map = HashMap<u32, CharInfo>;
 
-/// The texture inside is a wide texture representing a font for a size x
-/// and map is the map of utf-8 value linked to his GraphicalChar
 #[derive(Debug)]
+/// # GlyphMap
+/// A glyphmap represent a font for the size x.
+/// ## Texture
+/// the texture contain all needed character from
+/// all text which this Font is used.
+/// ## Rows
+/// The rows 'slice' the texture into each character and help to find place
+/// for each new glyph.
+/// ## Utf8Map
+/// the Utf8Map store information about
+/// each previously added Char to texture(Graphical offsets and textureCoords).
 struct GlyphMap {
     pub texture: Texture,
     pub rows: Vec<Row>,
     pub map: Utf8Map,
 }
 
-/// Give information about the texture used
 #[derive(Debug,Clone)]
 struct Row {
     pub width: u32,
@@ -72,7 +83,9 @@ impl GlyphMap {
         }
     }
 
-    /// Get texture rect from width and height of a char
+    /// Get texture rect from width and height of a char.
+    /// And return information about newly inserted char.
+    /// Heavy function.
     pub fn get_texture_rect(&mut self, width: u32, height: u32) -> Rect<u32> {
         let mut ret: Option<Rect<u32>> = None;
         // Iter over all element
@@ -122,9 +135,15 @@ impl GlyphMap {
     }
 }
 
-/// rect: it's size
-/// texCoord: coord of the texture inside the parent texture
 #[derive(Debug)]
+/// # CharInfo
+/// CharInfo are data struct used into Utf8Map.
+/// ## Rect
+/// Is the offsets of the glyph like bearing etc...
+/// ## tex_coord
+/// Is the TexCoord of the char inside the GlyphMap.
+/// ## advance
+/// Is the global x offset between the previous char and the next one.
 pub struct CharInfo {
     pub rect: Rect<f32>,
     pub tex_coord: Rect<u32>,
@@ -152,11 +171,12 @@ impl CharInfo {
     }
 }
 
-/// Contain a face and everything needed to render a text
+/// Contain a face and everything needed to render a glyph.
+/// The font have to be modified by the Text that old it
+/// so most of the time you will need to wrap it into MutResource<Self>.
 pub struct Font {
     face: Face,
     lib: Library,
-    outline: i32,
     map: FontMap
 }
 
@@ -174,7 +194,7 @@ impl fmt::Debug for Font {
 
 impl Font {
 
-    /// Create a new font from a filepath
+    /// Create a new font from a file path.
     pub fn from_path(path: &str) -> Option<Font> {
         let lib = Library::init().unwrap();
         match lib.new_face(path, 0) {
@@ -187,7 +207,6 @@ impl Font {
                 Some(Font {
                     face: face,
                     lib: lib,
-                    outline: 0,
                     map: FontMap::with_capacity(1)
                 })
             }
@@ -210,6 +229,7 @@ impl Font {
     }
 
     /// Create a glyph if the previously asked isn't already created.
+    /// Heavy fonction.
     fn create_glyph<'a>(&'a mut self, size: u32, code: u32) -> Result<&'a CharInfo, Box<Error>> {
         {
             // Get the glyph map

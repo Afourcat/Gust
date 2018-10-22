@@ -76,17 +76,14 @@ impl Sprite {
     /// Get texture sizes
     pub fn get_sizes(&self) -> Vector2<usize> {
         if let Some(ref texture) = self.texture {
-            Vector2::new(
-                texture.width() as usize,
-                texture.height() as usize
-            )
+            Vector2::new(texture.width() as usize, texture.height() as usize)
         } else {
             Vector2::new(0, 0)
         }
     }
 
     /// Set origin to center of the sprite. Can fail because a sprite sizes
-    /// are defined by it's texture, sometimes it can happend that there isn't.
+    /// are defined by it's texture, sometimes it can happend that there isn't one.
     /// So it return an SpriteError::NoTexture
     pub fn set_origin_to_center(&mut self) -> Result<(), SpriteError> {
 
@@ -140,14 +137,12 @@ impl<'a> From<&'a Resource<Texture>> for Sprite {
 
 impl Movable for Sprite {
 
+    /// TODO: Transform the point tested.
     fn contain<T: nalgebra::Scalar + From<f32> + Into<f32>>(&self, vec: ::Point<T>) -> bool {
         let sizes = self.get_sizes();
         let vec: Vector2<f32> = Vector2::new(vec.x.into(), vec.y.into());
 
-        let a = Rect::new(self.pos.x as f32,
-                  self.pos.y as f32,
-                  sizes.x as f32,
-                  sizes.y as f32);
+        let a = Rect::new(self.pos.x as f32, self.pos.y as f32, sizes.x as f32, sizes.y as f32);
         a.contain(vec)
     }
 
@@ -216,7 +211,7 @@ impl Default for Sprite {
             rotation: 0.0,
             origin: Vector2::new(0.0, 0.0),
             vertice: Box::new(VertexBuffer::default()),
-            texture: None,
+            texture: Some(Resource::new(Texture::default())),
             model: Matrix4::<f32>::identity(),
             need_update: false
         }
@@ -225,6 +220,8 @@ impl Default for Sprite {
 
 /// Drawing trait for sprite sturct
 impl Drawable for Sprite {
+
+    /// Draw the actual sprite on a context
     fn draw<T: Drawer>(&self, window: &mut T) {
         self.draw_with_context(window, &mut Context::new(
                     if let Some(ref rc_texture) = self.texture {
@@ -238,52 +235,46 @@ impl Drawable for Sprite {
         ));
     }
 
+    /// Draw the actual sprite with your own context.
     fn draw_with_context<'a, T: Drawer>(&self, window: &mut T, context: &'a mut Context) {
         self.vertice.draw_with_context(window, context);
     }
 
+    /// Update the sprite, this is a heavy operation because it's an operation that reconstruct
+    /// the model matrix (that represent transformation of the sprite) from scratch.
+    /// However this function is computed only when it's necessary. (self.need_update == true)
+    /// TODO: Make this computation in shader program.
     fn update(&mut self) {
-        if self.need_update {
-            //translate to position
-            self.model = Matrix4::<f32>::identity().append_translation(
-                &Vector3::new(
-                    self.pos.x - self.origin.x,
-                    self.pos.y - self.origin.y,
-                    0.0,
-                )
-            );
-
-            if self.origin.x != 0.0 && self.origin.y != 0.0 {
-                self.model.append_translation_mut(
-                    &Vector3::new(
-                        self.origin.x,
-                        self.origin.y,
-                        0.0
-                    )
-                );
-                self.model *= Matrix4::from_euler_angles(
-                        0.0, 0.0, self.rotation * (3.14116 * 180.0)
-                );
-                self.model.prepend_translation_mut(
-                    &Vector3::new(
-                        -self.origin.x,
-                        -self.origin.y,
-                        0.0
-                    )
-                );
-            } else {
-                self.model *= Matrix4::from_euler_angles(
-                    0.0, 0.0, self.rotation * (3.14116 * 180.0)
-                );
-            }
-
-            self.model.append_nonuniform_scaling_mut(
-                &Vector3::new(self.scale.x, self.scale.y, 0.0)
-            );
-            self.need_update = false;
+        if !self.need_update {
+            return;
         }
+        //translate to position
+        self.model = Matrix4::<f32>::identity().append_translation(
+            &Vector3::new(self.pos.x - self.origin.x, self.pos.y - self.origin.y, 0.0)
+        );
+
+        if self.origin.x != 0.0 && self.origin.y != 0.0 {
+            self.model.append_translation_mut(
+                &Vector3::new(self.origin.x, self.origin.y, 0.0)
+            );
+            self.model *= Matrix4::from_euler_angles(
+                    0.0, 0.0, self.rotation * (3.14116 * 180.0)
+            );
+            self.model.prepend_translation_mut(
+                &Vector3::new(-self.origin.x, -self.origin.y, 0.0)
+            );
+        } else {
+            self.model *= Matrix4::from_euler_angles(
+                0.0, 0.0, self.rotation * (3.14116 * 180.0)
+            );
+        }
+        self.model.append_nonuniform_scaling_mut(
+            &Vector3::new(self.scale.x, self.scale.y, 0.0)
+        );
+        self.need_update = false;
     }
 
+    /// Set a new texture and set the sprite to update state.
     fn set_texture(&mut self, texture: &Resource<Texture>) {
         self.texture = Some(Resource::clone(texture));
         self.need_update = true;
@@ -291,6 +282,7 @@ impl Drawable for Sprite {
 }
 
 #[derive(Debug)]
+/// All error trigerable in sprite
 pub enum SpriteError {
     NoTexture,
 }
