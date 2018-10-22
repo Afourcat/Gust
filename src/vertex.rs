@@ -265,3 +265,12 @@ impl IndexMut<usize> for VertexArray {
         &mut self.array[vertex_index]
     }
 }
+
+impl Drop for VertexArray {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteVertexArrays(1, &[self.id] as *const _);
+        }
+        println!("VertexArray {} delete.", self.id);
+    }
+}

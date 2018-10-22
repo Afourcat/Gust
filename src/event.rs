@@ -3,20 +3,22 @@ use std::sync::mpsc::Receiver;
 use glfw;
 pub use glfw::WindowEvent as Events;
 use std::rc::Rc;
+use window::Window;
 
 pub type EventMessage<'a> = glfw::FlushedMessages<'a, (f64, Events)>;
 
 /// Event Wrap glfwEvent data
 pub type Event = (f64, Events);
+pub type EventReceiver = Rc<Receiver<(f64, glfw::WindowEvent)>>;
 
 pub struct EventHandler {
-    receiver: Rc<Receiver<(f64, glfw::WindowEvent)>>,
+    receiver: EventReceiver
 }
 
 impl EventHandler {
-    pub fn new(window: &::window::Window) -> EventHandler {
+    pub fn new(window: &Window) -> EventHandler {
         EventHandler {
-            receiver: Rc::clone(&window.event)
+            receiver: Rc::clone(window.event())
         }
     }
 

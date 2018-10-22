@@ -82,11 +82,8 @@ impl Text {
     }
 
     /// Set the content of the text
-    pub fn set_content<'a, T>(&mut self, content: T)
-    where
-        T: AsRef<str>
-    {
-        self.content = String::from(content.as_ref());
+    pub fn set_content(&mut self, content: &str) {
+        self.content = String::from(content);
         self.need_update = true;
     }
 
@@ -122,11 +119,13 @@ impl Movable for Text {
         true
     }
 
-    fn translate<T>(&mut self, _offset: Vector<T>)
+    fn translate<T>(&mut self, offset: Vector<T>)
     where
         T: nalgebra::Scalar + From<f32> + Into<f32>
     {
-        unimplemented!();
+        self.pos.x += offset.x.into();
+        self.pos.y += offset.y.into();
+        self.need_update = true;
     }
 
     fn set_position<T>(&mut self, pos: Vector<T>)
@@ -139,7 +138,7 @@ impl Movable for Text {
     }
 
     fn get_position(&self) -> Vector<f32> {
-        Vector::new(0.0, 0.0)
+        self.pos
     }
 
     fn scale<T>(&mut self, _factor: Vector<T>)
@@ -157,7 +156,7 @@ impl Movable for Text {
     }
 
     fn get_scale(&self) -> Vector<f32> {
-        Vector::new(0.0, 0.0)
+        unimplemented!();
     }
 
     fn rotate<T>(&mut self, _angle: T)
@@ -182,7 +181,7 @@ impl Movable for Text {
     where
         T: nalgebra::Scalar + Into<f32>
     {
-            unimplemented!();
+        unimplemented!();
     }
 
     fn get_origin(&self) -> Vector<f32> {

@@ -171,7 +171,7 @@ impl Drawable for VertexBuffer {
         } else {
             None
         };
-        
+
         self.draw_with_context(target, &mut Context::new(
             texture,
 			if texture.is_none() {
@@ -247,7 +247,9 @@ impl Default for VertexBuffer {
 
 impl Drop for VertexBuffer {
 	fn drop(&mut self) {
-		//gl::DeleteVertexArrays(1, self.array);
-		//gl::DeleteBuffers(1, self.buffer);
+        unsafe {
+	    	gl::DeleteBuffers(1, &[self.id] as *const _);
+        }
+        println!("Buffer {} deleted.", self.id);
 	}
 }

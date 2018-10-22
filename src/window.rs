@@ -13,7 +13,6 @@ extern crate gl;
 use color::Color;
 use std::sync::mpsc::Receiver;
 use std::rc::Rc;
-use std::ops::Drop;
 use draw::{Drawable,Drawer};
 use glfw::Context;
 use draw;
@@ -22,7 +21,7 @@ use view::{View};
 use rect::Rect;
 use nalgebra;
 use nalgebra::Matrix4;
-use event::EventType;
+use event::{EventType, EventReceiver};
 
 static DEFAULT_FPS: u32 = 60;
 
@@ -35,7 +34,7 @@ lazy_static! {
 pub struct Window {
     pub height: usize,
     pub width: usize,
-    pub event: Rc<Receiver<(f64, glfw::WindowEvent)>>,
+    event: Rc<Receiver<(f64, glfw::WindowEvent)>>,
     win: glfw::Window,
     clear_color: Color,
     glf_window: glfw::Glfw,
@@ -148,8 +147,7 @@ impl<'a> Window {
     pub fn enable_cursor(&mut self) {
         self.win.set_cursor_mode(glfw::CursorMode::Normal);
     }
- 
- 
+
     /// Check if the window is open
     pub fn is_open(&self) -> bool {
        !self.win.should_close()
@@ -239,20 +237,21 @@ impl<'a> Window {
     pub fn limit_fps(&mut self) -> f64 {
         let time = self.glf_window.get_time();
         let limit = 1.0_f64 / self.fps_limit as f64;
-        
+
         if limit <= time {
             self.glf_window.set_time(0_f64);
-            limit - time 
+            limit - time
         } else {
             0.0
         }
     }
 
-}
+    pub fn event(&self) -> &EventReceiver {
+        &self.event
+    }
 
-impl Drop for Window {
-    fn drop(&mut self) {
-        println!("Dropped");
+    pub fn event_mut(&mut self) -> &mut EventReceiver {
+        &mut self.event
     }
 }
 

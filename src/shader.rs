@@ -299,6 +299,8 @@ impl Drop for Shader {
 		unsafe {
 			gl::DeleteShader(self.vert);
 			gl::DeleteShader(self.frag);
+            gl::DeleteProgram(self.id);
 		}
+        println!("Shaders {} deleted.", self.id);
 	}
 }

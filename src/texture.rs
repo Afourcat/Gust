@@ -27,7 +27,7 @@ use std::path::Path;
 /// let leave = Rc::new(Texture::new("path/to/test"));
 ///	let sprite = Sprite::from(&leave);
 /// ```
-#[derive(Debug,Clone,PartialEq,Copy,Eq)]
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub struct Texture {
     pub id: u32,
     width: u32,
@@ -51,7 +51,7 @@ impl Texture {
         }
     }
 
-    /// Create a texture from a raw data pointer needed for Font handling unsafe version of 
+    /// Create a texture from a raw data pointer needed for Font handling unsafe version of
     /// from slice
     pub unsafe fn from_data(data: *mut c_void, mode: RgbMode, width: u32, height: u32) -> Texture {
         Texture {
@@ -323,7 +323,7 @@ impl Texture {
 
     /// Update the data of the texture
     pub fn update<T>(&mut self, data: &[u8], mode: T) -> Result<(),TextureError>
-    where 
+    where
         T: Into<Option<RgbMode>>,
     {
         let mode = mode.into().unwrap_or(self.rgb_mode);
@@ -366,7 +366,7 @@ impl Texture {
     pub fn unbind(&self) {
         unsafe { gl::BindTexture(gl::TEXTURE_2D, 0); }
     }
-    
+
     #[inline]
     /// Active texture num
     pub fn active(&self, num: i32) {
@@ -406,7 +406,6 @@ impl Texture {
 }
 
 impl Default for Texture {
-    
     /// Create a 1 white pixel texture
     fn default() -> Texture {
         let mut id = 0;
@@ -470,7 +469,8 @@ impl fmt::Display for TextureError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             TextureError::UpdateSize(a, b, c, d) => {
-                write!(f, "Error while updating texture: Sizes are not
+                write!(f, "
+Error while updating texture: Sizes are not
 okay with this texture. x: {}
 < new_x: {}  | y: {} new_y: {}", a, b, c, d)
             },
@@ -493,5 +493,14 @@ okay with this texture. x: {}
 impl Error for TextureError {
     fn cause(&self) -> Option<&Error> {
         None
+    }
+}
+
+impl Drop for Texture {
+    fn drop(&mut self) {
+        unsafe {
+            println!("Texture {} deleted", self.id);
+            gl::DeleteTextures(1, &[self.id] as *const _);
+        }
     }
 }
