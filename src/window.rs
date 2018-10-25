@@ -22,6 +22,7 @@ use rect::Rect;
 use nalgebra;
 use nalgebra::Matrix4;
 use event::{EventType, EventReceiver};
+use std::sync::Mutex;
 
 static DEFAULT_FPS: u32 = 60;
 
@@ -37,10 +38,13 @@ pub struct Window {
     event: Rc<Receiver<(f64, glfw::WindowEvent)>>,
     win: glfw::Window,
     clear_color: Color,
-    glf_window: glfw::Glfw,
     already_init: bool,
     view: View,
     fps_limit: u32
+}
+
+lazy_static! {
+    static ref GLFW_INSTANCE: Mutex<glfw::Glfw> = Mutex::new(glfw::init(glfw::FAIL_ON_ERRORS).unwrap());
 }
 
 /// Window structure implementation
@@ -50,7 +54,7 @@ impl<'a> Window {
     pub fn new(width: usize, height: usize, name: &str) -> Window {
         // Init the glfw system
 
-        let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+        let mut glfw = GLFW_INSTANCE.lock().unwrap();
 
         glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
         glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
@@ -88,7 +92,6 @@ impl<'a> Window {
             win: win,
             event: Rc::new(evt),
             clear_color: Color::new(1.0, 1.0, 1.0),
-            glf_window: glfw,
             already_init: true,
             fps_limit: self::DEFAULT_FPS
         }
@@ -155,7 +158,7 @@ impl<'a> Window {
 
     /// Poll the event
     pub fn poll_events(&mut self) {
-        self.glf_window.poll_events();
+        GLFW_INSTANCE.lock().unwrap().poll_events();
     }
 
     /// Set clear color
@@ -234,18 +237,6 @@ impl<'a> Window {
         self.fps_limit
     }
 
-    pub fn limit_fps(&mut self) -> f64 {
-        let time = self.glf_window.get_time();
-        let limit = 1.0_f64 / self.fps_limit as f64;
-
-        if limit <= time {
-            self.glf_window.set_time(0_f64);
-            limit - time
-        } else {
-            0.0
-        }
-    }
-
     pub fn event(&self) -> &EventReceiver {
         &self.event
     }
@@ -282,9 +273,8 @@ impl Drawer for Window {
 /// Default trait implementation for window
 impl Default for Window {
     fn default() -> Window {
-        let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
-        let (mut win, evt) = glfw.create_window(
+        let (mut win, evt) = GLFW_INSTANCE.lock().unwrap().create_window(
             DEFAULT_HEIGHT as u32, DEFAULT_WIDTH as u32,
             "Gust",
             glfw::WindowMode::Windowed
@@ -301,7 +291,6 @@ impl Default for Window {
             win: win,
             event: Rc::new(evt),
             clear_color: Color::new(1.0, 1.0, 1.0),
-            glf_window: glfw,
             already_init: true,
             fps_limit: self::DEFAULT_FPS,
         }
