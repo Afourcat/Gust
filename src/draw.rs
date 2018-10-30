@@ -144,10 +144,10 @@ impl<'a> Default for Context<'a> {
 /// Trait defining a drawer
 pub trait Drawer {
 	/// Function that draw on itself
-	fn draw<T: Drawable>(&mut self, drawable: &T);
+	fn draw<T: Drawable>(&mut self, drawable: &mut T);
 
     /// Draw with context fonction if you want to define you own fonction
-    fn draw_with_context<T: Drawable>(&mut self, drawable: &T, context: &mut Context);
+    fn draw_with_context<T: Drawable>(&mut self, drawable: &mut T, context: &mut Context);
 
     fn get_projection(&self) -> &Matrix4<f32>;
 
@@ -160,10 +160,10 @@ pub trait Drawer {
 pub trait Drawable {
 
     /// Draw the drawable structure, you need a Drawer(Where the struct will be draw)
-    fn draw<T: Drawer>(&self, window: &mut T);
+    fn draw<T: Drawer>(&mut self, window: &mut T);
 
     /// Draw with a particular context
-    fn draw_with_context<T: Drawer>(&self, window: &mut T, context: &mut Context);
+    fn draw_with_context<T: Drawer>(&mut self, window: &mut T, context: &mut Context);
 
     /// Assign a texture to a drawable
     fn set_texture(&mut self, texture: &Resource<Texture>);

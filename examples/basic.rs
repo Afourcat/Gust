@@ -41,8 +41,8 @@ fn main() -> Result<(), Box<Error>> {
         }
 
         window.clear();
-        window.draw(&sprite);
-        window.draw(&leave);
+        window.draw(&mut sprite);
+        window.draw(&mut leave);
         window.display();
     }
 

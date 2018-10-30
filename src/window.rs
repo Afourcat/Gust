@@ -248,11 +248,11 @@ impl<'a> Window {
 
 impl Drawer for Window {
 
-    fn draw<T: Drawable>(&mut self, drawable: &T) {
+    fn draw<T: Drawable>(&mut self, drawable: &mut T) {
         drawable.draw(self);
     }
 
-    fn draw_with_context<T: Drawable>(&mut self, drawable: &T, context: &mut draw::Context) {
+    fn draw_with_context<T: Drawable>(&mut self, drawable: &mut T, context: &mut draw::Context) {
         drawable.draw_with_context(self, context);
     }
 

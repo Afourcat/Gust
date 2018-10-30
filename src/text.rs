@@ -269,7 +269,7 @@ impl Drawable for Text {
         self.need_update = false;
     }
 
-    fn draw<T: Drawer>(&self, target: &mut T) {
+    fn draw<T: Drawer>(&mut self, target: &mut T) {
         // If there is no text don't draw
         if self.content.is_empty() { return }
 
@@ -286,10 +286,10 @@ impl Drawable for Text {
         );
 
         // Draw the vertex_buffer with context
-        self.draw_with_context(target, &mut context)
+        self.vertex_buffer.draw_with_context(target, &mut context);
     }
 
-    fn draw_with_context<T: Drawer> (&self, target: &mut T, context: &mut Context) {
+    fn draw_with_context<T: Drawer>(&mut self, target: &mut T, context: &mut Context) {
         self.vertex_buffer.draw_with_context(target, context)
     }
 

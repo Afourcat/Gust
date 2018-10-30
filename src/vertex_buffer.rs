@@ -191,14 +191,15 @@ impl VertexBuffer {
 }
 
 impl Drawable for VertexBuffer {
-	fn draw<T: Drawer>(&self, target: &mut T) {
+	fn draw<T: Drawer>(&mut self, target: &mut T) {
+
         let texture = if let Some(ref rc_texture) = self.texture {
             Some(rc_texture.as_ref())
         } else {
             None
         };
 
-        self.draw_with_context(target, &mut Context::new(
+        let mut context = Context::new(
             texture,
 			if texture.is_none() {
                 &*NO_TEXTURE_SHADER
@@ -207,10 +208,18 @@ impl Drawable for VertexBuffer {
             },
 			None,
 			BlendMode::Alpha,
-		));
+		);
+
+        unsafe {
+            self.setup_draw(&mut context, target);
+            self.array.bind();
+            self.bind();
+            gl::DrawArrays(self.primitive, 0, self.array.len() as i32);
+			self.unbind();
+        }
 	}
 
-    fn draw_with_context<T: Drawer>(&self, target: &mut T, context: &mut Context) {
+    fn draw_with_context<T: Drawer>(&mut self, target: &mut T, context: &mut Context) {
 		unsafe {
 			self.setup_draw(context, target);
 			self.array.bind();

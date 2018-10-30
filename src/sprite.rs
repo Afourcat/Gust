@@ -222,21 +222,26 @@ impl Default for Sprite {
 impl Drawable for Sprite {
 
     /// Draw the actual sprite on a context
-    fn draw<T: Drawer>(&self, window: &mut T) {
-        self.draw_with_context(window, &mut Context::new(
-                    if let Some(ref rc_texture) = self.texture {
-                        Some(rc_texture.as_ref())
-                    } else {
-                        None
-                    },
-                    &*DEFAULT_SHADER,
-                    Some(Matrix4::<f32>::identity() * self.model),
-                    BlendMode::Alpha
-        ));
+    fn draw<T: Drawer>(&mut self, window: &mut T) {
+
+        let texture = if let Some(ref rc_texture) = self.texture {
+            Some(rc_texture.as_ref())
+        } else {
+            None
+        };
+
+        let mut context = Context::new(
+            texture,
+            &*DEFAULT_SHADER,
+            Some(Matrix4::<f32>::identity() * self.model),
+            BlendMode::Alpha
+        );
+
+        self.vertice.draw_with_context(window, &mut context);
     }
 
     /// Draw the actual sprite with your own context.
-    fn draw_with_context<'a, T: Drawer>(&self, window: &mut T, context: &'a mut Context) {
+    fn draw_with_context<'a, T: Drawer>(&mut self, window: &mut T, context: &'a mut Context) {
         self.vertice.draw_with_context(window, context);
     }
 
