@@ -117,6 +117,10 @@ impl Text {
     pub fn size(&self) -> u32 {
         self.actual_size
     }
+
+    fn set_texture(&mut self, _texture: &Rc<Texture>) {
+        unimplemented!();
+    }
 }
 
 impl Movable for Text {
@@ -293,9 +297,7 @@ impl Drawable for Text {
         self.vertex_buffer.draw_with_context(target, context)
     }
 
-    fn set_texture(&mut self, _texture: &Rc<Texture>) {
-        unimplemented!();
-    }
+    
 }
 
 /// Get a vertice from a character information, padding and offset

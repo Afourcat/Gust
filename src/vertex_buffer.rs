@@ -160,6 +160,10 @@ impl VertexBuffer {
         }
     }
 
+    fn set_texture(&mut self, texture: &Resource<Texture>) {
+        self.texture = Some(Resource::clone(texture));
+    }
+
     pub fn get_primitive(&self) -> Primitive {
         match self.primitive {
 			gl::QUADS       => Primitive::Quads,
@@ -254,10 +258,6 @@ impl Drawable for VertexBuffer {
             self.array.unbind();
         }
 	}
-
-    fn set_texture(&mut self, texture: &Resource<Texture>) {
-        self.texture = Some(Resource::clone(texture));
-    }
 }
 
 impl Index<usize> for VertexBuffer {

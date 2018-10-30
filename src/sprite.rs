@@ -98,6 +98,12 @@ impl Sprite {
             Err(SpriteError::NoTexture)
         }
     }
+
+    /// Set a new texture and set the sprite to update state.
+    fn set_texture(&mut self, texture: &Resource<Texture>) {
+        self.texture = Some(Resource::clone(texture));
+        self.need_update = true;
+    }
 }
 
 impl<'a> From<&'a Resource<Texture>> for Sprite {
@@ -282,12 +288,6 @@ impl Drawable for Sprite {
         }
 
         self.need_update = false;
-    }
-
-    /// Set a new texture and set the sprite to update state.
-    fn set_texture(&mut self, texture: &Resource<Texture>) {
-        self.texture = Some(Resource::clone(texture));
-        self.need_update = true;
     }
 }
 

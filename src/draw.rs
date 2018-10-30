@@ -165,9 +165,6 @@ pub trait Drawable {
     /// Draw with a particular context
     fn draw_with_context<T: Drawer>(&mut self, window: &mut T, context: &mut Context);
 
-    /// Assign a texture to a drawable
-    fn set_texture(&mut self, texture: &Resource<Texture>);
-
     /// Update the openGL state of the drawable entity
     /// Should be call often so be carefull when implementing.
     fn update(&mut self);
