@@ -9,3 +9,7 @@ The globals ideas are inspired by sfml and is thinked to be more simple and less
 
 ### Warning
 This project is only for learning purpose.
+
+## UML
+
+![alt text](./data/UmlGust.png "Uml Gust")
