@@ -249,7 +249,6 @@ impl<'a> Window {
 impl Drawer for Window {
 
     fn draw<T: Drawable>(&mut self, drawable: &T) {
-        //let time = self.limit_fps();
         drawable.draw(self);
     }
 
@@ -278,7 +277,7 @@ impl Default for Window {
             DEFAULT_HEIGHT as u32, DEFAULT_WIDTH as u32,
             "Gust",
             glfw::WindowMode::Windowed
-            ).unwrap();
+        ).unwrap();
 
         win.make_current();
 
@@ -331,4 +330,3 @@ pub enum InputState {
     Hidden =  0x00034002,
     Disable = 0x00034003,
 }
-
