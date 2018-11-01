@@ -45,15 +45,15 @@ fn window1() -> Result<(), Box<Error>> {
         }
 
         window.clear();
-        window.draw(&sprite);
-        window.draw(&leave);
+        window.draw(&mut sprite);
+        window.draw(&mut leave);
         window.display();
     }
     Ok(())
 }
 
 fn window2() -> Result<(), Box<Error>> {
-
+    std::thread::sleep_ms(2000);
     let mut window = Window::new(500, 500, "Hello2");
     let mut font = MutResource::new(
         RefCell::new(Font::from_path("examples/font/terminus.ttf").unwrap())
@@ -75,7 +75,7 @@ fn window2() -> Result<(), Box<Error>> {
         }
 
         window.clear();
-        window.draw(&text);
+        window.draw(&mut text);
         window.display();
     }
     Ok(())

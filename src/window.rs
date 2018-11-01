@@ -80,9 +80,6 @@ impl<'a> Window {
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         }
 
-        // Make this window usable
-        win.make_current();
-
         glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
 
         Window {
@@ -186,8 +183,8 @@ impl<'a> Window {
 
     /// Activate window on OpenGl context
     pub fn active(&mut self) -> bool {
-        self.win.make_current();
-        self.win.is_current()
+        GLFW_INSTANCE.lock().unwrap().make_context_current(Some(&self.win));
+        true
     }
 
     pub fn set_view(&mut self, view: View) {
@@ -213,17 +210,17 @@ impl<'a> Window {
     }
 
     /// Should not be used (low level glfw function)
-    fn get_input_mode(&self, im: InputMode) -> InputMode {
+    fn input_mode(&self, im: InputMode) -> InputMode {
         unsafe {
             InputMode::from(glfw::ffi::glfwGetInputMode(self.win.window_ptr(), im.to_i32().0))
         }
     }
 
-    pub fn get_view(&self) -> &View {
+    pub fn view(&self) -> &View {
         &self.view
     }
 
-    pub fn get_view_mut(&mut self) -> &mut View {
+    pub fn view_mut(&mut self) -> &mut View {
         &mut self.view
     }
 
@@ -248,24 +245,46 @@ impl<'a> Window {
 
 impl Drawer for Window {
 
-    fn draw<T: Drawable>(&mut self, drawable: &mut T) {
+    fn draw<T: Drawable>(&mut self, drawable: &T) {
+        self.active();
         drawable.draw(self);
     }
 
-    fn draw_with_context<T: Drawable>(&mut self, drawable: &mut T, context: &mut draw::Context) {
-        drawable.draw_with_context(self, context);
+    #[inline]
+    fn draw_mut<T: Drawable>(&mut self, drawable: &mut T) {
+        self.active();
+        drawable.draw_mut(self);
     }
 
+    #[inline]
+    fn draw_with_context<T: Drawable>(&mut self, drawable: &mut T, context: &mut draw::Context) {
+        self.active();
+        drawable.draw_with_context(context);
+    }
+
+    #[inline]
+    fn draw_with_context_mut<T: Drawable>(&mut self, drawable: &mut T, context: &mut draw::Context) {
+        self.active();
+        drawable.draw_with_context(context);
+    }
+
+    #[inline]
     fn get_projection(&self) -> &Matrix4<f32> {
         self.view.get_projection()
     }
 
+    #[inline]
     fn get_sizes(&self) -> Vector<f32> {
         Vector::new(self.width as f32, self.height as f32)
     }
 
+    #[inline]
     fn get_center(&self) -> Vector<f32> {
         Vector::new(self.width as f32 / 2.0, self.height as f32 / 2.0)
+    }
+
+    fn projection(&self) -> &Matrix4<f32> {
+        self.view.get_projection()
     }
 }
 
@@ -278,8 +297,6 @@ impl Default for Window {
             "Gust",
             glfw::WindowMode::Windowed
         ).unwrap();
-
-        win.make_current();
 
         gl::load_with(|s| win.get_proc_address(s) as *const _);
 

@@ -31,15 +31,15 @@ fn main()
         leave.rotate(1.0);
         leave.update();
         sprite.update();
-        window.get_view_mut().update();
+        window.view_mut().update();
 
         for event in event_handler.fetch() {
             event_process(event, &mut window);
         }
 
         window.clear();
-        window.draw(&sprite);
-        window.draw(&leave);
+        window.draw(&mut sprite);
+        window.draw(&mut leave);
         window.display();
     }
 }
@@ -54,7 +54,7 @@ fn event_process(event: Event, window: &mut Window) {
         },
         Events::CursorPos(x, y) => {
             let center = Vector::new(x as f32, y as f32);
-            window.get_view_mut().set_center(center);
+            window.view_mut().set_center(center);
             window.set_mouse_pos(center)
         },
         _ => { println!("Another event !") }

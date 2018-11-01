@@ -504,3 +504,51 @@ impl Drop for Texture {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    extern crate test;
+
+    use super::Vector;
+    use texture::Texture;
+    use self::test::Bencher;
+    use color::Color;
+    use window::Window;
+    use texture::RgbMode;
+
+    #[bench]
+    fn from_color(b: &mut Bencher) {
+        let _ = Window::new(200, 200, "Loader");
+
+        b.iter(|| {
+            Texture::from_color(Color::new(1.0, 1.0, 1.0), Vector::new(100, 100));
+        });
+    }
+
+    #[bench]
+    fn from_slice(b: &mut Bencher) {
+        let _ = Window::new(200, 200, "Loader");
+
+        b.iter(|| {
+            let mut slice = vec![255; 10000];
+
+            Texture::from_slice(slice.as_mut_slice(), RgbMode::RGBA, 100, 100);
+        });
+    }
+
+    #[bench]
+    fn update_block(b: &mut Bencher) {
+        let _ = Window::new(200, 200, "Loader");
+
+        let mut text_host = Texture::from_color(Color::new(0.0, 1.0, 0.0), Vector::new(100, 100));
+        let text_guest = Texture::from_color(Color::new(0.0, 0.0, 1.0), Vector::new(10, 10));
+
+        b.iter(|| {
+            text_host.update_block(
+                text_guest.get_data().as_slice(),
+                Vector::new(10, 10),
+                Vector::new(10, 10),
+                None).unwrap();
+        });
+    }
+}

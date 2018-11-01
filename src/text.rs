@@ -28,7 +28,7 @@
 
 use texture::Texture;
 use font::{Font,CharInfo};
-use draw::{Drawable,Drawer,Context,Movable,BlendMode};
+use draw::{Drawable, Drawer, Context, Movable, BlendMode, IDENTITY};
 use shader;
 use ::{Point,Vector};
 use nalgebra;
@@ -240,19 +240,16 @@ impl Drawable for Text {
         for charr in self.content.as_str().chars() {
 
             // If the char is a special one
-            if charr == '\n' {
-                pos.y += height;
-                offset = 0.0;
-                continue;
-            } else if charr == '\r' {
-                continue;
-            } else if charr == '\t' {
-                offset += 4.0 * whitespace;
-                continue;
-            } else if charr == ' ' {
-                offset += whitespace;
-                continue;
-            }
+            match charr {
+                '\n'    => {
+                    pos.y += height;
+                    offset = 0.0;
+                },
+                '\r'    => {},
+                '\t'    => offset += 4.0 * whitespace,
+                ' '     => offset += whitespace,
+                _       => {}
+            };
 
             // Get the glyph from the the font
             let char_info = font_ref.glyph(self.actual_size, charr as u32);
@@ -273,7 +270,12 @@ impl Drawable for Text {
         self.need_update = false;
     }
 
-    fn draw<T: Drawer>(&mut self, target: &mut T) {
+    fn draw_mut<T: Drawer>(&mut self, target: &mut T) {
+        self.update();
+        self.draw(target);
+    }
+
+    fn draw<T: Drawer>(&self, target: &mut T) {
         // If there is no text don't draw
         if self.content.is_empty() { return }
 
@@ -285,19 +287,25 @@ impl Drawable for Text {
         let mut context = Context::new(
             Some(texture),
             &*shader::DEFAULT_SHADER,
-            None,
+            vec![
+                ("transform".to_string(), &*IDENTITY),
+                ("projection".to_string(), target.projection())
+            ],
             BlendMode::Alpha
         );
 
         // Draw the vertex_buffer with context
-        self.vertex_buffer.draw_with_context(target, &mut context);
+        self.vertex_buffer.draw_with_context(&mut context);
     }
 
-    fn draw_with_context<T: Drawer>(&mut self, target: &mut T, context: &mut Context) {
-        self.vertex_buffer.draw_with_context(target, context)
+    fn draw_with_context_mut(&mut self, context: &mut Context) {
+        self.update();
+        self.draw_with_context(context);
     }
 
-    
+    fn draw_with_context(&self, context: &mut Context) {
+        self.vertex_buffer.draw_with_context(context);
+    }
 }
 
 /// Get a vertice from a character information, padding and offset

@@ -15,6 +15,26 @@ lazy_static! {
 }
 
 lazy_static! {
+    pub static ref SPRITE_SHADER: Shader = {
+        let (vert, frag, id);
+        unsafe {
+            let (v, f, i) = Shader::do_shader(
+                    CString::new(SPRITE_VS.as_bytes()).unwrap(),
+                    CString::new(SPRITE_FS.as_bytes()).unwrap()
+            ).unwrap();
+            frag = f;
+            vert = v;
+            id = i;
+        }
+        return Shader {
+            id,
+            frag,
+            vert
+        }
+    };
+}
+
+lazy_static! {
     pub static ref NO_TEXTURE_SHADER: Shader = {
         let (vert, frag, id);
         unsafe {
@@ -50,15 +70,17 @@ layout (location = 2) in vec3 aColor;
 out vec3 ourColor;
 out vec2 TexCoord;
 uniform mat4 transform;
+uniform mat4 model;
+uniform mat4 projection;
 
 void main()
 {
-   gl_Position = transform * vec4(aPos.xy, 0.0, 1.0);
-   ourColor = aColor;
-   TexCoord = aTexCoord;
+    gl_Position = projection * transform * vec4(aPos.xy, 0.0, 1.0);
+    ourColor = aColor;
+    TexCoord = aTexCoord;
 }";
 
-static SPRITE_FG: &'static str =
+static SPRITE_FS: &'static str =
 "#version 330 core
 out vec4 FragColor;
 in vec3 ourColor;
@@ -80,10 +102,11 @@ layout (location = 2) in vec3 aColor;
 out vec3 ourColor;
 out vec2 TexCoord;
 uniform mat4 transform;
+uniform mat4 projection;
 
 void main()
 {
-   gl_Position = transform * vec4(aPos.xy, 0.0, 1.0);
+   gl_Position = projection * transform * vec4(aPos.xy, 0.0, 1.0);
    ourColor = aColor;
    TexCoord = aTexCoord;
 }";

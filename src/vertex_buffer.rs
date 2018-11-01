@@ -4,7 +4,7 @@
 use gl;
 use gl::types::*;
 use std;
-use draw::{Drawable,Drawer,Context,BlendMode};
+use draw::{Drawable, Drawer, Context, BlendMode, IDENTITY};
 use texture::Texture;
 use vertex::*;
 use shader::*;
@@ -195,7 +195,13 @@ impl VertexBuffer {
 }
 
 impl Drawable for VertexBuffer {
-	fn draw<T: Drawer>(&mut self, target: &mut T) {
+
+    fn draw_mut<T: Drawer>(&mut self, target: &mut T) {
+        self.update();
+        self.draw(target);
+    }
+
+	fn draw<T: Drawer>(&self, target: &mut T) {
 
         let texture = if let Some(ref rc_texture) = self.texture {
             Some(rc_texture.as_ref())
@@ -210,12 +216,15 @@ impl Drawable for VertexBuffer {
             } else {
                 &*DEFAULT_SHADER
             },
-			None,
+			vec![
+                ("transform".to_string(), &*IDENTITY),
+                ("projection".to_string(), target.projection())
+            ],
 			BlendMode::Alpha,
 		);
 
         unsafe {
-            self.setup_draw(&mut context, target);
+            self.setup_draw(&mut context);
             self.array.bind();
             self.bind();
             gl::DrawArrays(self.primitive, 0, self.array.len() as i32);
@@ -223,9 +232,14 @@ impl Drawable for VertexBuffer {
         }
 	}
 
-    fn draw_with_context<T: Drawer>(&mut self, target: &mut T, context: &mut Context) {
+    fn draw_with_context_mut(&mut self, context: &mut Context) {
+        self.update();
+        self.draw_with_context(context);
+    }
+
+    fn draw_with_context(&self, context: &mut Context) {
 		unsafe {
-			self.setup_draw(context, target);
+			self.setup_draw(context);
 			self.array.bind();
             self.bind();
             gl::DrawArrays(self.primitive, 0, self.array.len() as i32);

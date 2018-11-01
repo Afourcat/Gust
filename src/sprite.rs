@@ -228,8 +228,13 @@ impl Default for Sprite {
 impl Drawable for Sprite {
 
     /// Draw the actual sprite on a context
-    fn draw<T: Drawer>(&mut self, window: &mut T) {
+    fn draw_mut<T: Drawer>(&mut self, window: &mut T) {
+        self.update();
+        self.draw(window);
+    }
 
+    /// Draw the actual sprite on a context
+    fn draw<T: Drawer>(&self, window: &mut T) {
         let texture = if let Some(ref rc_texture) = self.texture {
             Some(rc_texture.as_ref())
         } else {
@@ -239,16 +244,23 @@ impl Drawable for Sprite {
         let mut context = Context::new(
             texture,
             &*DEFAULT_SHADER,
-            Some(Matrix4::<f32>::identity() * self.model),
+            vec![
+                ("transform".to_string(), &self.model),
+                ("projection".to_string(), window.projection())
+            ],
             BlendMode::Alpha
         );
+        self.vertice.draw_with_context(&mut context);
+    }
 
-        self.vertice.draw_with_context(window, &mut context);
+    fn draw_with_context_mut<'a>(&mut self, context: &'a mut Context) {
+        self.update();
+        self.vertice.draw_with_context(context);
     }
 
     /// Draw the actual sprite with your own context.
-    fn draw_with_context<'a, T: Drawer>(&mut self, window: &mut T, context: &'a mut Context) {
-        self.vertice.draw_with_context(window, context);
+    fn draw_with_context<'a>(&self, context: &'a mut Context) {
+        self.vertice.draw_with_context(context);
     }
 
     /// Update the sprite, this is a heavy operation because it's an operation that reconstruct
