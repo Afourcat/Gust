@@ -244,10 +244,17 @@ impl Drawable for Text {
                 '\n'    => {
                     pos.y += height;
                     offset = 0.0;
+                    continue;
                 },
-                '\r'    => {},
-                '\t'    => offset += 4.0 * whitespace,
-                ' '     => offset += whitespace,
+                '\r'    => continue,
+                '\t'    => {
+                    offset += 4.0 * whitespace;
+                    continue;
+                },
+                ' '     => {
+                    offset += whitespace;
+                    continue;
+                },
                 _       => {}
             };
 
