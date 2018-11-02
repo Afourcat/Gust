@@ -5,7 +5,6 @@ use nalgebra::{Vector2};
 use nalgebra;
 use texture::Texture;
 use shader::Shader;
-use resources::Resource;
 use nalgebra::Matrix4;
 use gl;
 use shader::DEFAULT_SHADER;
@@ -95,10 +94,10 @@ impl<'a> Context<'a> {
         blend_mode: BlendMode
     ) -> Context<'a> {
         Context {
-            texture: texture,
-            shader: shader,
-            transform: transform,
-            blend_mode: blend_mode
+            texture,
+            shader,
+            transform,
+            blend_mode
         }
     }
 

@@ -262,7 +262,7 @@ impl Drawable for Text {
             let char_info = font_ref.glyph(self.actual_size, charr as u32);
 
             // get vertices from char_info
-            let vertices = get_vertice_letter(&char_info, &pos, padding, offset);
+            let vertices = get_vertice_letter(&char_info, pos, padding, offset);
 
             // append vertice to vertex_buffer
             self.vertex_buffer.append(&vertices);
@@ -316,7 +316,7 @@ impl Drawable for Text {
 }
 
 /// Get a vertice from a character information, padding and offset
-fn get_vertice_letter(char_info: &CharInfo, pos: &Vector<f32>, padding: f32, offset: f32) -> [Vertex; 6] {
+fn get_vertice_letter(char_info: &CharInfo, pos: Vector<f32>, padding: f32, offset: f32) -> [Vertex; 6] {
     let x = pos.x + offset;
     let y = pos.y;
 

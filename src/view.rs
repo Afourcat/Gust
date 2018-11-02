@@ -48,7 +48,7 @@ impl View {
             zoom: 1.0,
             angle: 0.0,
             sizes: Vector::new(rect.width, rect.height),
-            pos: pos,
+            pos,
             screen: Rect::new(1.0, 1.0, 1.0, 1.0),
             need_update: false,
         }

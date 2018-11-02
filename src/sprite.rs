@@ -66,10 +66,10 @@ impl Sprite {
 
     /// Set texture color
     pub fn set_color(&mut self, color: &Color) {
-        self.vertice[0].color = color.clone();
-        self.vertice[1].color = color.clone();
-        self.vertice[2].color = color.clone();
-        self.vertice[3].color = color.clone();
+        self.vertice[0].color = *color;
+        self.vertice[1].color = *color;
+        self.vertice[2].color = *color;
+        self.vertice[3].color = *color;
         self.vertice.update();
     }
 
@@ -87,7 +87,7 @@ impl Sprite {
     /// So it return an SpriteError::NoTexture
     pub fn set_origin_to_center(&mut self) -> Result<(), SpriteError> {
 
-        if let Some(_) = self.texture {
+        if self.texture.is_some() {
             let mut center = Vector2::new(0.0, 0.0);
             let sizes = self.get_sizes();
             center.x = sizes.x as f32 / 2.0;
@@ -122,7 +122,7 @@ impl<'a> From<&'a Resource<Texture>> for Sprite {
         let height = tex.height() as f32;
         let pos = Vector2::new(0.0, 0.0);
         Sprite {
-            pos: pos,
+            pos,
             scale: Vector2::new(1.0, 1.0),
             vertice: Box::new(VertexBuffer::new(Primitive::TrianglesStrip,
                 VertexArray::from(vec![
@@ -246,7 +246,7 @@ impl Drawable for Sprite {
             &*DEFAULT_SHADER,
             vec![
                 ("transform".to_string(), &self.model),
-                ("projection".to_string(), window.projection())
+                ("projection".to_string(), window.projection()),
             ],
             BlendMode::Alpha
         );

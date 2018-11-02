@@ -22,7 +22,7 @@ impl EventHandler {
         }
     }
 
-    pub fn fetch<'a>(&'a self) -> EventIterator<'a> {
+    pub fn fetch(&self) -> EventIterator {
         EventIterator::from(&*self)
     }
 }

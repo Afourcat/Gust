@@ -57,7 +57,7 @@ pub enum Primitive {
 
 impl Primitive {
     /// Get primitive type
-    pub fn get_gl_type(&self) -> GLenum {
+    pub fn get_gl_type(self) -> GLenum {
         match self {
             Primitive::Quads        	=> gl::QUADS,
             Primitive::Triangles    	=> gl::TRIANGLES,
@@ -134,7 +134,7 @@ impl VertexBuffer {
 		let vertex_buffer = VertexBuffer {
 			id: buffer_id,
             texture: None,
-            primitive: Self::get_gl_type(&t),
+            primitive: Self::get_gl_type(t),
             len: vertice.len(),
             array: vertice
 		};
@@ -149,7 +149,7 @@ impl VertexBuffer {
     }
 
     /// Get primitive type
-    fn get_gl_type(prim: &Primitive) -> GLenum {
+    fn get_gl_type(prim: Primitive) -> GLenum {
         match prim {
             Primitive::Quads        	=> gl::QUADS,
             Primitive::Triangles    	=> gl::TRIANGLES,
@@ -283,7 +283,7 @@ impl Index<usize> for VertexBuffer {
 }
 
 impl IndexMut<usize> for VertexBuffer {
-    fn index_mut<'a>(&'a mut self, index: usize) -> &'a mut Vertex {
+    fn index_mut(&mut self, index: usize) -> &mut Vertex {
         &mut self.array[index]
     }
 }

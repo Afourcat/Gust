@@ -62,8 +62,8 @@ impl Row {
     pub fn new(height: u32, pos: u32) -> Row {
         Row {
             width: 0,
-            height: height,
-            pos: pos
+            height,
+            pos
         }
     }
 }
@@ -90,9 +90,7 @@ impl GlyphMap {
         let mut ret: Option<Rect<u32>> = None;
         // Iter over all element
         for mut row in self.rows.iter_mut() {
-            if row.width + width  > self.texture.width() {
-                continue;
-            } else if row.height < height {
+            if (row.width + width  > self.texture.width()) || (row.height < height) {
                 continue;
             }
             ret = Some(Rect::new(row.width, row.pos, width, height));
@@ -135,7 +133,7 @@ impl GlyphMap {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 /// # CharInfo
 /// CharInfo are data struct used into Utf8Map.
 /// ## Rect
@@ -162,11 +160,11 @@ impl CharInfo {
     }
 
     /// Create CharInfo from data
-    pub fn from_data(rect: Rect<f32>, tex: Rect<u32>, adv: f32) -> CharInfo {
+    pub fn from_data(rect: Rect<f32>, tex_coord: Rect<u32>, advance: f32) -> CharInfo {
         CharInfo {
-            rect: rect,
-            tex_coord: tex,
-            advance: adv
+            rect,
+            tex_coord,
+            advance
         }
     }
 }
@@ -205,8 +203,8 @@ impl Font {
             Ok(face) => {
                 face.set_pixel_sizes(0, 30).unwrap();
                 Some(Font {
-                    face: face,
-                    lib: lib,
+                    face,
+                    lib,
                     map: FontMap::with_capacity(1)
                 })
             }
@@ -220,7 +218,7 @@ impl Font {
                 return true;
             }
         }
-        return false;
+        false
     }
 
     /// Get mutable FontMap.
@@ -233,7 +231,7 @@ impl Font {
     fn create_glyph<'a>(&'a mut self, size: u32, code: u32) -> Result<&'a CharInfo, Box<Error>> {
         {
             // Get the glyph map
-            let glyph_map = self.map.entry(size).or_insert(GlyphMap::new());
+            let glyph_map = self.map.entry(size).or_insert_with(GlyphMap::new);
 
             // Load the right glyph
             self.face.load_char(code as usize, LoadFlag::RENDER)?;
@@ -257,11 +255,8 @@ impl Font {
             to_insert.tex_coord = glyph_map.get_texture_rect(width as u32, height as u32);
 
             // Resize buffer
-            let mut slice = vec![255; (height * width * 4) as usize];
-            for ref mut elem in slice.chunks_mut(4) { elem[3] = 0; }
-
-            // Create the data vector from slice
-            let mut data = Vec::from(slice);
+            let mut data = vec![255; (height * width * 4) as usize];
+            for elem in &mut data.chunks_mut(4) { elem[3] = 0; }
 
             // fill pixel buffer
             let pixels: Vec<u8> = Vec::from(bitmap.buffer());
@@ -308,17 +303,17 @@ impl Font {
         }
 
         // Return the newly inserted charinfo
-        Ok(self.get_map_mut()[&size].map.get(&code).unwrap())
+        Ok(&self.get_map_mut()[&size].map[&code])
     }
 
     /// Check if the glyph exist:
     /// If the glyph exist get GraphicChar from it
     /// Else add it to the row and update the texture
-    pub fn glyph<'a>(&'a mut self, size: u32, code: u32) -> &'a CharInfo {
+    pub fn glyph(&mut self, size: u32, code: u32) -> &CharInfo {
         let glyph_exist: bool = self.glyph_exist(size, code);
 
         if glyph_exist {
-            self.map.get(&size).unwrap().map.get(&code).unwrap()
+            &self.map[&size].map[&code]
         } else {
             self.create_glyph(size, code).unwrap()
         }

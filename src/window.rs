@@ -27,7 +27,7 @@ use std::sync::Mutex;
 static DEFAULT_FPS: u32 = 60;
 
 lazy_static! {
-    static ref DEFAULT_DELTA: f64 = 1.0 / DEFAULT_FPS as f64;
+    static ref DEFAULT_DELTA: f64 = 1.0 / f64::from(DEFAULT_FPS);
 }
 
 /// Window struct
@@ -84,9 +84,9 @@ impl<'a> Window {
 
         Window {
             view: View::from(Rect::new(0.0, 0.0, width as f32, height as f32)),
-            height: height,
-            width: width,
-            win: win,
+            height,
+            width,
+            win,
             event: Rc::new(evt),
             clear_color: Color::new(1.0, 1.0, 1.0),
             already_init: true,
@@ -95,7 +95,7 @@ impl<'a> Window {
     }
 
     pub fn set_mouse_pos<T: nalgebra::Scalar + Into<f32>>(&mut self, vec: Vector<T>) {
-        self.win.set_cursor_pos(vec.x.into() as f64, vec.y.into() as f64)
+        self.win.set_cursor_pos(f64::from(vec.x.into()), f64::from(vec.y.into()))
     }
 
     pub fn poll<T: Into<Option<EventType>>>(&mut self, event: T) {
@@ -202,7 +202,7 @@ impl<'a> Window {
     }
 
     /// Should not be used (low level glfw function)
-    fn set_input_mode(&self, im: InputMode) {
+    fn set_input_mode(&self, im: &InputMode) {
         let (mode, value) = im.to_i32();
         unsafe {
             glfw::ffi::glfwSetInputMode(self.win.window_ptr() ,mode, value);
@@ -210,7 +210,7 @@ impl<'a> Window {
     }
 
     /// Should not be used (low level glfw function)
-    fn input_mode(&self, im: InputMode) -> InputMode {
+    fn input_mode(&self, im: &InputMode) -> InputMode {
         unsafe {
             InputMode::from(glfw::ffi::glfwGetInputMode(self.win.window_ptr(), im.to_i32().0))
         }
@@ -304,7 +304,7 @@ impl Default for Window {
             view: View::from(Rect::new(0.0, 0.0, DEFAULT_WIDTH as f32, DEFAULT_HEIGHT as f32)),
             height: DEFAULT_HEIGHT as usize,
             width: DEFAULT_WIDTH as usize,
-            win: win,
+            win,
             event: Rc::new(evt),
             clear_color: Color::new(1.0, 1.0, 1.0),
             already_init: true,
@@ -323,9 +323,9 @@ pub enum InputMode {
 impl InputMode {
     fn to_i32(&self) -> (i32, i32) {
         match self {
-            InputMode::CursorMode(a)        => { (0x00033001, a as *const _ as i32) },
-            InputMode::StickKeys            => { (0x00033002, 1) },
-            InputMode::StickMouseButtons    => { (0x00033003, 1) },
+            InputMode::CursorMode(a)        => { (0x0003_3001, a as *const _ as i32) },
+            InputMode::StickKeys            => { (0x0003_3002, 1) },
+            InputMode::StickMouseButtons    => { (0x0003_3003, 1) },
             InputMode::NotDefined           => { (-1, -1) }
         }
     }
@@ -334,16 +334,16 @@ impl InputMode {
 impl From<i32> for InputMode {
     fn from(value: i32) -> InputMode {
         match value {
-            0x00033001  => InputMode::CursorMode(InputState::Normal),
-            0x00033002  => InputMode::StickKeys,
-            0x00033003  => InputMode::StickMouseButtons,
+            0x0003_3001  => InputMode::CursorMode(InputState::Normal),
+            0x0003_3002  => InputMode::StickKeys,
+            0x0003_3003  => InputMode::StickMouseButtons,
             _           => InputMode::NotDefined,
         }
     }
 }
 
 pub enum InputState {
-    Normal = 0x00034001,
-    Hidden =  0x00034002,
-    Disable = 0x00034003,
+    Normal = 0x0003_4001,
+    Hidden =  0x0003_4002,
+    Disable = 0x0003_4003,
 }

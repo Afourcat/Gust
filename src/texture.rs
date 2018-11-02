@@ -7,7 +7,6 @@ use image::{DynamicImage,ImageBuffer};
 use image;
 use gl;
 use gl::types::*;
-use std::mem;
 use std::os::raw::c_void;
 use ::Vector;
 use std::error::Error;
@@ -44,7 +43,7 @@ impl Texture {
         let mut id = 0;
         unsafe { gl::GenTextures(1, &mut id); };
         Texture {
-            id: id,
+            id,
             width: 0,
             height: 0,
             rgb_mode: RgbMode::RGBA
@@ -92,8 +91,7 @@ impl Texture {
     /// Create an empty texture with a size
     pub fn from_size(sizes: Vector<u32>) -> Texture {
         let mut ve: Vec<u8> = vec![255; sizes.x as usize * sizes.y as usize * 4];
-
-        return Self::from_slice(ve.as_mut_slice(), RgbMode::RGBA, sizes.x, sizes.y);
+        Self::from_slice(ve.as_mut_slice(), RgbMode::RGBA, sizes.x, sizes.y)
     }
 
     /// Create a texture from an image
@@ -103,22 +101,22 @@ impl Texture {
         let mode;
 
         match img {
-            DynamicImage::ImageRgba8(data) => unsafe {
+            DynamicImage::ImageRgba8(data) => {
                 size.0 = data.width();
                 size.1 = data.height();
                 id = Self::create(
-                    mem::transmute(&data.into_raw()[0]),
+                    &data.into_raw()[0] as *const u8 as *mut std::ffi::c_void,
                     gl::RGBA,
                     size.0 as i32,
                     size.1 as i32
                 );
                 mode = RgbMode::RGBA;
             },
-            DynamicImage::ImageRgb8(data) => unsafe {
+            DynamicImage::ImageRgb8(data) => {
                 size.0 = data.width();
                 size.1 = data.height();
                 id = Self::create(
-                    mem::transmute(&data.into_raw()[0]),
+                    &data.into_raw()[0] as *const u8 as *mut std::ffi::c_void,
                     gl::RGB,
                     size.0 as i32,
                     size.1 as i32
@@ -132,7 +130,7 @@ impl Texture {
 
         Ok(
         Texture {
-            id: id,
+            id,
             width: size.0,
             height: size.1,
             rgb_mode: mode
@@ -222,10 +220,10 @@ impl Texture {
         T: Into<Option<Vector<u32>>>,
         U: Into<Option<RgbMode>>
     {
-        let pos = pos.into().unwrap_or(Vector::new(0, 0));
+        let pos = pos.into().unwrap_or_else(|| Vector::new(0, 0));
         let rgb_mode = rgb_mode.into().unwrap_or(self.rgb_mode);
         // If sizes are fucked up return an error
-        if data.len() == 0 {
+        if data.is_empty() {
             Ok(())
         } else if pos.x + sizes.x > self.width || pos.y + sizes.y > self.height {
             Err(TextureError::UpdateSize(
@@ -272,10 +270,8 @@ impl Texture {
         let size = self.get_rawsize();
         let mut data: Vec<u8> = Vec::with_capacity(size);
 
-        if size == 0 {
-            return Vec::new() 
-        } else if self.id == 0 {
-            return Vec::new()
+        if size == 0 || self.id == 0 {
+            Vec::new()
         } else {
             unsafe {
                 data.set_len(size);
@@ -428,7 +424,7 @@ impl Default for Texture {
         };
 
         Texture {
-            id: id,
+            id,
             width: 1,
             height: 1,
             rgb_mode: RgbMode::RGBA
@@ -445,7 +441,7 @@ pub enum RgbMode {
 }
 
 impl RgbMode {
-    pub fn as_gl(&self) -> GLenum {
+    pub fn as_gl(self) -> GLenum {
         match self {
             RgbMode::RGBA => { gl::RGBA },
             RgbMode::RGB => { gl::RGB },
@@ -468,11 +464,11 @@ use std::fmt;
 impl fmt::Display for TextureError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            TextureError::UpdateSize(a, b, c, d) => {
+            TextureError::UpdateSize(x, new_x, y, new_y) => {
                 write!(f, "
 Error while updating texture: Sizes are not
 okay with this texture. x: {}
-< new_x: {}  | y: {} new_y: {}", a, b, c, d)
+< new_x: {}  | y: {} new_y: {}", x, new_x, y, new_y)
             },
             TextureError::FileError => {
                 write!(f, "Error while openning given file.")
