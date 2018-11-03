@@ -35,7 +35,7 @@ pub struct Sprite {
     scale: Vector2<f32>,
     rotation: f32,
     origin: Vector2<f32>,
-    vertice: Box<VertexBuffer>,
+    vertice: VertexBuffer,
     texture: Option<Resource<Texture>>,
     model: Matrix4<f32>,
     need_update: bool
@@ -48,14 +48,12 @@ impl Sprite {
         Sprite {
             pos: Vector2::new(0.0, 0.0),
             scale: Vector2::new(1.0, 1.0),
-            vertice: Box::new(
-                VertexBuffer::new(Primitive::TrianglesStrip, VertexArray::from(vec![
+            vertice: VertexBuffer::new(Primitive::TrianglesStrip, VertexArray::from(vec![
                     Vertex::default(),
                     Vertex::default(),
                     Vertex::default(),
                     Vertex::default(),
-                ].as_slice()))
-            ),
+            ].as_slice())),
             need_update: true,
             texture: None,
             origin: Vector2::new(0.0, 0.0),
@@ -124,14 +122,14 @@ impl<'a> From<&'a Resource<Texture>> for Sprite {
         Sprite {
             pos,
             scale: Vector2::new(1.0, 1.0),
-            vertice: Box::new(VertexBuffer::new(Primitive::TrianglesStrip,
+            vertice: VertexBuffer::new(Primitive::TrianglesStrip,
                 VertexArray::from(vec![
                     Vertex::new(Vector2::new(0.0,      0.0), Vector2::new(0.0, 0.0), Color::white()),
                     Vertex::new(Vector2::new(0.0,   height), Vector2::new(0.0, 1.0), Color::white()),
                     Vertex::new(Vector2::new(width,    0.0), Vector2::new(1.0, 0.0), Color::white()),
                     Vertex::new(Vector2::new(width, height), Vector2::new(1.0, 1.0), Color::white()),
                 ].as_slice())
-            )),
+            ),
             texture: Some(Resource::clone(tex)),
             need_update: true,
             model: Matrix4::identity().append_translation(&Vector3::new(pos.x, pos.y, 0.0)),
@@ -216,7 +214,7 @@ impl Default for Sprite {
             scale: Vector2::new(0.0, 0.0),
             rotation: 0.0,
             origin: Vector2::new(0.0, 0.0),
-            vertice: Box::new(VertexBuffer::default()),
+            vertice: VertexBuffer::default(),
             texture: Some(Resource::new(Texture::default())),
             model: Matrix4::<f32>::identity(),
             need_update: false

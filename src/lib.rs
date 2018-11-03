@@ -79,6 +79,7 @@ extern crate freetype;
 extern crate lazy_static;
 extern crate image;
 
+pub mod spritebatch;
 pub mod resources;
 pub mod gl_error;
 pub mod vertex_buffer;

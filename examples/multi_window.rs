@@ -55,7 +55,7 @@ fn window1() -> Result<(), Box<Error>> {
 fn window2() -> Result<(), Box<Error>> {
     std::thread::sleep_ms(2000);
     let mut window = Window::new(500, 500, "Hello2");
-    let mut font = MutResource::new(
+    let font = MutResource::new(
         RefCell::new(Font::from_path("examples/font/terminus.ttf").unwrap())
     );
     let mut text = Text::from_str(&font, "I've been looking forward to this.");
