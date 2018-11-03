@@ -71,13 +71,16 @@
 #![allow(dead_code)]
 #![feature(test)]
 
+extern crate crossbeam;
 extern crate gl;
 extern crate glfw;
 extern crate nalgebra;
 extern crate freetype;
+extern crate rayon;
 #[macro_use]
 extern crate lazy_static;
 extern crate image;
+extern crate alga;
 
 pub mod spritebatch;
 pub mod resources;
@@ -103,6 +106,7 @@ pub use glfw::MouseButtonRight;
 pub use glfw::MouseButtonMiddle;
 pub use glfw::Action;
 pub use resources::{Resource, MutResource, ThreadResource, MutThreadResource};
+pub use nalgebra::Matrix4;
 
 pub type Vector<T> = nalgebra::Vector2<T>;
 pub type Point<T>  = Vector<T>;

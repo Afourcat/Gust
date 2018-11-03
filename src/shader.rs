@@ -35,6 +35,26 @@ lazy_static! {
 }
 
 lazy_static! {
+    pub static ref BATCH_SHADER: Shader = {
+        let (vert, frag, id);
+        unsafe {
+            let (v, f, i) = Shader::do_shader(
+                    &CString::new(BATCH_VS.as_bytes()).unwrap(),
+                    &CString::new(FS.as_bytes()).unwrap()
+            ).unwrap();
+            vert = v;
+            frag = f;
+            id = i;
+        }
+        Shader {
+            id: id,
+            frag: frag,
+            vert: vert
+        }
+    };
+}
+
+lazy_static! {
     pub static ref NO_TEXTURE_SHADER: Shader = {
         let (vert, frag, id);
         unsafe {
@@ -92,7 +112,23 @@ void main()
    FragColor = texture(ourTexture, TexCoord) * vec4(ourColor, 1.0);
 }";
 
+static BATCH_VS: &'static str =
+"#version 330 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec2 aTexCoord;
+layout (location = 2) in vec3 aColor;
+out vec3 ourColor;
+out vec2 TexCoord;
+uniform mat4 transform;
+uniform mat4 projection;
 
+void main()
+{
+   gl_Position = projection * vec4(aPos.xy, 0.0, 1.0);
+   ourColor = aColor;
+   TexCoord = aTexCoord;
+}
+";
 
 static VS: &'static str =
 "#version 330 core

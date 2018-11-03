@@ -52,7 +52,7 @@ use gl::types::*;
 use std::ops::{Index,IndexMut};
 
 /// Vertex structure defined by texture coord, space coors and color
-#[derive(Debug,Clone,PartialEq)]
+#[derive(Debug, Clone, PartialEq, Copy)]
 pub struct Vertex {
     pub pos:    Vector2<f32>,
     pub tex:    Vector2<f32>,

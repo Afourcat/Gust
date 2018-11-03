@@ -19,13 +19,18 @@ use gust::texture::{Texture};
 use gust::draw::{Drawer,Movable};
 use gust::draw::Drawable;
 use std::error::Error;
-use gust::spritebatch::SpriteBatch;
+use gust::spritebatch::{SpriteBatch, SpriteData};
+use gust::Matrix4;
+use std::sync::Arc;
 
 fn main() -> Result<(), Box<Error>> {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
 
-    let texture = Rc::new(Texture::from_path("examples/texture/Z.png").unwrap());
+    let texture = Arc::new(Texture::from_path("examples/texture/Dirt.png").unwrap());
     let mut batch = SpriteBatch::from(&texture);
+    for i in 0..100000 {
+        batch.add_sprites(SpriteData::new(Vector::new(i as f32 + 10.0, i as f32 + 10.0)))
+    }
 
     let event_handler = EventHandler::new(&window);
 
@@ -34,14 +39,13 @@ fn main() -> Result<(), Box<Error>> {
     window.poll(None);
     while window.is_open() {
         window.poll_events();
-        batch.update();
 
         for event in event_handler.fetch() {
             event_process(event, &mut window);
         }
 
         window.clear();
-        window.draw(&batch);
+        window.draw_mut(&mut batch);
         window.display();
     }
 

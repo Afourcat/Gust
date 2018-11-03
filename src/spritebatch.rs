@@ -5,11 +5,10 @@
 //  module:
 //! spritebatch test system
 
-use std::rc::Rc;
 use texture::Texture;
 use rect::Rect;
 use draw::{Drawer, Drawable, Context, BlendMode};
-use shader::DEFAULT_SHADER;
+use shader::BATCH_SHADER;
 use super::Vector;
 use vertex::Vertex;
 use nalgebra::{Matrix4, Vector3};
@@ -17,28 +16,38 @@ use gl;
 use gl::types::*;
 use std::mem;
 use std::ptr;
-use std::iter::{Extend, IntoIterator};
-
-#[derive(Debug, Default, Clone)]
-/// A Sprite data without vbo and texture
-/// Represented only by it's transformation.
-/// It's represented under the SAO representation to be efficient for cpu caching
-pub struct SpritesData {
-    pos: Vec<Vector<f32>>,
-    rotation: Vec<f32>,
-    vertices: Vec<[Vertex; 4]>,
-    model: Vec<Matrix4<f32>>,
-    need_update: Vec<bool>
-}
+use rayon::prelude::*;
+use std::sync::{Arc, Mutex};
+use color::Color;
+use nalgebra::Vector4;
 
 #[derive(Debug, Clone)]
+/// SpriteData is a structure representing transformation on a texture to become a sprite.
 pub struct SpriteData {
     pos: Vector<f32>,
     rotation: f32,
-    vertices: [Vertex; 4],
     model: Matrix4<f32>,
-    need_update: bool
+    need_update: bool,
+}
 
+impl SpriteData {
+    pub fn new(pos: Vector<f32>) -> Self {
+        SpriteData {
+            pos,
+            ..Self::default()
+        }
+    }
+}
+
+impl Default for SpriteData {
+    fn default() -> SpriteData {
+        SpriteData {
+            pos: Vector::new(0.0, 0.0),
+            rotation: 0.0,
+            model: Matrix4::identity(),
+            need_update: true,
+        }
+    }
 }
 
 /// SpriteBatch is a datastructure that handle all sprites that have the same texture.
@@ -55,12 +64,15 @@ pub struct SpriteData {
 /// ```
 /// The idea behind SpriteBatch is to limit draw calls. Even if your sprites havn't the same texture
 /// can pack textures. And give your Vertex text_coord the actual texture coordinate that you want to be drawn.
-#[derive(Default, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct SpriteBatch {
-    texture: Option<Rc<Texture>>,
-    sprites: SpritesData,
+    texture: Option<Arc<Texture>>,
+    sprites: Vec<SpriteData>,
+    vertice: Vec<Vertex>,
     textures: Vec<Rect<f32>>,
     gl_objects: (u32, u32),
+    origin: Vector<f32>,
+    len: usize
 }
 
 // For maximum efficiency we will not use the previously implemented abstraction of VertexBuffer
@@ -83,20 +95,33 @@ impl SpriteBatch {
         (vao, vbo)
     }
 
-    fn fill_vbo(&self) {
+    fn update_vbo(&mut self) {
         unsafe {
-            gl::BindVertexArray(self.gl_objects.0);
             gl::BindBuffer(gl::ARRAY_BUFFER, self.gl_objects.1);
 
-            gl::BufferData(
-                gl::ARRAY_BUFFER,
-                (std::mem::size_of::<GLfloat>() * self.sprites.need_update.len() * 8) as GLsizeiptr,
-                self.sprites.vertices.as_ptr() as *const _ as *const std::ffi::c_void,
-                gl::STATIC_DRAW
-            );
+            if self.len != self.vertice.len() / 4{
+                gl::BufferData(
+                    gl::ARRAY_BUFFER,
+                    (std::mem::size_of::<GLfloat>() * self.vertice.len() * 8) as GLsizeiptr,
+                    self.vertice.as_ptr() as *const GLvoid,
+                    gl::STATIC_DRAW
+                );
+                self.len = self.vertice.len() / 4;
+            }
+            gl::BufferSubData(
+				gl::ARRAY_BUFFER,
+                0,
+				(std::mem::size_of::<GLfloat>() * self.vertice.len() * 8) as GLsizeiptr,
+				self.vertice.as_ptr() as *const GLvoid,
+			);
+            self.update_vao();
+            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+        }
+    }
 
-            gl::BindVertexArray(self.gl_objects.1);
-
+    fn update_vao(&mut self) {
+        unsafe {
+            gl::BindVertexArray(self.gl_objects.0);
             // position (of each vertex)
             gl::VertexAttribPointer(
                             0,
@@ -128,73 +153,44 @@ impl SpriteBatch {
             );
             gl::EnableVertexAttribArray(2);
 
-            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
             gl::BindVertexArray(0);
         }
     }
 
-    pub fn add_sprites(&mut self, sprites: SpritesData) {
-        self.sprites.pos.extend_from_slice(&sprites.pos);
-        self.sprites.rotation.extend_from_slice(&sprites.rotation);
-        self.sprites.vertices.extend_from_slice(&sprites.vertices);
-        self.sprites.model.extend_from_slice(&sprites.model);
-        self.sprites.need_update.extend_from_slice(&sprites.need_update);
-    }
+    fn fill_vbo(&mut self) {
+        unsafe {
+            gl::BindVertexArray(self.gl_objects.0);
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.gl_objects.1);
 
-    pub fn add_sprite_from(&mut self, sprites: &[SpriteData]) {
-        for sprite in sprites {
-            self.sprites.pos.push(sprite.pos);
-            self.sprites.vertices.push(sprite.vertices);
-            self.sprites.rotation.push(sprite.rotation);
-            self.sprites.model.push(sprite.model);
-            self.sprites.need_update.push(sprite.need_update);
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                (std::mem::size_of::<GLfloat>() * self.vertice.len() * 8) as GLsizeiptr,
+                self.vertice.as_ptr() as *const GLvoid,
+                gl::STATIC_DRAW
+            );
+            self.update_vao();
+
+            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         }
     }
 
-    fn update_sprite(
-        pos: &Vector<f32>,
-        rotation: &mut f32,
-        vertice: &mut [Vertex; 4],
-        model: &mut Matrix4<f32>,
-        origin: Vector<f32>,
-    ) {
-        *model = Matrix4::identity().append_translation(
-            &Vector3::new(pos.x - origin.x, pos.y - origin.y, 0.0)
-        );
+    pub fn add_sprites(&mut self, mut sprites: SpriteData) {
+        sprites.need_update = true;
+        self.sprites.push(sprites);
+        let (w , h) = if let Some(ref texture) = self.texture {
+            (texture.width() as f32, texture.height() as f32)
+        } else {
+            (0.0, 0.0)
+        };
 
-        *model *= Matrix4::from_euler_angles(
-            0.0, 0.0, *rotation * (3.14116 * 180.0)
-        );
-
-        for vertex in vertice {
-            let a = *model * nalgebra::Vector4::new(vertex.pos.x, vertex.pos.y, 0.0, 0.0);
-            vertex.pos = Vector::new(a.x, a.y);
-        }
-
-        if *rotation > 360.0 {
-            *rotation = 0.0;
-        }
+        self.vertice.extend_from_slice(&[
+            Vertex::new(Vector::new(0.0, 0.0), Vector::new(0.0, 0.0), Color::white()),
+            Vertex::new(Vector::new(0.0,   h), Vector::new(0.0, 1.0), Color::white()),
+            Vertex::new(Vector::new(w,   0.0), Vector::new(1.0, 0.0), Color::white()),
+            Vertex::new(Vector::new(w,     h), Vector::new(1.0, 1.0), Color::white()),
+        ]);
     }
 }
-
-//impl IntoIterator for SpritesData {
-//    type Item = SpriteData;
-//    type IntoIter = Iterator;
-//
-//    fn into_iter(self) -> Self::IntoIter {
-//    }
-//}
-//
-//impl Extend<SpritesData> for SpriteBatch {
-//    fn extend<T: IntoIterator<Item=SpriteData>>(&mut self, iter: T) {
-//        for elem in iter {
-//            self.sprites.pos.append(elem.pos);
-//            self.sprites.need_update.append(elem.need_update);
-//            self.sprites.rotation.append(elem.rotation);
-//            self.sprites.vertices.append(elem.vertices);
-//        }
-//    }
-//}
 
 impl Drawable for SpriteBatch {
     fn draw<T: Drawer>(&self, target: &mut T) {
@@ -206,19 +202,19 @@ impl Drawable for SpriteBatch {
 
         let mut context = Context::new(
             texture,
-            &*DEFAULT_SHADER,
+            &*BATCH_SHADER,
             vec![
-                ("projection".to_string(), &target.projection())
+                ("projection".to_string(), target.projection())
             ],
             BlendMode::Alpha
         );
 
         self.setup_draw(&mut context);
         unsafe {
-            gl::BindVertexArray(self.gl_objects.1);
-            gl::BindBuffer(gl::ARRAY_BUFFER, self.gl_objects.0);
+            gl::BindVertexArray(self.gl_objects.0);
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.gl_objects.1);
 
-            gl::DrawArrays(gl::TRIANGLE_STRIP, 0, self.sprites.need_update.len() as i32);
+            gl::DrawArrays(gl::TRIANGLE_STRIP, 0, self.vertice.len() as i32);
 
             gl::BindVertexArray(0);
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
@@ -235,27 +231,78 @@ impl Drawable for SpriteBatch {
     }
 
     fn update(&mut self) {
-        for i in 0..self.sprites.need_update.len() {
-            if self.sprites.need_update[i] {
-                Self::update_sprite(
-                    &self.sprites.pos[i],
-                    &mut self.sprites.rotation[i],
-                    &mut self.sprites.vertices[i],
-                    &mut self.sprites.model[i],
-                    Vector::new(0.0, 0.0),
-                );
-            }
+        use std::sync::mpsc;
+        let (rec, sen) = mpsc::channel();
+        let rex = Mutex::new(rec);
+        {
+            let sprites = &mut self.sprites;
+            let vertices = Mutex::new(&mut self.vertice);
+
+            
+            // Iterate over each sprites and update it if it need it.
+            sprites
+                .par_iter_mut()
+                .enumerate()
+                .for_each(|(i, mut elem)| {
+                    if elem.need_update {
+                        let vert = &mut vertices.lock().unwrap()[(i * 4)..(i * 4 + 4)];
+                        self::update_sprite(&mut elem, Vector::new(0.0, 0.0), vert);
+                        rex.lock().unwrap().send(true).unwrap();
+                    }
+                });
+        }
+        for _i in sen {
+            println!("Update");
+            self.update_vbo();
         }
     }
 }
 
-impl From<&Rc<Texture>> for SpriteBatch {
-    fn from(what: &Rc<Texture>) -> SpriteBatch {
+fn update_sprite(data: &mut SpriteData, origin: Vector<f32>, vertice: &mut [Vertex]) {
+    data.model = Matrix4::identity().append_translation(
+        &Vector3::new(data.pos.x - origin.x, data.pos.y - origin.y, 0.0)
+    );
+
+    data.model *= Matrix4::from_euler_angles(
+        0.0, 0.0, data.rotation * (3.14116 * 180.0)
+    );
+
+    for vertex in vertice {
+        let b = data.model * Vector4::new(vertex.pos.x, vertex.pos.y, 0.0, 1.0);
+        vertex.pos = Vector::new(b.x, b.y);
+    }
+
+    if data.rotation > 360.0 {
+        data.rotation = 0.0;
+    }
+
+    data.need_update = false;
+}
+
+impl Default for SpriteBatch {
+    fn default() -> Self {
         SpriteBatch {
-            texture: Some(Rc::clone(what)),
-            sprites: SpritesData::default(),
+            texture: None,
+            sprites: Vec::new(),
+            vertice: Vec::new(),
             gl_objects: Self::create_vbo(),
-            textures: Vec::new()
+            textures: Vec::new(),
+            origin: Vector::new(0.0, 0.0),
+            len: 0
+        }
+    }
+}
+
+impl From<&Arc<Texture>> for SpriteBatch {
+    fn from(what: &Arc<Texture>) -> SpriteBatch {
+        SpriteBatch {
+            texture: Some(Arc::clone(what)),
+            sprites: Vec::new(),
+            vertice: Vec::new(),
+            gl_objects: Self::create_vbo(),
+            textures: Vec::new(),
+            origin: Vector::new(0.0, 0.0),
+            len: 0
         }
     }
 }

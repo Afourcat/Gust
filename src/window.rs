@@ -58,7 +58,7 @@ impl<'a> Window {
 
         glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
         glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
-
+    
         // Create window from Glfw method create_window
         // Return the glfw::WindowEvent enum and a window
         // That we are trying to wrap in this code

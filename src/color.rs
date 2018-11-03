@@ -4,7 +4,7 @@ use std::ops::Add;
 use std::ops::Mul;
 use std::ops::Sub;
 
-#[derive(Debug,Clone,Copy,PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Color(pub f32, pub f32, pub f32, pub f32);
 
 lazy_static! {
