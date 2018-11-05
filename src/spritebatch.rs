@@ -51,6 +51,63 @@ impl Default for SpriteData {
     }
 }
 
+impl Movable for SpriteData {
+    fn contain<T: nalgebra::Scalar + From<f32> + Into<f32>>(&self, vec: ::Point<T>) -> bool {
+        true
+    }
+
+    fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
+        self.pos.x += vec.x.into();
+        self.pos.y += vec.y.into();
+        self.need_update = true;
+    }
+
+    fn set_scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
+        unimplemented!("For instance no scale to SpriteData.");
+    }
+
+    fn get_scale(&self) -> Vector<f32> {
+        unimplemented!("For instance no scale to SpriteData.");
+    }
+
+    fn scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, factor: Vector<T>) {
+        unimplemented!("For instance no scale to SpriteData.");
+    }
+
+    fn get_position(&self) -> Vector<f32> {
+        self.pos
+    }
+
+    fn set_position<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
+        self.pos.x = vec.x.into();
+        self.pos.y = vec.y.into();
+        self.need_update = true;
+    }
+
+    fn set_origin<T: nalgebra::Scalar + Into<f32>>(&mut self, origin: Vector<T>) {
+        unimplemented!("No origin for now in SpriteData.");
+        self.need_update = true;
+    }
+
+    fn get_origin(&self) -> Vector<f32> {
+        unimplemented!("No origin for now in SpriteData.");
+    }
+
+    fn rotate<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+        self.rotation += angle.into();
+        self.need_update = true;
+    }
+
+    fn set_rotation<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+        self.rotation = angle.into();
+        self.need_update = true;
+    }
+
+    fn get_rotation(&self) -> f32 {
+        self.rotation
+    }
+}
+
 /// SpriteBatch is a datastructure that handle all sprites that have the same texture.
 /// And make only 1 drawCall to draw them all. this way you can highly optimise data sended to
 /// GPU.

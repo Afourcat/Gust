@@ -9,27 +9,23 @@
 extern crate gust;
 extern crate glfw;
 
-use gust::sprite::Sprite;
 use gust::window::Window;
-use gust::{Vector,Point,Key, Action};
-use gust::event::{EventHandler,Events,Event};
+use gust::{Vector, Key, Action};
+use gust::event::{Events, Event, EventHandler};
 use std::rc::Rc;
-use gust::color::Color;
 use gust::texture::{Texture};
-use gust::draw::{Drawer,Movable};
-use gust::draw::Drawable;
+use gust::draw::{Movable, Drawer};
 use std::error::Error;
 use gust::spritebatch::{SpriteBatch, SpriteData};
-use gust::Matrix4;
-use std::sync::Arc;
+use gust::color::Color;
 
 fn main() -> Result<(), Box<Error>> {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
 
     let texture = Rc::new(Texture::from_path("examples/texture/Dirt.png").unwrap());
     let mut batch = SpriteBatch::from(&texture);
-    for i in 0..10 {
-        batch.push_sprite(SpriteData::new(Vector::new(i as f32 * 100.0, i as f32 * 10.0)));
+    for i in 0..1_000_000 {
+        batch.push_sprite(SpriteData::new(Vector::new(i as f32 * 1.0, i as f32 * 10.0)));
     }
 
     let event_handler = EventHandler::new(&window);
@@ -60,6 +56,9 @@ fn event_process(event: Event, window: &mut Window, batch: &mut SpriteBatch) {
         Events::Key(Key::W, _, Action::Press, _) => {
             batch.translate(Vector::new(10.0, 10.0));
         },
+        Events::Key(Key::D, _, Action::Press, _) => {
+            batch.get_sprite_mut(0).translate(Vector::new(10.0, 0.0));
+        },
         Events::MouseButton(_, _, _) => {
             println!("Mouse button !");
         },
@@ -68,4 +67,5 @@ fn event_process(event: Event, window: &mut Window, batch: &mut SpriteBatch) {
         },
         _ => { println!("Another event !") }
     }
+    drop(event);
 }
