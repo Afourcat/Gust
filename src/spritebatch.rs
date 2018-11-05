@@ -108,6 +108,7 @@ impl Movable for SpriteData {
     }
 }
 
+#[derive(Clone, Debug)]
 /// SpriteBatch is a datastructure that handle all sprites that have the same texture.
 /// And make only 1 drawCall to draw them all. this way you can highly optimise data sended to
 /// GPU.
@@ -122,7 +123,6 @@ impl Movable for SpriteData {
 /// ```
 /// The idea behind SpriteBatch is to limit draw calls. Even if your sprites havn't the same texture
 /// can pack textures. And give your Vertex text_coord the actual texture coordinate that you want to be drawn.
-#[derive(Clone, Debug)]
 pub struct SpriteBatch {
     texture: Option<Rc<Texture>>,
     sprites: Vec<SpriteData>,
@@ -146,11 +146,35 @@ impl SpriteBatch {
         SpriteBatch::default()
     }
 
-    pub fn sprites(&self) -> &Vec<SpriteData> {
+    pub fn extend_from_slice(&mut self, slice: &mut [SpriteData]) {
+        {
+            let vertice = &mut self.vertice;
+
+            let (w , h) = if let Some(ref texture) = self.texture {
+                (texture.width() as f32, texture.height() as f32)
+            } else {
+                (0.0, 0.0)
+            };
+
+            slice.iter_mut().for_each(|x| {
+                x.need_update = true;
+                vertice.extend_from_slice(&[
+                    Vertex::new(Vector::new(0.0, 0.0), Vector::new(0.0, 0.0), Color::white()),
+                    Vertex::new(Vector::new(0.0,   h), Vector::new(0.0, 1.0), Color::white()),
+                    Vertex::new(Vector::new(w,   0.0), Vector::new(1.0, 0.0), Color::white()),
+                    Vertex::new(Vector::new(w,     h), Vector::new(1.0, 1.0), Color::white()),
+                ]);
+            });
+        }
+        self.sprites.extend_from_slice(slice);
+        self.need_update = true;
+    }
+
+    pub fn sprites(&self) -> &[SpriteData] {
         &self.sprites
     }
 
-    pub fn sprites_mut(&mut self) -> &mut Vec<SpriteData> {
+    pub fn sprites_mut(&mut self) -> &mut [SpriteData] {
         &mut self.sprites
     }
 
@@ -300,6 +324,10 @@ impl SpriteBatch {
         }
         self.need_update = false;
     }
+
+    fn len(&self) -> usize {
+        self.len
+    }
 }
 
 impl Movable for SpriteBatch {
@@ -406,27 +434,39 @@ impl Drawable for SpriteBatch {
     }
 
     fn update(&mut self) {
-        use std::sync::mpsc;
-        let (rec, sen) = mpsc::channel();
-
+        //use std::sync::mpsc;
+        //let (rec, sen) = mpsc::channel();
+        let mut sprite_mod = false;
         {
-            let rex = Mutex::new(rec);
+            //let rex = Mutex::new(rec);
             let sprites = &mut self.sprites;
-            let vertices = Mutex::new(&mut self.vertice);
+            //let vertices = Mutex::new(&mut self.vertice);
+            let vertices = &mut self.vertice;
 
-            // Iterate over each sprites and update it if it need it.
-            sprites
-                .par_iter_mut()
-                .enumerate()
-                .for_each(|(i, mut elem)| {
-                    if elem.need_update {
-                        let vert = &mut vertices.lock().unwrap()[(i * 4)..(i * 4 + 4)];
-                        self::update_sprite(&mut elem, Vector::new(0.0, 0.0), vert);
-                        rex.lock().unwrap().send(true).unwrap();
-                    }
-                });
+            for (i, mut elem) in sprites.iter_mut().enumerate() {
+                if elem.need_update {
+                    let vert = &mut vertices[(i * 4)..(i * 4 + 4)];
+                    self::update_sprite(&mut elem, Vector::new(0.0, 0.0), vert);
+                    sprite_mod = true;
+                }
+            }
         }
-        if sen.iter().max().is_some() {
+        // Iterate over each sprites and update it if it need it.
+        //            sprites
+        //                .par_iter_mut()
+        //                .enumerate()
+        //                .for_each(|(i, mut elem)| {
+        //                    if elem.need_update {
+        //                        let vert = &mut vertices.lock().unwrap()[(i * 4)..(i * 4 + 4)];
+        //                        self::update_sprite(&mut elem, Vector::new(0.0, 0.0), vert);
+        //                        rex.lock().unwrap().send(true).unwrap();
+        //                    }
+        //                });
+        //
+        //        if sen.iter().max().is_some() {
+        //            self.update_vbo();
+        //        }
+        if sprite_mod {
             self.update_vbo();
         }
         if self.need_update {
@@ -493,5 +533,105 @@ impl From<&Rc<Texture>> for SpriteBatch {
             need_update: false,
             model: Matrix4::identity()
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    extern crate test;
+
+    use super::{SpriteBatch, SpriteData};
+    use window::Window;
+    use self::test::Bencher;
+    use ::{Vector, texture::Texture};
+    use std::rc::Rc;
+    use draw::{Drawable, Movable};
+    use rayon::prelude::*;
+
+    #[bench]
+    fn sprite_batch_create(bencher: &mut Bencher) {
+        Window::new(100, 100, "Loader");
+
+        bencher.iter(|| {
+            SpriteBatch::new();
+        });
+    }
+
+    #[bench]
+    fn batch_create_with_data(bencher: &mut Bencher) {
+        Window::new(100, 100, "Loader");
+        let texture = Rc::new(Texture::from_path("examples/texture/test.jpg").unwrap());
+        let mut vec = Vec::with_capacity(1000);
+        (0..1000).into_iter().for_each(|i| { vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))) });
+
+        bencher.iter(|| {
+            let mut batch = SpriteBatch::from(&texture);
+            batch.extend_from_slice(&mut vec);
+        });
+    }
+
+    #[bench]
+    fn batch_update_create(bencher: &mut Bencher) {
+        Window::new(100, 100, "Loader");
+        let texture = Rc::new(Texture::from_path("examples/texture/test.jpg").unwrap());
+        let mut vec = Vec::with_capacity(1000);
+        (0..1000).into_iter().for_each(|i| { vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))) });
+        let mut batch = SpriteBatch::from(&texture);
+        batch.extend_from_slice(&mut vec);
+
+        bencher.iter(|| {
+            batch.update();
+        });
+    }
+
+    #[bench]
+    fn batch_update_translation_with_bad_update(bencher: &mut Bencher) {
+        Window::new(100, 100, "Loader");
+        let texture = Rc::new(Texture::from_path("examples/texture/test.jpg").unwrap());
+        let mut vec = Vec::with_capacity(1000);
+        (0..1000).into_iter().for_each(|i| { vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))) });
+        let mut batch = SpriteBatch::from(&texture);
+        batch.extend_from_slice(&mut vec);
+
+        bencher.iter(|| {
+            // Here this update is make the compute 2 times longer
+            // However it's useless because we will mut and update after it.
+            // /!\ Be careful when calling heavy function.
+            batch.update();
+            batch.translate(Vector::new(100.0, 0.0));
+            batch.get_sprite_mut(0).translate(Vector::new(100.0, 0.0));
+            batch.update();
+        });
+    }
+
+    #[bench]
+    fn batch_update_translation(bencher: &mut Bencher) {
+        Window::new(100, 100, "Loader");
+        let texture = Rc::new(Texture::from_path("examples/texture/test.jpg").unwrap());
+        let mut vec = Vec::with_capacity(1000);
+        (0..1000).into_iter().for_each(|i| { vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))) });
+        let mut batch = SpriteBatch::from(&texture);
+        batch.extend_from_slice(&mut vec);
+
+        bencher.iter(|| {
+            batch.translate(Vector::new(100.0, 0.0));
+            batch.get_sprite_mut(0).translate(Vector::new(100.0, 0.0));
+            batch.update();
+        });
+    }
+
+    #[bench]
+    fn batch_update_content(bencher: &mut Bencher) {
+        Window::new(100, 100, "Loader");
+        let texture = Rc::new(Texture::from_path("examples/texture/Dirt.png").unwrap());
+        let mut vec = Vec::with_capacity(100000);
+        (0..100000).into_iter().for_each(|i| { vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))) });
+        let mut batch = SpriteBatch::from(&texture);
+        batch.extend_from_slice(&mut vec);
+
+        bencher.iter(|| {
+            batch.sprites_mut().iter_mut().for_each(|x| x.translate(Vector::new(10.0, 0.0)));
+            batch.update();
+        });
     }
 }

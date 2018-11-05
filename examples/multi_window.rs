@@ -53,7 +53,6 @@ fn window1() -> Result<(), Box<Error>> {
 }
 
 fn window2() -> Result<(), Box<Error>> {
-    std::thread::sleep_ms(2000);
     let mut window = Window::new(500, 500, "Hello2");
     let font = MutResource::new(
         RefCell::new(Font::from_path("examples/font/terminus.ttf").unwrap())
