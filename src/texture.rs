@@ -215,8 +215,8 @@ impl Texture {
         sizes: Vector<u32>,
         pos: T,
         rgb_mode: U
-    ) -> Result<(), TextureError> 
-    where 
+    ) -> Result<(), TextureError>
+    where
         T: Into<Option<Vector<u32>>>,
         U: Into<Option<RgbMode>>
     {

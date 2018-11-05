@@ -211,11 +211,7 @@ impl Drawable for VertexBuffer {
 
         let mut context = Context::new(
             texture,
-			if texture.is_none() {
-                &*NO_TEXTURE_SHADER
-            } else {
-                &*DEFAULT_SHADER
-            },
+			if texture.is_none() { &*NO_TEXTURE_SHADER } else { &*DEFAULT_SHADER },
 			vec![
                 ("transform".to_string(), &*IDENTITY),
                 ("projection".to_string(), target.projection())
@@ -271,7 +267,7 @@ impl Drawable for VertexBuffer {
             self.unbind();
             self.array.unbind();
         }
-	}
+    }
 }
 
 impl Index<usize> for VertexBuffer {

@@ -11,7 +11,7 @@ extern crate glfw;
 
 use gust::sprite::Sprite;
 use gust::window::Window;
-use gust::{Vector,Point,Key};
+use gust::{Vector,Point,Key, Action};
 use gust::event::{EventHandler,Events,Event};
 use std::rc::Rc;
 use gust::color::Color;
@@ -26,10 +26,10 @@ use std::sync::Arc;
 fn main() -> Result<(), Box<Error>> {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
 
-    let texture = Arc::new(Texture::from_path("examples/texture/Dirt.png").unwrap());
+    let texture = Rc::new(Texture::from_path("examples/texture/Dirt.png").unwrap());
     let mut batch = SpriteBatch::from(&texture);
-    for i in 0..100000 {
-        batch.add_sprites(SpriteData::new(Vector::new(i as f32 + 10.0, i as f32 + 10.0)))
+    for i in 0..10 {
+        batch.push_sprite(SpriteData::new(Vector::new(i as f32 * 100.0, i as f32 * 10.0)));
     }
 
     let event_handler = EventHandler::new(&window);
@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<Error>> {
         window.poll_events();
 
         for event in event_handler.fetch() {
-            event_process(event, &mut window);
+            event_process(event, &mut window, &mut batch);
         }
 
         window.clear();
@@ -52,10 +52,13 @@ fn main() -> Result<(), Box<Error>> {
     Ok(())
 }
 
-fn event_process(event: Event, window: &mut Window) {
+fn event_process(event: Event, window: &mut Window, batch: &mut SpriteBatch) {
     match event.1 {
         Events::Key(Key::Escape, _, _, _) => {
             window.close();
+        },
+        Events::Key(Key::W, _, Action::Press, _) => {
+            batch.translate(Vector::new(10.0, 10.0));
         },
         Events::MouseButton(_, _, _) => {
             println!("Mouse button !");

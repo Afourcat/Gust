@@ -6,3 +6,5 @@ gust_example/**/*.rs.bk
 
 ./**/*.rs.bk
 target/
+
+.vscode
