@@ -25,8 +25,11 @@ fn main() -> Result<(), Box<Error>> {
     let texture = Rc::new(Texture::from_path("examples/texture/Dirt.png").unwrap());
     let mut batch = SpriteBatch::from(&texture);
     for i in 0..1_000_000 {
-        batch.push_sprite(SpriteData::new(Vector::new(i as f32 * 1.0, i as f32 * 10.0)));
+        let mut data = SpriteData::new(Vector::new(i as f32 * 1.0, i as f32 * 10.0));
+        data.set_texture_raw([Vector::new(0.5, 0.5), Vector::new(1.0, 1.0)]);
+        batch.push_sprite(data);
     }
+    println!("Created !");
 
     let event_handler = EventHandler::new(&window);
 

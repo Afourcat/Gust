@@ -22,6 +22,10 @@ use std::rc::Rc;
 use color::Color;
 use nalgebra::Vector4;
 
+pub enum BatchError {
+    BadTextureRect
+}
+
 #[derive(Debug, Clone)]
 /// SpriteData is a structure representing transformation on a texture to become a sprite.
 pub struct SpriteData {
@@ -29,14 +33,46 @@ pub struct SpriteData {
     rotation: f32,
     model: Matrix4<f32>,
     need_update: bool,
+    text_coord: [Vector<f32>; 2]
 }
 
 impl SpriteData {
+
+    /// Create a new SpriteData needed by SpriteBatch
     pub fn new(pos: Vector<f32>) -> Self {
         SpriteData {
             pos,
             ..Self::default()
         }
+    }
+
+    /// Set texture_coord Raw (gl like)
+    pub fn set_texture_raw(&mut self, text_coord: [Vector<f32>; 2]) {
+        self.text_coord = text_coord;
+    }
+
+    /// Set texture rect.
+    pub fn set_texture_rect(&mut self, text_rect: Rect<usize>, texture_size: usize) {
+        self.text_coord = [
+            Vector::new(
+                text_rect.left as f32 / texture_size as f32,
+                text_rect.top as f32 / texture_size as f32
+            ),
+            Vector::new(
+                text_rect.width as f32 / texture_size as f32,
+                text_rect.height as f32 / texture_size as f32
+            ),
+        ];
+    }
+
+    /// Get texture rect.
+    pub fn texture_rect(&self, texture_size: usize) -> Rect<usize> {
+        Rect::new(
+            (self.text_coord[0].x * texture_size as f32) as usize,
+            (self.text_coord[0].y * texture_size as f32) as usize,
+            (self.text_coord[1].x * texture_size as f32) as usize,
+            (self.text_coord[1].y * texture_size as f32) as usize
+        )
     }
 }
 
@@ -47,6 +83,7 @@ impl Default for SpriteData {
             rotation: 0.0,
             model: Matrix4::identity(),
             need_update: true,
+            text_coord: [Vector::new(0.0, 0.0), Vector::new(1.0, 1.0)]
         }
     }
 }
@@ -127,7 +164,6 @@ pub struct SpriteBatch {
     texture: Option<Rc<Texture>>,
     sprites: Vec<SpriteData>,
     vertice: Vec<Vertex>,
-    textures: Vec<Rect<f32>>,
     gl_objects: (u32, u32),
     glob_origin: Vector<f32>,
     glob_pos: Vector<f32>,
@@ -156,15 +192,15 @@ impl SpriteBatch {
                 (0.0, 0.0)
             };
 
-            slice.iter_mut().for_each(|x| {
+            for x in slice.iter_mut() {
                 x.need_update = true;
                 vertice.extend_from_slice(&[
-                    Vertex::new(Vector::new(0.0, 0.0), Vector::new(0.0, 0.0), Color::white()),
-                    Vertex::new(Vector::new(0.0,   h), Vector::new(0.0, 1.0), Color::white()),
-                    Vertex::new(Vector::new(w,   0.0), Vector::new(1.0, 0.0), Color::white()),
-                    Vertex::new(Vector::new(w,     h), Vector::new(1.0, 1.0), Color::white()),
+                    Vertex::new(Vector::new(0.0, 0.0), Vector::new(x.text_coord[0].x, x.text_coord[0].y), Color::white()),
+                    Vertex::new(Vector::new(0.0,   h), Vector::new(x.text_coord[0].x, x.text_coord[1].y), Color::white()),
+                    Vertex::new(Vector::new(w,   0.0), Vector::new(x.text_coord[1].x, x.text_coord[0].y), Color::white()),
+                    Vertex::new(Vector::new(w,     h), Vector::new(x.text_coord[1].x, x.text_coord[1].y), Color::white()),
                 ]);
-            });
+            }
         }
         self.sprites.extend_from_slice(slice);
         self.need_update = true;
@@ -188,7 +224,6 @@ impl SpriteBatch {
 
     pub fn push_sprite(&mut self, mut sprites: SpriteData) {
         sprites.need_update = true;
-        self.sprites.push(sprites);
         let (w , h) = if let Some(ref texture) = self.texture {
             (texture.width() as f32, texture.height() as f32)
         } else {
@@ -196,11 +231,12 @@ impl SpriteBatch {
         };
 
         self.vertice.extend_from_slice(&[
-            Vertex::new(Vector::new(0.0, 0.0), Vector::new(0.0, 0.0), Color::white()),
-            Vertex::new(Vector::new(0.0,   h), Vector::new(0.0, 1.0), Color::white()),
-            Vertex::new(Vector::new(w,   0.0), Vector::new(1.0, 0.0), Color::white()),
-            Vertex::new(Vector::new(w,     h), Vector::new(1.0, 1.0), Color::white()),
+            Vertex::new(Vector::new(0.0, 0.0), Vector::new(sprites.text_coord[0].x, sprites.text_coord[0].y), Color::white()),
+            Vertex::new(Vector::new(0.0,   h), Vector::new(sprites.text_coord[0].x, sprites.text_coord[1].y), Color::white()),
+            Vertex::new(Vector::new(w,   0.0), Vector::new(sprites.text_coord[1].x, sprites.text_coord[0].y), Color::white()),
+            Vertex::new(Vector::new(w,     h), Vector::new(sprites.text_coord[1].x, sprites.text_coord[1].y), Color::white()),
         ]);
+        self.sprites.push(sprites);
     }
 
     fn update_vbo(&mut self) {
@@ -503,7 +539,6 @@ impl Default for SpriteBatch {
             sprites: Vec::new(),
             vertice: Vec::new(),
             gl_objects: Self::create_vbo(),
-            textures: Vec::new(),
             glob_origin: Vector::new(0.0, 0.0),
             glob_pos: Vector::new(0.0, 0.0),
             glob_scale: Vector::new(0.0, 0.0),
@@ -524,7 +559,6 @@ impl From<&Rc<Texture>> for SpriteBatch {
             sprites: Vec::new(),
             vertice: Vec::new(),
             gl_objects: Self::create_vbo(),
-            textures: Vec::new(),
             glob_origin: Vector::new((width / 2) as f32, (height / 2) as f32),
             glob_pos: Vector::new(0.0, 0.0),
             glob_scale: Vector::new(1.0, 1.0),
