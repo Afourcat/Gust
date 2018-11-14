@@ -99,6 +99,21 @@ pub mod rect;
 pub mod text;
 pub mod font;
 
+pub mod prelude {
+    pub use window::Window;
+    pub use texture::Texture;
+    pub use sprite::Sprite;
+    pub use spritebatch::{SpriteBatch, SpriteData};
+    pub use font::Font;
+    pub use text::Text;
+    pub use event::{Event, Events, EventHandler};
+    pub use super::{Vector, Coord, Point};
+    pub use glfw::Key;
+    pub use draw::{Drawer, Drawable, Movable};
+    pub use view::View;
+    pub use color::Color;
+}
+
 pub use glfw::Key;
 pub use glfw::MouseButton;
 pub use glfw::MouseButtonLeft;

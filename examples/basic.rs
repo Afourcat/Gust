@@ -1,16 +1,9 @@
 extern crate gust;
 extern crate glfw;
 
-use gust::sprite::Sprite;
-use gust::window::Window;
-use gust::{Vector,Point,Key};
-use gust::event::{EventHandler,Events,Event};
 use std::rc::Rc;
-use gust::color::Color;
-use gust::texture::{Texture};
-use gust::draw::{Drawer,Movable};
-use gust::draw::Drawable;
 use std::error::Error;
+use gust::prelude::*;
 
 fn main() -> Result<(), Box<Error>> {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");

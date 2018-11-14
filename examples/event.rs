@@ -33,11 +33,6 @@ fn main() {
     while window.is_open() {
         window.poll_events();
 
-        std::thread::spawn(|| {
-            for event in event_handler.fetch() {
-                
-            }
-        });
         for event in event_handler.fetch() {
             event_process(event, &mut window, &mut sprites);
         }

@@ -26,7 +26,7 @@ use std::path::Path;
 /// let leave = Rc::new(Texture::new("path/to/test"));
 ///	let sprite = Sprite::from(&leave);
 /// ```
-#[derive(Debug,Clone,PartialEq,Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Texture {
     pub id: u32,
     width: u32,
