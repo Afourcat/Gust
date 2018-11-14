@@ -107,9 +107,8 @@ pub mod prelude {
     pub use font::Font;
     pub use text::Text;
     pub use event::{Event, Events, EventHandler};
-    pub use super::{Vector, Coord, Point};
-    pub use glfw::Key;
-    pub use draw::{Drawer, Drawable, Movable};
+    pub use super::{Vector, Coord, Point, Action, Key, MouseButtonLeft, MouseButtonRight};
+    pub use draw::{Drawer, Drawable, Movable, Context};
     pub use view::View;
     pub use color::Color;
 }
