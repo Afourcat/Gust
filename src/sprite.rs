@@ -151,6 +151,7 @@ impl Movable for Sprite {
 
         //let a = Rect::new(self.pos.x as f32, self.pos.y as f32, sizes.x as f32, sizes.y as f32);
         //a.contain(vec)
+        true
     }
 
     fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>) {
