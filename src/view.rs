@@ -98,10 +98,13 @@ impl View {
 
     pub fn update(&mut self) {
         if self.need_update {
+            let width = self.sizes.x * self.zoom;
+            let height = self.sizes.y * self.zoom;
+
             self.projection = Matrix4::new_ortho(
                 self.pos.x,
-                self.sizes.x + self.pos.x,
-                self.sizes.y + self.pos.y,
+                width + self.pos.x,
+                height + self.pos.y,
                 self.pos.y,
                 -1.0, 1.0
             );
@@ -110,7 +113,15 @@ impl View {
     }
 
     pub fn set_zoom(&mut self, zoom: f32) {
-        self.zoom = zoom;
+        if zoom != self.zoom {
+            self.zoom = zoom;
+            self.need_update = true;
+        }
+    }
+
+    pub fn zoom(&mut self, zoom: f32) {
+        self.zoom *= zoom;
+        self.need_update = true;
     }
 
     pub fn projection(&self) -> Matrix4<f32> {

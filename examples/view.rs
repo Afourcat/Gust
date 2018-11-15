@@ -49,8 +49,11 @@ fn event_process(event: Event, window: &mut Window) {
         Events::Key(Key::Escape, _, _, _) => {
             window.close();
         },
-        Events::MouseButton(_, _, _) => {
-            println!("Mouse button !");
+        Events::Key(Key::Up, _, _, _) => {
+            window.view_mut().zoom(2.0);
+        },
+        Events::Key(Key::Down, _, _, _) => {
+            window.view_mut().zoom(0.5);
         },
         Events::CursorPos(x, y) => {
             let center = Vector::new(x as f32, y as f32);

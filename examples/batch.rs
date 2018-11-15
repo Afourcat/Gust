@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<Error>> {
     let mut batch = SpriteBatch::from(&texture);
     for i in 0..1_000_000 {
         let mut data = SpriteData::new(Vector::new(i as f32 * 1.0, i as f32 * 10.0));
-        data.set_texture_raw([Vector::new(0.5, 0.5), Vector::new(1.0, 1.0)]);
+        data.set_texture_raw([Vector::new(0.0, 0.0), Vector::new(1.0, 1.0)]);
         batch.push_sprite(data);
     }
     println!("Created !");
