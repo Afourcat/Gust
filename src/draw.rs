@@ -5,7 +5,6 @@ use nalgebra::{Vector2};
 use nalgebra;
 use texture::Texture;
 use shader::Shader;
-use std::rc::Rc;
 use nalgebra::Matrix4;
 use gl;
 use shader::DEFAULT_SHADER;
@@ -18,21 +17,29 @@ use shader::DEFAULT_SHADER;
 //
 //----------------------------------------------------------------------------
 
+lazy_static! {
+    static ref DEFAULT_CONTEXT: Context<'static> = Context::default();
+}
+
+lazy_static! {
+    pub static ref IDENTITY: Matrix4<f32> = Matrix4::identity();
+}
+
 #[derive(Debug)]
 /// Blend mode needed to draw
 pub enum BlendMode {
-	Alpha,
-	Beta,
-	Ceta
+    Alpha,
+    Beta,
+    Ceta
 }
 
 impl BlendMode {
-	fn blend_to_gl(&self) {
-		match self {
-			BlendMode::Alpha => unsafe { gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA) },
-			_ => {},
-		}
-	}
+    fn blend_to_gl(&self) {
+        match self {
+            BlendMode::Alpha => unsafe { gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA) },
+            _ => {},
+        }
+    }
 
     pub fn unactive(&self) {
         unsafe {
@@ -71,10 +78,10 @@ impl BlendMode {
 /// A context is needed by the drawer to handle the drawing
 /// process a default context can be use ether
 pub struct Context<'a> {
-	texture: Option<&'a Texture>,
-	shader: &'a Shader,
-    transform: Matrix4<f32>,
-	blend_mode: BlendMode,
+    texture: Option<&'a Texture>,
+    shader: &'a Shader,
+    transform: Vec<(String, &'a Matrix4<f32>)>,
+    blend_mode: BlendMode,
 }
 
 impl<'a> Context<'a> {
@@ -83,14 +90,14 @@ impl<'a> Context<'a> {
     pub fn new(
         texture: Option<&'a Texture>,
         shader: &'a Shader,
-        transform: Option<Matrix4<f32>>,
+        transform: Vec<(String, &'a Matrix4<f32>)>,
         blend_mode: BlendMode
     ) -> Context<'a> {
         Context {
-            texture: texture,
-            shader: shader,
-            transform: transform.unwrap_or(Matrix4::identity()),
-            blend_mode: blend_mode
+            texture,
+            shader,
+            transform,
+            blend_mode
         }
     }
 
@@ -101,11 +108,6 @@ impl<'a> Context<'a> {
         }
     }
 
-    /// Apply the graphical projection
-    pub fn apply_projection(&mut self, projection: &Matrix4<f32>) {
-        self.transform = projection * self.transform;
-    }
-
     /// Apply the blendmode to the current context
     pub fn apply_blendmode(&mut self) {
         self.blend_mode.active();
@@ -114,21 +116,23 @@ impl<'a> Context<'a> {
     /// Apply final shader (transformation)
     pub fn setup_shader(&self) {
         self.shader.activate();
-        self.shader.uniform_mat4f("transform", &self.transform);
+        for (name, mat) in &self.transform {
+            self.shader.uniform_mat4f(name.as_str(), mat);
+        }
     }
 }
 
 impl<'a> Default for Context<'a> {
 
     /// Default Context implementation
-	fn default() -> Context<'a> {
-		Context {
-			texture: None,
-			shader: &*DEFAULT_SHADER,
-            transform: Matrix4::identity(),
-			blend_mode: BlendMode::Alpha,
-		}
-	}
+    fn default() -> Context<'a> {
+        Context {
+            texture: None,
+            shader: &*DEFAULT_SHADER,
+            transform: vec![("transform".to_string(), &*IDENTITY)],
+            blend_mode: BlendMode::Alpha,
+        }
+    }
 }
 
 
@@ -143,17 +147,27 @@ impl<'a> Default for Context<'a> {
 
 /// Trait defining a drawer
 pub trait Drawer {
-	/// Function that draw on itself
-	fn draw<T: Drawable>(&mut self, drawable: &T);
+    fn draw_mut<T: Drawable>(&mut self, drawable: &mut T) {
+        self.draw(drawable);
+    }
+
+    /// Function that draw on itself
+    fn draw<T: Drawable>(&mut self, drawable: &T);
 
     /// Draw with context fonction if you want to define you own fonction
-    fn draw_with_context<T: Drawable>(&mut self, drawable: &T, context: &mut Context);
+    fn draw_with_context_mut<T: Drawable>(&mut self, drawable: &mut T, context: &mut Context) {
+        self.draw_with_context(drawable, context);
+    }
+
+    fn draw_with_context<T: Drawable>(&mut self, drawable: &mut T, context: &mut Context);
 
     fn get_projection(&self) -> &Matrix4<f32>;
 
     fn get_center(&self) -> Vector2<f32>;
 
     fn get_sizes(&self) -> Vector2<f32>;
+
+    fn projection(&self) -> &Matrix4<f32>;
 }
 
 /// Trait that can be use to draw on window
@@ -163,18 +177,24 @@ pub trait Drawable {
     fn draw<T: Drawer>(&self, window: &mut T);
 
     /// Draw with a particular context
-    fn draw_with_context<T: Drawer>(&self, window: &mut T, context: &mut Context);
+    fn draw_with_context(&self, context: &mut Context);
 
-    /// Assign a texture to a drawable
-    fn set_texture(&mut self, texture: &Rc<Texture>);
+    /// Draw as mutable
+    fn draw_mut<T: Drawer>(&mut self, window: &mut T) {
+        self.draw(window);
+    }
+
+    /// Draw with context as mutable
+    fn draw_with_context_mut(&mut self, context: &mut Context) {
+        self.draw_with_context(context);
+    }
 
     /// Update the openGL state of the drawable entity
     /// Should be call often so be carefull when implementing.
     fn update(&mut self);
 
     /// Setup the draw for the final system you don't have to implement it in a normal drawable
-    fn setup_draw<T: Drawer>(&self, context: &mut Context, window: &T) {
-        context.apply_projection(window.get_projection());
+    fn setup_draw(&self, context: &mut Context) {
         context.apply_texture(0);
         context.apply_blendmode();
         context.setup_shader();
@@ -203,7 +223,7 @@ pub trait Movable {
 
     /// Get the current scale
     fn get_scale(&self) -> Vector2<f32>;
-    
+
     fn rotate<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T);
 
     fn set_rotation<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T);

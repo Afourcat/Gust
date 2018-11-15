@@ -10,9 +10,13 @@ nalgebra = "0.15.0"
 image = "0.19.0"
 lazy_static = "1.1.0"
 freetype-rs = { git = "https://github.com/PistonDevelopers/freetype-rs" }
+rayon = "1.0.3"
+crossbeam = "0.4"
+alga = "0.7.2"
 
 [dependencies.glfw]
 git = "https://github.com/bjz/glfw-rs.git"
 
-debug=true
+[profile.release]
+debug = true
 

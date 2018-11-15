@@ -24,7 +24,13 @@ fn main() {
 
     // Create text with font
     let mut text = Text::new(&font);
-    text.set_content(String::from("Hello !\nReturn example !\tTabs = 4spaces\n"));
+    text.set_content("Welcome to Gust you can write text and\na lot more !\t(Like tabs)");
+    text.set_position(Vector::new(100.0, 100.0));
+
+    // Create a 2nd text with font
+    let mut text2 = Text::from_str(&font, "Salut !");
+    text2.set_position(Vector::new(200.0, 200.0));
+    text2.update();
 
     // Loop preparation
     window.set_clear_color(Color::new(0.0, 0.0, 0.0));
@@ -36,12 +42,12 @@ fn main() {
 
         // Poll event
         window.poll_events();
-
         event_handler.fetch().for_each(|event| handle(&event, &mut window, &mut text));
 
         // Draw process (Clear -> Draw -> Display)
         window.clear();
         window.draw(&text);
+        window.draw(&text2);
         window.display();
     }
 }

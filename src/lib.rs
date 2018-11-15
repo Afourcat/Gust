@@ -69,17 +69,22 @@
 //! ```
 
 #![allow(dead_code)]
+#![feature(test)]
 
+extern crate crossbeam;
 extern crate gl;
 extern crate glfw;
 extern crate nalgebra;
 extern crate freetype;
+extern crate rayon;
 #[macro_use]
 extern crate lazy_static;
 extern crate image;
+extern crate alga;
 
+pub mod spritebatch;
+pub mod resources;
 pub mod gl_error;
-pub mod help;
 pub mod vertex_buffer;
 pub mod color;
 pub mod window;
@@ -94,12 +99,28 @@ pub mod rect;
 pub mod text;
 pub mod font;
 
+pub mod prelude {
+    pub use window::Window;
+    pub use texture::Texture;
+    pub use sprite::Sprite;
+    pub use spritebatch::{SpriteBatch, SpriteData};
+    pub use font::Font;
+    pub use text::Text;
+    pub use event::{Event, Events, EventHandler};
+    pub use super::{Vector, Coord, Point, Action, Key, MouseButtonLeft, MouseButtonRight};
+    pub use draw::{Drawer, Drawable, Movable, Context};
+    pub use view::View;
+    pub use color::Color;
+}
+
 pub use glfw::Key;
 pub use glfw::MouseButton;
 pub use glfw::MouseButtonLeft;
 pub use glfw::MouseButtonRight;
 pub use glfw::MouseButtonMiddle;
 pub use glfw::Action;
+pub use resources::{Resource, MutResource, ThreadResource, MutThreadResource};
+pub use nalgebra::Matrix4;
 
 pub type Vector<T> = nalgebra::Vector2<T>;
 pub type Point<T>  = Vector<T>;

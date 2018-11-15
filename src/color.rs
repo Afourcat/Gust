@@ -4,7 +4,7 @@ use std::ops::Add;
 use std::ops::Mul;
 use std::ops::Sub;
 
-#[derive(Debug,Clone,Copy,PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Color(pub f32, pub f32, pub f32, pub f32);
 
 lazy_static! {
@@ -86,6 +86,17 @@ impl Mul for Color {
             self.2 * other.2,
             self.3 * other.3,
         )
+    }
+}
+
+impl Into<[u8; 4]> for Color {
+    fn into(self) -> [u8; 4] {
+        [
+            (self.0 * 255.0) as u8,
+            (self.1 * 255.0) as u8,
+            (self.2 * 255.0) as u8,
+            (self.3 * 255.0) as u8
+        ]
     }
 }
 

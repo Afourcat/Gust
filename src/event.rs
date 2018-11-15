@@ -3,24 +3,26 @@ use std::sync::mpsc::Receiver;
 use glfw;
 pub use glfw::WindowEvent as Events;
 use std::rc::Rc;
+use window::Window;
 
 pub type EventMessage<'a> = glfw::FlushedMessages<'a, (f64, Events)>;
 
 /// Event Wrap glfwEvent data
 pub type Event = (f64, Events);
+pub type EventReceiver = Rc<Receiver<(f64, glfw::WindowEvent)>>;
 
 pub struct EventHandler {
-    receiver: Rc<Receiver<(f64, glfw::WindowEvent)>>,
+    receiver: EventReceiver
 }
 
 impl EventHandler {
-    pub fn new(window: &::window::Window) -> EventHandler {
+    pub fn new(window: &Window) -> EventHandler {
         EventHandler {
-            receiver: Rc::clone(&window.event)
+            receiver: Rc::clone(window.event())
         }
     }
 
-    pub fn fetch<'a>(&'a self) -> EventIterator<'a> {
+    pub fn fetch(&self) -> EventIterator {
         EventIterator::from(&*self)
     }
 }
@@ -29,11 +31,7 @@ impl<'a> Iterator for EventIterator<'a> {
 	type Item = Event;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		if let Some(elem) = self.fmsg.next() {
-			Some(elem)
-		} else {
-			None
-		}
+		self.fmsg.next()
 	}
 }
 

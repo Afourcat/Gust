@@ -2,7 +2,6 @@
 
 use texture::Texture;
 use vertex_buffer::{VertexBuffer,Primitive};
-use std::rc::Rc;
 use draw::{Drawable,Drawer,Context,BlendMode};
 use color::Color;
 use vertex::Vertex;
@@ -13,6 +12,9 @@ use vertex::*;
 use shader::DEFAULT_SHADER;
 use rect::Rect;
 use std::convert::From;
+use std::error::Error;
+use std::fmt;
+use resources::Resource;
 
 /// A sprite is a transformable
 /// drawable sprite
@@ -33,10 +35,9 @@ pub struct Sprite {
     scale: Vector2<f32>,
     rotation: f32,
     origin: Vector2<f32>,
-    vertice: Box<VertexBuffer>,
-    texture: Option<Rc<Texture>>,
+    vertice: VertexBuffer,
+    texture: Option<Resource<Texture>>,
     model: Matrix4<f32>,
-    auto_update: bool,
     need_update: bool
 }
 
@@ -47,45 +48,44 @@ impl Sprite {
         Sprite {
             pos: Vector2::new(0.0, 0.0),
             scale: Vector2::new(1.0, 1.0),
-            vertice: Box::new(
-                VertexBuffer::new(Primitive::TrianglesStrip, VertexArray::from(vec![
+            vertice: VertexBuffer::new(Primitive::TrianglesStrip, VertexArray::from(vec![
                     Vertex::default(),
                     Vertex::default(),
                     Vertex::default(),
                     Vertex::default(),
-                ].as_slice()))
-            ),
+            ].as_slice())),
             need_update: true,
             texture: None,
             origin: Vector2::new(0.0, 0.0),
             model: Matrix4::identity(),
             rotation: 0.0,
-            auto_update: false,
         }
     }
 
+    /// Set texture color
     pub fn set_color(&mut self, color: &Color) {
-        self.vertice[0].color = color.clone();
-        self.vertice[1].color = color.clone();
-        self.vertice[2].color = color.clone();
-        self.vertice[3].color = color.clone();
+        self.vertice[0].color = *color;
+        self.vertice[1].color = *color;
+        self.vertice[2].color = *color;
+        self.vertice[3].color = *color;
         self.vertice.update();
     }
 
+    /// Get texture sizes
     pub fn get_sizes(&self) -> Vector2<usize> {
         if let Some(ref texture) = self.texture {
-            Vector2::new(
-                texture.width() as usize,
-                texture.height() as usize
-            )
+            Vector2::new(texture.width() as usize, texture.height() as usize)
         } else {
             Vector2::new(0, 0)
         }
     }
 
-    pub fn set_origin_to_center(&mut self) -> Result<(),&'static str> {
+    /// Set origin to center of the sprite. Can fail because a sprite sizes
+    /// are defined by it's texture, sometimes it can happend that there isn't one.
+    /// So it return an SpriteError::NoTexture
+    pub fn set_origin_to_center(&mut self) -> Result<(), SpriteError> {
 
-        if let Some(_) = self.texture {
+        if self.texture.is_some() {
             let mut center = Vector2::new(0.0, 0.0);
             let sizes = self.get_sizes();
             center.x = sizes.x as f32 / 2.0;
@@ -93,12 +93,18 @@ impl Sprite {
             self.set_origin(center);
             Ok(())
         } else {
-            return Err("You should set a texture before !")
+            Err(SpriteError::NoTexture)
         }
+    }
+
+    /// Set a new texture and set the sprite to update state.
+    fn set_texture(&mut self, texture: &Resource<Texture>) {
+        self.texture = Some(Resource::clone(texture));
+        self.need_update = true;
     }
 }
 
-impl<'a> From<&'a Rc<Texture>> for Sprite {
+impl<'a> From<&'a Resource<Texture>> for Sprite {
 
     /// You can create sprite from texture (precisly Rc<Texture>)
     /// ```no_run
@@ -109,43 +115,43 @@ impl<'a> From<&'a Rc<Texture>> for Sprite {
     /// let texture = Rc::new(Texture::new("My great texture"));
     /// let personnage = Sprite::from(&texture);
     /// ```
-    fn from(tex: &'a Rc<Texture>) -> Sprite {
+    fn from(tex: &'a Resource<Texture>) -> Sprite {
         let width = tex.width() as f32;
         let height = tex.height() as f32;
         let pos = Vector2::new(0.0, 0.0);
         Sprite {
-            pos: pos,
+            pos,
             scale: Vector2::new(1.0, 1.0),
-            vertice: Box::new(VertexBuffer::new(Primitive::TrianglesStrip,
+            vertice: VertexBuffer::new(Primitive::TrianglesStrip,
                 VertexArray::from(vec![
                     Vertex::new(Vector2::new(0.0,      0.0), Vector2::new(0.0, 0.0), Color::white()),
                     Vertex::new(Vector2::new(0.0,   height), Vector2::new(0.0, 1.0), Color::white()),
                     Vertex::new(Vector2::new(width,    0.0), Vector2::new(1.0, 0.0), Color::white()),
                     Vertex::new(Vector2::new(width, height), Vector2::new(1.0, 1.0), Color::white()),
                 ].as_slice())
-            )),
-            texture: Some(Rc::clone(tex)),
+            ),
+            texture: Some(Resource::clone(tex)),
             need_update: true,
             model: Matrix4::identity().append_translation(&Vector3::new(pos.x, pos.y, 0.0)),
             rotation: 0.0,
             origin: Vector2::new(0.0, 0.0),
-            auto_update: false,
         }
     }
 }
 
 impl Movable for Sprite {
 
-    fn contain<T: nalgebra::Scalar + From<f32> + Into<f32>>(&self, vec: ::Point<T>) -> bool {
-        let sizes = self.get_sizes();
-        let vec: Vector2<f32> = Vector2::new(vec.x.into(), vec.y.into());
+    /// TODO: Transform the point tested.
+    fn contain<T: nalgebra::Scalar + From<f32> + Into<f32>>(&self, point: ::Point<T>) -> bool {
+        //let sizes = self.get_sizes();
+        //let b: Vector4<f32> = Matrix4::inverse(self.model) * Vector4::new(point.x.into(), point.y.into(), 0.0, 1.0);
+        //let vec: Vector2<f32> = Vector2::new(b.x, b.y);
+        //println!("OldVec {:?}", point);
+        //println!("NewVec {}", vec);
 
-        let a = Rect::new(self.pos.x as f32,
-                  self.pos.y as f32,
-                  sizes.x as f32,
-                  sizes.y as f32);
-        println!("{:?}", a);
-        a.contain(vec)
+        //let a = Rect::new(self.pos.x as f32, self.pos.y as f32, sizes.x as f32, sizes.y as f32);
+        //a.contain(vec)
+        true
     }
 
     fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>) {
@@ -204,69 +210,119 @@ impl Movable for Sprite {
         self.rotation
     }
 }
-//
-/// Drawing trait for sprite sturct
-impl Drawable for Sprite {
-    fn draw<T: Drawer>(&self, window: &mut T) {
-        self.draw_with_context(window, &mut Context::new(
-                    if let Some(ref rc_texture) = self.texture {
-                        Some(rc_texture.as_ref())
-                    } else {
-                        None
-                    },
-                    &*DEFAULT_SHADER,
-                    Some(Matrix4::<f32>::identity() * self.model),
-                    BlendMode::Alpha
-        ));
-    }
 
-    fn draw_with_context<'a, T: Drawer>(&self, window: &mut T, context: &'a mut Context) {
-        self.vertice.draw_with_context(window, context);
-    }
-
-    fn update(&mut self) {
-        if self.need_update {
-            //translate to position
-            self.model = Matrix4::<f32>::identity().append_translation(
-                &Vector3::new(
-                    self.pos.x - self.origin.x,
-                    self.pos.y - self.origin.y,
-                    0.0,
-                )
-            );
-
-            if self.origin.x != 0.0 && self.origin.y != 0.0 {
-                self.model.append_translation_mut(
-                    &Vector3::new(
-                        self.origin.x,
-                        self.origin.y,
-                        0.0
-                    )
-                );
-                self.model *= Matrix4::from_euler_angles(
-                        0.0, 0.0, self.rotation * (3.14116 * 180.0)
-                );
-                self.model.prepend_translation_mut(
-                    &Vector3::new(
-                        -self.origin.x,
-                        -self.origin.y,
-                        0.0
-                    )
-                );
-            } else {
-                self.model *= Matrix4::from_euler_angles(
-                    0.0, 0.0, self.rotation * (3.14116 * 180.0)
-                );
-            }
-
-            self.model.append_nonuniform_scaling_mut(
-                &Vector3::new(self.scale.x, self.scale.y, 0.0)
-            );
-            self.need_update = false;
+impl Default for Sprite {
+    fn default() -> Self {
+        Sprite {
+            pos: Vector2::new(0.0, 0.0),
+            scale: Vector2::new(0.0, 0.0),
+            rotation: 0.0,
+            origin: Vector2::new(0.0, 0.0),
+            vertice: VertexBuffer::default(),
+            texture: Some(Resource::new(Texture::default())),
+            model: Matrix4::<f32>::identity(),
+            need_update: false
         }
     }
+}
 
-    fn set_texture(&mut self, texture: &Rc<Texture>) {
-        self.texture = Some(Rc::clone(texture))
+/// Drawing trait for sprite sturct
+impl Drawable for Sprite {
+
+    /// Draw the actual sprite on a context
+    fn draw_mut<T: Drawer>(&mut self, window: &mut T) {
+        self.update();
+        self.draw(window);
+    }
+
+    /// Draw the actual sprite on a context
+    fn draw<T: Drawer>(&self, window: &mut T) {
+        let texture = if let Some(ref rc_texture) = self.texture {
+            Some(rc_texture.as_ref())
+        } else {
+            None
+        };
+
+        let mut context = Context::new(
+            texture,
+            &*DEFAULT_SHADER,
+            vec![
+                ("transform".to_string(), &self.model),
+                ("projection".to_string(), window.projection()),
+            ],
+            BlendMode::Alpha
+        );
+        self.vertice.draw_with_context(&mut context);
+    }
+
+    fn draw_with_context_mut<'a>(&mut self, context: &'a mut Context) {
+        self.update();
+        self.vertice.draw_with_context(context);
+    }
+
+    /// Draw the actual sprite with your own context.
+    fn draw_with_context<'a>(&self, context: &'a mut Context) {
+        self.vertice.draw_with_context(context);
+    }
+
+    /// Update the sprite, this is a heavy operation because it's an operation that reconstruct
+    /// the model matrix (that represent transformation of the sprite) from scratch.
+    /// However this function is computed only when it's necessary. (self.need_update == true)
+    /// TODO: Make this computation in shader program.
+    fn update(&mut self) {
+        if !self.need_update {
+            return;
+        }
+        //translate to position
+        self.model = Matrix4::<f32>::identity().append_translation(
+            &Vector3::new(self.pos.x - self.origin.x, self.pos.y - self.origin.y, 0.0)
+        );
+
+        if self.origin.x != 0.0 && self.origin.y != 0.0 {
+            self.model.append_translation_mut(
+                &Vector3::new(self.origin.x, self.origin.y, 0.0)
+            );
+            self.model *= Matrix4::from_euler_angles(
+                    0.0, 0.0, self.rotation * (3.14116 * 180.0)
+            );
+            self.model.prepend_translation_mut(
+                &Vector3::new(-self.origin.x, -self.origin.y, 0.0)
+            );
+        } else {
+            self.model *= Matrix4::from_euler_angles(
+                0.0, 0.0, self.rotation * (3.14116 * 180.0)
+            );
+        }
+        self.model.append_nonuniform_scaling_mut(
+            &Vector3::new(self.scale.x, self.scale.y, 0.0)
+        );
+
+        if self.rotation > 360.0 {
+            self.rotation = 0.0;
+        }
+
+        self.need_update = false;
+    }
+}
+
+#[derive(Debug)]
+/// All error trigerable in sprite
+pub enum SpriteError {
+    NoTexture,
+}
+
+impl fmt::Display for SpriteError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            SpriteError::NoTexture => write!(f, "There is no texture linked to this Sprite"),
+        }
+    }
+}
+
+impl Error for SpriteError {
+    fn cause(&self) -> Option<&Error> {
+        match self {
+            SpriteError::NoTexture => None,
+        }
     }
 }

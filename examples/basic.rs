@@ -1,35 +1,28 @@
 extern crate gust;
 extern crate glfw;
 
-use gust::sprite::Sprite;
-use gust::window::Window;
-use gust::{Vector,Point,Key};
-use gust::event::{EventHandler,Events,Event};
 use std::rc::Rc;
-use gust::color::Color;
-use gust::texture::{Texture};
-use gust::draw::{Drawer,Movable};
-use gust::draw::Drawable;
+use std::error::Error;
+use gust::prelude::*;
 
-fn main()
-{
+fn main() -> Result<(), Box<Error>> {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
-    let tex_leave = Rc::new(
-        Texture::from_path("examples/texture/Z.png").unwrap()
-    );
-    let tex_dirt = Rc::new(
-        Texture::from_path("examples/texture/Dirt.png").unwrap()
-    );
-    let event_handler = EventHandler::new(&window);
+
+    let tex_leave = Rc::new(Texture::from_path("examples/texture/Z.png").unwrap());
+    let tex_dirt = Rc::new(Texture::from_path("examples/texture/Dirt.png").unwrap());
     let mut sprite = Sprite::from(&tex_dirt);
     let mut leave = Sprite::from(&tex_leave);
+    leave.set_position(Point::new(500.0, 500.0));
+    sprite.set_position(Point::new(10.0, 10.0));
+    leave.set_scale(Vector::new(0.5, 0.5));
+    leave.set_origin_to_center()?;
 
-    leave.set_position(Point::new(300.0, 300.0));
-    window.set_clear_color(Color::new(0.0, 0.0, 1.0));
+    let event_handler = EventHandler::new(&window);
+
+    window.set_clear_color(Color::new(0.45, 0.0, 1.0));
     window.enable_cursor();
     window.poll(None);
-    leave.set_scale(Vector::new(0.5, 0.5));
-    leave.set_origin_to_center().unwrap_or_else(|e| println!("{}", e));
+    
     while window.is_open() {
         window.poll_events();
         leave.rotate(1.0);
@@ -45,6 +38,8 @@ fn main()
         window.draw(&leave);
         window.display();
     }
+
+    Ok(())
 }
 
 fn event_process(event: Event, window: &mut Window) {

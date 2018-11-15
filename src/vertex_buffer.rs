@@ -4,18 +4,42 @@
 use gl;
 use gl::types::*;
 use std;
-use draw::{Drawable,Drawer,Context,BlendMode};
-use std::rc::Rc;
+use draw::{Drawable, Drawer, Context, BlendMode, IDENTITY};
 use texture::Texture;
 use vertex::*;
 use shader::*;
 use std::ops::{Index,IndexMut};
+use resources::Resource;
 
 /// Vertex Buffer structure
 #[derive(Debug,Clone,PartialEq)]
+/// A vertexbuffer is an buffer object in OpenGl.
+/// Here it's linked with VertexArray for data.
+/// The VertexBuffer is the 'low levelest' object that is drawable.
+/// You can create it from Vertice slice or VertexArray
+/// ```no_run
+/// use gust::window::Window;
+/// use gust::vertex::{VertexArray, Vertex};
+/// use gust::Drawable;
+///
+/// fn main() {
+///     let win = Window::default();
+///     let vertice = &[
+///     Vertex::new(Vector::new(0.0, 0.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
+///     Vertex::new(Vector::new(1.0, 0.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
+///     Vertex::new(Vector::new(0.0, 1.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
+///     ];
+///     let triangle = VertexBuffer::from(vertice);
+///     while window.is_open() {
+///         window.clear();
+///         window.draw(&triangle);
+///         window.display();
+///     }
+/// }
+/// ```
 pub struct VertexBuffer {
 	id: u32,
-    texture: Option<Rc<Texture>>,
+    texture: Option<Resource<Texture>>,
     array: VertexArray,
     primitive: GLenum,
     len: usize
@@ -33,7 +57,7 @@ pub enum Primitive {
 
 impl Primitive {
     /// Get primitive type
-    pub fn get_gl_type(&self) -> GLenum {
+    pub fn get_gl_type(self) -> GLenum {
         match self {
             Primitive::Quads        	=> gl::QUADS,
             Primitive::Triangles    	=> gl::TRIANGLES,
@@ -71,11 +95,12 @@ impl VertexBuffer {
 		}
 	}
 
+    /// Clear all data from VertexArray
     pub fn clear(&mut self) {
         self.array.clear();
     }
 
-	/// Create new Vertex Buffer for vertices
+	/// Create new Vertex Buffer from vertices
 	pub fn new(t: Primitive, vertice: VertexArray) -> VertexBuffer {
 		let mut buffer_id: u32 = 0;
 
@@ -109,7 +134,7 @@ impl VertexBuffer {
 		let vertex_buffer = VertexBuffer {
 			id: buffer_id,
             texture: None,
-            primitive: Self::get_gl_type(&t),
+            primitive: Self::get_gl_type(t),
             len: vertice.len(),
             array: vertice
 		};
@@ -118,12 +143,13 @@ impl VertexBuffer {
 		vertex_buffer
 	}
 
+    /// Append data to the actual VertexArray while be updated internaly.
     pub fn append(&mut self, vertices: &[Vertex]) {
         self.array.array_mut().append(&mut Vec::from(vertices));
     }
 
     /// Get primitive type
-    fn get_gl_type(prim: &Primitive) -> GLenum {
+    fn get_gl_type(prim: Primitive) -> GLenum {
         match prim {
             Primitive::Quads        	=> gl::QUADS,
             Primitive::Triangles    	=> gl::TRIANGLES,
@@ -132,6 +158,10 @@ impl VertexBuffer {
 			Primitive::TrianglesStrip	=> gl::TRIANGLE_STRIP,
             Primitive::TriangleFan      => gl::TRIANGLE_FAN
         }
+    }
+
+    fn set_texture(&mut self, texture: &Resource<Texture>) {
+        self.texture = Some(Resource::clone(texture));
     }
 
     pub fn get_primitive(&self) -> Primitive {
@@ -165,28 +195,47 @@ impl VertexBuffer {
 }
 
 impl Drawable for VertexBuffer {
+
+    fn draw_mut<T: Drawer>(&mut self, target: &mut T) {
+        self.update();
+        self.draw(target);
+    }
+
 	fn draw<T: Drawer>(&self, target: &mut T) {
+
         let texture = if let Some(ref rc_texture) = self.texture {
             Some(rc_texture.as_ref())
         } else {
             None
         };
-        
-        self.draw_with_context(target, &mut Context::new(
+
+        let mut context = Context::new(
             texture,
-			if texture.is_none() {
-                &*NO_TEXTURE_SHADER
-            } else {
-                &*DEFAULT_SHADER
-            },
-			None,
+			if texture.is_none() { &*NO_TEXTURE_SHADER } else { &*DEFAULT_SHADER },
+			vec![
+                ("transform".to_string(), &*IDENTITY),
+                ("projection".to_string(), target.projection())
+            ],
 			BlendMode::Alpha,
-		));
+		);
+
+        unsafe {
+            self.setup_draw(&mut context);
+            self.array.bind();
+            self.bind();
+            gl::DrawArrays(self.primitive, 0, self.array.len() as i32);
+			self.unbind();
+        }
 	}
 
-    fn draw_with_context<T: Drawer>(&self, target: &mut T, context: &mut Context) {
+    fn draw_with_context_mut(&mut self, context: &mut Context) {
+        self.update();
+        self.draw_with_context(context);
+    }
+
+    fn draw_with_context(&self, context: &mut Context) {
 		unsafe {
-			self.setup_draw(context, target);
+			self.setup_draw(context);
 			self.array.bind();
             self.bind();
             gl::DrawArrays(self.primitive, 0, self.array.len() as i32);
@@ -218,10 +267,6 @@ impl Drawable for VertexBuffer {
             self.unbind();
             self.array.unbind();
         }
-	}
-
-    fn set_texture(&mut self, texture: &Rc<Texture>) {
-        self.texture = Some(Rc::clone(texture));
     }
 }
 
@@ -234,7 +279,7 @@ impl Index<usize> for VertexBuffer {
 }
 
 impl IndexMut<usize> for VertexBuffer {
-    fn index_mut<'a>(&'a mut self, index: usize) -> &'a mut Vertex {
+    fn index_mut(&mut self, index: usize) -> &mut Vertex {
         &mut self.array[index]
     }
 }
@@ -247,7 +292,9 @@ impl Default for VertexBuffer {
 
 impl Drop for VertexBuffer {
 	fn drop(&mut self) {
-		//gl::DeleteVertexArrays(1, self.array);
-		//gl::DeleteBuffers(1, self.buffer);
+        unsafe {
+	    	gl::DeleteBuffers(1, &[self.id] as *const _);
+        }
+        println!("Buffer {} deleted.", self.id);
 	}
 }

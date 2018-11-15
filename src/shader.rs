@@ -15,18 +15,58 @@ lazy_static! {
 }
 
 lazy_static! {
-    pub static ref NO_TEXTURE_SHADER: Shader = {
+    pub static ref SPRITE_SHADER: Shader = {
         let (vert, frag, id);
         unsafe {
             let (v, f, i) = Shader::do_shader(
-                    CString::new(VS.as_bytes()).unwrap(),
-                    CString::new(NO_TEXTURE_FS.as_bytes()).unwrap()
+                    &CString::new(SPRITE_VS.as_bytes()).unwrap(),
+                    &CString::new(SPRITE_FS.as_bytes()).unwrap()
+            ).unwrap();
+            frag = f;
+            vert = v;
+            id = i;
+        }
+        Shader {
+            id,
+            frag,
+            vert
+        }
+    };
+}
+
+lazy_static! {
+    pub static ref BATCH_SHADER: Shader = {
+        let (vert, frag, id);
+        unsafe {
+            let (v, f, i) = Shader::do_shader(
+                    &CString::new(BATCH_VS.as_bytes()).unwrap(),
+                    &CString::new(FS.as_bytes()).unwrap()
             ).unwrap();
             vert = v;
             frag = f;
             id = i;
         }
-        return Shader {
+        Shader {
+            id: id,
+            frag: frag,
+            vert: vert
+        }
+    };
+}
+
+lazy_static! {
+    pub static ref NO_TEXTURE_SHADER: Shader = {
+        let (vert, frag, id);
+        unsafe {
+            let (v, f, i) = Shader::do_shader(
+                    &CString::new(VS.as_bytes()).unwrap(),
+                    &CString::new(NO_TEXTURE_FS.as_bytes()).unwrap()
+            ).unwrap();
+            vert = v;
+            frag = f;
+            id = i;
+        }
+        Shader {
             id: id,
             frag: frag,
             vert: vert
@@ -50,15 +90,17 @@ layout (location = 2) in vec3 aColor;
 out vec3 ourColor;
 out vec2 TexCoord;
 uniform mat4 transform;
+uniform mat4 model;
+uniform mat4 projection;
 
 void main()
 {
-   gl_Position = transform * vec4(aPos.xy, 0.0, 1.0);
-   ourColor = aColor;
-   TexCoord = aTexCoord;
+    gl_Position = projection * transform * vec4(aPos.xy, 0.0, 1.0);
+    ourColor = aColor;
+    TexCoord = aTexCoord;
 }";
 
-static SPRITE_FG: &'static str =
+static SPRITE_FS: &'static str =
 "#version 330 core
 out vec4 FragColor;
 in vec3 ourColor;
@@ -70,7 +112,23 @@ void main()
    FragColor = texture(ourTexture, TexCoord) * vec4(ourColor, 1.0);
 }";
 
+static BATCH_VS: &'static str =
+"#version 330 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec2 aTexCoord;
+layout (location = 2) in vec3 aColor;
+out vec3 ourColor;
+out vec2 TexCoord;
+uniform mat4 glob_model;
+uniform mat4 projection;
 
+void main()
+{
+   gl_Position = projection * glob_model * vec4(aPos.xy, 0.0, 1.0);
+   ourColor = aColor;
+   TexCoord = aTexCoord;
+}
+";
 
 static VS: &'static str =
 "#version 330 core
@@ -80,10 +138,11 @@ layout (location = 2) in vec3 aColor;
 out vec3 ourColor;
 out vec2 TexCoord;
 uniform mat4 transform;
+uniform mat4 projection;
 
 void main()
 {
-   gl_Position = transform * vec4(aPos.xy, 0.0, 1.0);
+   gl_Position = projection * transform * vec4(aPos.xy, 0.0, 1.0);
    ourColor = aColor;
    TexCoord = aTexCoord;
 }";
@@ -128,22 +187,22 @@ impl Shader {
 		let (vert_id, frag_id, id);
 
 		unsafe {
-			let (v, f, i) = Shader::do_shader(vert_source, frag_source)?;
+			let (v, f, i) = Shader::do_shader(&vert_source, &frag_source)?;
 			vert_id = v;
 			frag_id = f;
 			id = i;
 		}
 
-		Ok (Shader { id: id, frag: frag_id, vert: vert_id })
+		Ok (Shader { id, frag: frag_id, vert: vert_id })
 	}
 
 	/// Do all everything needed for shaders
-	unsafe fn do_shader(vert_code: CString, frag_code: CString)
+	unsafe fn do_shader(vert_code: &CString, frag_code: &CString)
 	-> Result<(u32, u32, u32), io::Error>
 	{
 		let id = gl::CreateProgram();
-		let vert_id = Shader::compile_shader(vert_code, gl::VERTEX_SHADER);
-		let frag_id = Shader::compile_shader(frag_code, gl::FRAGMENT_SHADER);
+		let vert_id = Shader::compile_shader(&vert_code, gl::VERTEX_SHADER);
+		let frag_id = Shader::compile_shader(&frag_code, gl::FRAGMENT_SHADER);
 
 
 		gl::AttachShader(id, vert_id);
@@ -155,7 +214,7 @@ impl Shader {
 		let info_log: CString = CString::new(s.as_bytes()).unwrap();
 		gl::GetProgramiv(id, gl::LINK_STATUS, &mut status);
 		if status == 0 {
-			gl::GetProgramInfoLog(id, 512, 0 as *mut _, info_log.as_ptr() as *mut _);
+			gl::GetProgramInfoLog(id, 512, ptr::null_mut(), info_log.as_ptr() as *mut _);
 			println!("Could not link shaders {}", info_log.into_string().unwrap());
 		}
 		gl::DeleteShader(vert_id);
@@ -164,7 +223,7 @@ impl Shader {
 	}
 
 	/// Compile all shaders
-	unsafe fn compile_shader(code: CString, gl_type: GLenum) -> u32 {
+	unsafe fn compile_shader(code: &CString, gl_type: GLenum) -> u32 {
 		let id = gl::CreateShader(gl_type);
 		gl::ShaderSource(id, 1, &code.as_ptr(), ptr::null());
 		gl::CompileShader(id);
@@ -173,7 +232,7 @@ impl Shader {
 		let info_log: CString = CString::new(s.as_bytes()).unwrap();
 		gl::GetShaderiv(id, gl::COMPILE_STATUS, &mut success);
 		if success == 0 {
-			gl::GetShaderInfoLog(id, 512, 0 as *mut _, info_log.as_ptr() as *mut _);
+			gl::GetShaderInfoLog(id, 512, ptr::null_mut(), info_log.as_ptr() as *mut _);
 			println!("Could not compile shaders {}", info_log.into_string().unwrap());
 		};
 		id
@@ -256,7 +315,8 @@ impl Shader {
 
     pub fn uniform_mat4f(&self, name: &str, value: &Matrix4<f32>) {
         unsafe {
-            let pos = gl::GetUniformLocation(self.id, CString::new(name.as_bytes()).unwrap().as_ptr());
+            let string = CString::new(name.as_bytes()).unwrap();
+            let pos = gl::GetUniformLocation(self.id, string.as_ptr());
             gl::UniformMatrix4fv(pos, 1, gl::FALSE, value.as_slice().as_ptr());
         }
     }
@@ -284,13 +344,13 @@ impl Default for Shader {
 		let (vert_id, frag_id, id);
 
 		unsafe {
-			let (v, f, i) = Shader::do_shader(vert_source, frag_source).unwrap();
+			let (v, f, i) = Shader::do_shader(&vert_source, &frag_source).unwrap();
 			vert_id = v;
 			frag_id = f;
 			id = i;
 		}
 
-		Shader { id: id, frag: frag_id, vert: vert_id }
+		Shader { id, frag: frag_id, vert: vert_id }
     }
 }
 
@@ -299,6 +359,8 @@ impl Drop for Shader {
 		unsafe {
 			gl::DeleteShader(self.vert);
 			gl::DeleteShader(self.frag);
+            gl::DeleteProgram(self.id);
 		}
+        println!("Shaders {} deleted.", self.id);
 	}
 }

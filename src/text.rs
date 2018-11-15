@@ -4,27 +4,31 @@
 //  text.rs
 //  module:
 //! text render utils
-//! # How it works
-//! When you create a font you create a face from freetype
-//! This face is stocked inside the Font struct.
-//! When you trigger glyph from Text component. The font look if the glyph from
-//! this size and this letter exist. Else it loadIt from the Face and Add it to
-//! a globaltexture linked to the font size.
-//! This way it load only a rect from the same texture when you draw text.
-//! # Example
-//! ```no_run
-//! use text::{Font,Text};
-//! let font = Rc::new(Font::new("examples/fonts/Monaco.ttf"));
-//! let text = Text::new(&font);
-//! text.set_content("This is the text content");
-//! ```
-//! Text is drawable so you can use targer.draw(text);
-//! after initialising it.
-//! The text is made from Text.cpp of SFML
+/// # How to use
+/// ```no_run
+/// use gust::text::Text;
+/// use gust::font::Font;
+/// use gust::window::Window;
+///
+/// fn draw(score: u32) {
+///     let window = Default::default();
+///     let arial = MutResource::new(Font::from_path("resources/font/arial.ttf"));
+///     let score = Text::new(&arial);
+///
+///     score.set_content(format!("Score: {}", score));
+///     score.set_position(Vector::new(10.0, 10.0));
+///     while window.is_open() {
+///         window.clear();
+///         window.draw(&score);
+///         window.display();
+///     }
+/// }
+/// ```
+/// It's made from the Text system of the C++ library SFML.
 
 use texture::Texture;
 use font::{Font,CharInfo};
-use draw::{Drawable,Drawer,Context,Movable,BlendMode};
+use draw::{Drawable, Drawer, Context, Movable, BlendMode, IDENTITY};
 use shader;
 use ::{Point,Vector};
 use nalgebra;
@@ -37,6 +41,10 @@ use color::Color;
 extern crate freetype as ft;
 
 #[derive(Debug)]
+/// # Text struct
+/// Text is a drawable entity that can be used to display text.
+/// The text need a MutResource<Font> because the text mut the
+/// internal texture of his font.
 pub struct Text {
     font: Rc<RefCell<Font>>,
     content: String,
@@ -48,15 +56,17 @@ pub struct Text {
 
 impl Text {
 
-    pub fn dump_texture(&mut self) -> Result<(),Box<Error>>{
+    /// Dump the font texture to a file
+    pub fn dump_texture(&mut self) -> Result<(), Box<Error>>{
         // Get the texture
         let font_ref = self.font.try_borrow().unwrap();
         let texture = font_ref.texture(self.actual_size).unwrap();
 
-        texture.to_file("test.png")?;
+        texture.to_file("font_dump.png")?;
         Ok(())
     }
 
+    /// Create a new text from a font previously created
 	pub fn new(font: &Rc<RefCell<Font>>) -> Text {
         Text {
             font: Rc::clone(font),
@@ -68,27 +78,47 @@ impl Text {
         }
     }
 
-    pub fn set_content(&mut self, content: String) {
-        self.content = content;
+    /// Create a text from it's content and a font
+    pub fn from_str(font: &Rc<RefCell<Font>>, content: &str) -> Text {
+        Text {
+            font: Rc::clone(font),
+            content: String::from(content),
+            actual_size: 14,
+            vertex_buffer: VertexBuffer::default(),
+            need_update: true,
+            pos: Vector::new(0.0, 0.0)
+        }
     }
 
+    /// Set the content of the text
+    pub fn set_content(&mut self, content: &str) {
+        self.content = String::from(content);
+        self.need_update = true;
+    }
+
+    /// Get the content of the text as &String
     pub fn content(&self) -> &String {
         &self.content
     }
 
+    /// Get the content of the text as &mut String
     pub fn content_mut(&mut self) -> &mut String {
+        self.need_update = true;
         &mut self.content
     }
 
+    /// Set the local font size
     pub fn set_size(&mut self, size: u32) {
         self.actual_size = size;
+        self.need_update = true;
     }
 
+    /// Get the local font size
     pub fn size(&self) -> u32 {
         self.actual_size
     }
 
-    pub fn add_to_buffer(&mut self, _char_info: CharInfo, _pos: Vector<u32>) {
+    fn set_texture(&mut self, _texture: &Rc<Texture>) {
         unimplemented!();
     }
 }
@@ -97,53 +127,62 @@ impl Movable for Text {
 
     fn contain<T>(&self, _point: Point<T>) -> bool
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32> {
+        T: nalgebra::Scalar + From<f32> + Into<f32>
+    {
         true
     }
 
-    fn translate<T>(&mut self, _offset: Vector<T>)
+    fn translate<T>(&mut self, offset: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32> {
-        unimplemented!();
+        T: nalgebra::Scalar + From<f32> + Into<f32>
+    {
+        self.pos.x += offset.x.into();
+        self.pos.y += offset.y.into();
+        self.need_update = true;
     }
 
     fn set_position<T>(&mut self, pos: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32> {
+        T: nalgebra::Scalar + From<f32> + Into<f32>
+    {
         self.pos.x = pos.x.into();
         self.pos.y = pos.y.into();
         self.need_update = true;
     }
 
     fn get_position(&self) -> Vector<f32> {
-        Vector::new(0.0, 0.0)
+        self.pos
     }
 
     fn scale<T>(&mut self, _factor: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32> {
+        T: nalgebra::Scalar + From<f32> + Into<f32>
+    {
         unimplemented!();
     }
 
     fn set_scale<T>(&mut self, _vec: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32> {
+        T: nalgebra::Scalar + From<f32> + Into<f32>
+    {
         unimplemented!();
     }
 
     fn get_scale(&self) -> Vector<f32> {
-        Vector::new(0.0, 0.0)
+        unimplemented!();
     }
 
     fn rotate<T>(&mut self, _angle: T)
     where
-        T: nalgebra::Scalar + Into<f32> {
+        T: nalgebra::Scalar + Into<f32>
+    {
         unimplemented!();
     }
 
     fn set_rotation<T>(&mut self, _angle: T)
     where
-        T: nalgebra::Scalar + Into<f32> {
+        T: nalgebra::Scalar + Into<f32>
+    {
         unimplemented!();
     }
 
@@ -153,8 +192,9 @@ impl Movable for Text {
 
     fn set_origin<T>(&mut self, _origin: Vector<T>)
     where
-        T: nalgebra::Scalar + Into<f32> {
-            unimplemented!();
+        T: nalgebra::Scalar + Into<f32>
+    {
+        unimplemented!();
     }
 
     fn get_origin(&self) -> Vector<f32> {
@@ -167,7 +207,7 @@ impl Drawable for Text {
 
     fn update(&mut self) {
         // Si l'update n'est pas necessaire
-        if !self.need_update { return; }
+        if !self.need_update { return }
 
         // Relative position
         let mut pos = self.pos;
@@ -181,7 +221,7 @@ impl Drawable for Text {
         // Get the whitespace x size
         let whitespace;
         let height;
-        { 
+        {
             let space_glyph = font_ref.glyph(self.actual_size, 0x20_u32);
             whitespace = space_glyph.advance;
         }
@@ -200,25 +240,29 @@ impl Drawable for Text {
         for charr in self.content.as_str().chars() {
 
             // If the char is a special one
-            if charr == '\n' {
-                pos.y += height;
-                offset = 0.0;
-                continue;
-            } else if charr == '\r' {
-                continue;
-            } else if charr == '\t' {
-                offset += 4.0 * whitespace;
-                continue;
-            } else if charr == ' ' {
-                offset += whitespace;
-                continue;
-            }
+            match charr {
+                '\n'    => {
+                    pos.y += height;
+                    offset = 0.0;
+                    continue;
+                },
+                '\r'    => continue,
+                '\t'    => {
+                    offset += 4.0 * whitespace;
+                    continue;
+                },
+                ' '     => {
+                    offset += whitespace;
+                    continue;
+                },
+                _       => {}
+            };
 
             // Get the glyph from the the font
             let char_info = font_ref.glyph(self.actual_size, charr as u32);
 
             // get vertices from char_info
-            let vertices = get_vertice_letter(&char_info, &pos, padding, offset);
+            let vertices = get_vertice_letter(&char_info, pos, padding, offset);
 
             // append vertice to vertex_buffer
             self.vertex_buffer.append(&vertices);
@@ -233,6 +277,11 @@ impl Drawable for Text {
         self.need_update = false;
     }
 
+    fn draw_mut<T: Drawer>(&mut self, target: &mut T) {
+        self.update();
+        self.draw(target);
+    }
+
     fn draw<T: Drawer>(&self, target: &mut T) {
         // If there is no text don't draw
         if self.content.is_empty() { return }
@@ -245,24 +294,29 @@ impl Drawable for Text {
         let mut context = Context::new(
             Some(texture),
             &*shader::DEFAULT_SHADER,
-            None,
+            vec![
+                ("transform".to_string(), &*IDENTITY),
+                ("projection".to_string(), target.projection())
+            ],
             BlendMode::Alpha
         );
 
         // Draw the vertex_buffer with context
-        self.draw_with_context(target, &mut context)
+        self.vertex_buffer.draw_with_context(&mut context);
     }
 
-    fn draw_with_context<T: Drawer> (&self, target: &mut T, context: &mut Context) {
-        self.vertex_buffer.draw_with_context(target, context)
+    fn draw_with_context_mut(&mut self, context: &mut Context) {
+        self.update();
+        self.draw_with_context(context);
     }
 
-    fn set_texture(&mut self, _texture: &Rc<Texture>) {
-        unimplemented!();
+    fn draw_with_context(&self, context: &mut Context) {
+        self.vertex_buffer.draw_with_context(context);
     }
 }
 
-fn get_vertice_letter(char_info: &CharInfo, pos: &Vector<f32>, padding: f32, offset: f32) -> [Vertex; 6] {
+/// Get a vertice from a character information, padding and offset
+fn get_vertice_letter(char_info: &CharInfo, pos: Vector<f32>, padding: f32, offset: f32) -> [Vertex; 6] {
     let x = pos.x + offset;
     let y = pos.y;
 

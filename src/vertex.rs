@@ -52,7 +52,7 @@ use gl::types::*;
 use std::ops::{Index,IndexMut};
 
 /// Vertex structure defined by texture coord, space coors and color
-#[derive(Debug,Clone,PartialEq)]
+#[derive(Debug, Clone, PartialEq, Copy)]
 pub struct Vertex {
     pub pos:    Vector2<f32>,
     pub tex:    Vector2<f32>,
@@ -65,9 +65,9 @@ impl Vertex {
     pub fn new
     (pos: Vector2<f32>, tex: Vector2<f32>, color: Color) -> Vertex {
         Vertex {
-            pos: pos,
-            tex: tex,
-            color: color,
+            pos,
+            tex,
+            color
         }
     }
 }
@@ -77,7 +77,7 @@ impl From<Vector2<f32>> for Vertex {
     /// create a vertex with just a position in 2D space
     fn from(pos: Vector2<f32>) -> Vertex {
         Vertex {
-            pos: pos,
+            pos,
             tex: pos,
             color: Color::new(1.0, 1.0, 1.0),
         }
@@ -123,7 +123,7 @@ impl Default for Vertex {
 }
 
 /// VertexArray is a vertex data structure that is drawable and it's the basic system
-#[derive(Clone,Debug,PartialEq)]
+#[derive(Clone, Debug, PartialEq, Default)]
 pub struct VertexArray {
 	array: Vec<Vertex>,
     id: u32,
@@ -138,7 +138,7 @@ impl VertexArray {
 
 		VertexArray {
 			array: Vec::new(),
-            id: id,
+            id,
 		}
     }
 
@@ -195,6 +195,10 @@ impl VertexArray {
         self.array.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.array.len() == 0
+    }
+
     pub fn bind(&self) {
         unsafe {
             gl::BindVertexArray(self.id);
@@ -214,14 +218,14 @@ impl VertexArray {
 
 impl<'a> From<&'a [Vertex]> for VertexArray {
     fn from(array: &[Vertex]) -> VertexArray {
-        if array.len() == 0 {
+        if array.is_empty() {
             VertexArray::new()
         } else {
             let mut id = 0;
             unsafe { gl::GenVertexArrays(1, &mut id) };
             VertexArray {
                 array: Vec::from(array),
-                id: id
+                id
             }
         }
     }
@@ -229,7 +233,7 @@ impl<'a> From<&'a [Vertex]> for VertexArray {
 
 impl<'a> From<&'a [f32]> for VertexArray {
     fn from(array: &[f32]) -> VertexArray {
-        if array.len() == 0 {
+        if array.is_empty() {
             VertexArray::new()
         } else {
             let mut arr = Vec::new();
@@ -246,7 +250,7 @@ impl<'a> From<&'a [f32]> for VertexArray {
             unsafe { gl::GenVertexArrays(1, &mut id) };
             VertexArray {
                 array: arr,
-                id: id
+                id
             }
         }
     }
@@ -261,7 +265,16 @@ impl Index<usize> for VertexArray {
 }
 
 impl IndexMut<usize> for VertexArray {
-    fn index_mut<'a>(&'a mut self, vertex_index: usize) -> &'a mut Vertex {
+    fn index_mut(&mut self, vertex_index: usize) -> &mut Vertex {
         &mut self.array[vertex_index]
+    }
+}
+
+impl Drop for VertexArray {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteVertexArrays(1, &[self.id] as *const _);
+        }
+        println!("VertexArray {} delete.", self.id);
     }
 }
