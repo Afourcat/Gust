@@ -186,11 +186,9 @@ impl SpriteBatch {
         {
             let vertice = &mut self.vertice;
 
-            let (w , h) = if let Some(ref texture) = self.texture {
-                (texture.width() as f32, texture.height() as f32)
-            } else {
-                (0.0, 0.0)
-            };
+            let (w, h) = self.texture
+                            .as_ref()
+                            .map_or((0.0, 0.0), |x| (x.width() as f32, x.height() as f32));
 
             for x in slice.iter_mut() {
                 x.need_update = true;
@@ -206,20 +204,36 @@ impl SpriteBatch {
         self.need_update = true;
     }
 
+    /// Clear data.
+    pub fn clear(&mut self) {
+        self.sprites.clear();
+        self.vertice.clear();
+    }
+
+    /// Reserve data for vertice and sprites.
+    pub fn reserve(&mut self, len: usize) {
+        self.sprites.reserve(len);
+        self.vertice.reserve(len * 4);
+    }
+
+    /// Return spritedata slice
     pub fn sprites(&self) -> &[SpriteData] {
         &self.sprites
     }
 
+    /// Return sprite mutable slice
     pub fn sprites_mut(&mut self) -> &mut [SpriteData] {
         &mut self.sprites
     }
 
-    pub fn get_sprite_mut(&mut self, idx: usize) -> &mut SpriteData {
-        &mut self.sprites[idx]
+    /// Return maybe a mutable Slice.
+    pub fn get_sprite_mut(&mut self, idx: usize) -> Option<&mut SpriteData> {
+        self.sprites.get_mut(idx)
     }
 
-    pub fn get_sprite(&self, idx: usize) -> &SpriteData {
-        &self.sprites[idx]
+    /// Return maybe a SpriteData.
+    pub fn get_sprite(&self, idx: usize) -> Option<&SpriteData> {
+        self.sprites.get(idx)
     }
 
     pub fn push_sprite(&mut self, mut sprites: SpriteData) {
@@ -237,6 +251,13 @@ impl SpriteBatch {
             Vertex::new(Vector::new(w,     h), Vector::new(sprites.text_coord[1].x, sprites.text_coord[1].y), Color::white()),
         ]);
         self.sprites.push(sprites);
+    }
+
+    /// Pop a sprite and return it's data.
+    pub fn pop_sprite(&mut self) -> Option<SpriteData> {
+        self.need_update = true;
+        self.vertice.truncate(self.len - 4);
+        self.sprites.pop()
     }
 
     fn update_vbo(&mut self) {
@@ -633,7 +654,7 @@ mod test {
             // /!\ Be careful when calling heavy function.
             batch.update();
             batch.translate(Vector::new(100.0, 0.0));
-            batch.get_sprite_mut(0).translate(Vector::new(100.0, 0.0));
+            batch.get_sprite_mut(0).unwrap().translate(Vector::new(100.0, 0.0));
             batch.update();
         });
     }
@@ -649,7 +670,7 @@ mod test {
 
         bencher.iter(|| {
             batch.translate(Vector::new(100.0, 0.0));
-            batch.get_sprite_mut(0).translate(Vector::new(100.0, 0.0));
+            batch.get_sprite_mut(0).map(|x| x.translate(Vector::new(100.0, 0.0)));
             batch.update();
         });
     }
