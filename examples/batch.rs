@@ -60,7 +60,7 @@ fn event_process(event: Event, window: &mut Window, batch: &mut SpriteBatch) {
             batch.translate(Vector::new(10.0, 10.0));
         },
         Events::Key(Key::D, _, Action::Press, _) => {
-            batch.get_sprite_mut(0).translate(Vector::new(10.0, 0.0));
+            batch.get_sprite_mut(0).unwrap().translate(Vector::new(10.0, 0.0));
         },
         Events::MouseButton(_, _, _) => {
             println!("Mouse button !");

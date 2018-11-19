@@ -21,6 +21,7 @@ use std::sync::Mutex;
 use std::rc::Rc;
 use color::Color;
 use nalgebra::Vector4;
+use color;
 
 pub enum BatchError {
     BadTextureRect
@@ -33,7 +34,8 @@ pub struct SpriteData {
     rotation: f32,
     model: Matrix4<f32>,
     need_update: bool,
-    text_coord: [Vector<f32>; 2]
+    text_coord: [Vector<f32>; 2],
+    color: Option<Color>
 }
 
 impl SpriteData {
@@ -83,7 +85,8 @@ impl Default for SpriteData {
             rotation: 0.0,
             model: Matrix4::identity(),
             need_update: true,
-            text_coord: [Vector::new(0.0, 0.0), Vector::new(1.0, 1.0)]
+            text_coord: [Vector::new(0.0, 0.0), Vector::new(1.0, 1.0)],
+            color: None
         }
     }
 }
@@ -193,10 +196,10 @@ impl SpriteBatch {
             for x in slice.iter_mut() {
                 x.need_update = true;
                 vertice.extend_from_slice(&[
-                    Vertex::new(Vector::new(0.0, 0.0), Vector::new(x.text_coord[0].x, x.text_coord[0].y), Color::white()),
-                    Vertex::new(Vector::new(0.0,   h), Vector::new(x.text_coord[0].x, x.text_coord[1].y), Color::white()),
-                    Vertex::new(Vector::new(w,   0.0), Vector::new(x.text_coord[1].x, x.text_coord[0].y), Color::white()),
-                    Vertex::new(Vector::new(w,     h), Vector::new(x.text_coord[1].x, x.text_coord[1].y), Color::white()),
+                    Vertex::new(Vector::new(0.0, 0.0), Vector::new(x.text_coord[0].x, x.text_coord[0].y), x.color.unwrap_or(Color::white())),
+                    Vertex::new(Vector::new(0.0,   h), Vector::new(x.text_coord[0].x, x.text_coord[1].y), x.color.unwrap_or(Color::white())),
+                    Vertex::new(Vector::new(w,   0.0), Vector::new(x.text_coord[1].x, x.text_coord[0].y), x.color.unwrap_or(Color::white())),
+                    Vertex::new(Vector::new(w,     h), Vector::new(x.text_coord[1].x, x.text_coord[1].y), x.color.unwrap_or(Color::white()))
                 ]);
             }
         }

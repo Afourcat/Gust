@@ -45,9 +45,7 @@ fn draw(window: &mut Window, sprites: &mut HashMap<&'static str,Sprite>) {
 
 fn event_process(event: Event, window: &mut Window, sprites: &mut HashMap<&'static str,Sprite>) {
     match event.1 {
-        Events::Key(Key::Escape, _, _, _) => {
-            window.close();
-        },
+        pressed!(Escape) => window.close(),
         pressed!(Space) => {
             sprites.get_mut("dirt_1").unwrap().rotate(45.0);
         },
