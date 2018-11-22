@@ -40,18 +40,18 @@
 //!         leave.rotate(1.0);
 //!         leave.update();
 //!         sprite.update();
-//! 
+//!
 //!         for event in event_handler.fetch() {
 //!             event_process(event, &mut window);
 //!         }
-//! 
+//!
 //!         window.clear();
 //!         window.draw(&sprite);
 //!         window.draw(&leave);
 //!         window.display();
 //!     }
 //! }
-//! 
+//!
 //! fn event_process(event: Event, window: &mut Window) {
 //!     match event.1 {
 //!         Events::Key(Key::Escape, _, _, _) => {
@@ -97,6 +97,7 @@ pub mod vertex;
 pub mod view;
 pub mod rect;
 pub mod text;
+pub mod shared_window;
 pub mod font;
 
 pub mod prelude {

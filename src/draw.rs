@@ -135,8 +135,6 @@ impl<'a> Default for Context<'a> {
     }
 }
 
-
-
 //----------------------------------------------------------------------------
 //
 //
@@ -159,7 +157,9 @@ pub trait Drawer {
         self.draw_with_context(drawable, context);
     }
 
-    fn draw_with_context<T: Drawable>(&mut self, drawable: &mut T, context: &mut Context);
+    fn draw_with_context<T: Drawable>(&mut self, drawable: &mut T, context: &mut Context) {
+        drawable.draw_with_context(context);
+    }
 
     fn get_projection(&self) -> &Matrix4<f32>;
 

@@ -13,7 +13,7 @@ extern crate gl;
 use color::Color;
 use std::sync::mpsc::Receiver;
 use std::rc::Rc;
-use draw::{Drawable,Drawer};
+use draw::{Drawable, Drawer};
 use glfw::Context;
 use draw;
 use ::Vector;
@@ -36,7 +36,7 @@ pub struct Window {
     pub height: usize,
     pub width: usize,
     event: Rc<Receiver<(f64, glfw::WindowEvent)>>,
-    win: glfw::Window,
+    pub (in super) win: glfw::Window,
     clear_color: Color,
     already_init: bool,
     view: View,
@@ -58,7 +58,7 @@ impl<'a> Window {
 
         glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
         glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
-    
+
         // Create window from Glfw method create_window
         // Return the glfw::WindowEvent enum and a window
         // That we are trying to wrap in this code
@@ -280,7 +280,9 @@ impl Drawer for Window {
 
     #[inline]
     fn get_center(&self) -> Vector<f32> {
-        Vector::new(self.width as f32 / 2.0, self.height as f32 / 2.0)
+        let view_pos = self.view().postition();
+        Vector::new((self.width as f32 / 2.0) + view_pos.x,
+                    (self.height as f32 / 2.0) + view_pos.y)
     }
 
     fn projection(&self) -> &Matrix4<f32> {

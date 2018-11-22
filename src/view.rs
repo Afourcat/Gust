@@ -127,6 +127,14 @@ impl View {
     pub fn projection(&self) -> Matrix4<f32> {
         self.projection
     }
+
+    pub fn sizes(&self) -> Vector<f32> {
+        self.sizes
+    }
+
+    pub fn postition(&self) -> Vector<f32> {
+        self.pos
+    }
 }
 
 impl From<Rect<f32>> for View {
@@ -164,9 +172,9 @@ trait Ortho {
         let tz = -(far + near) / far - near;
 
         Matrix4::new(
-            a   , 0.0, 0.0, tx,
+            a   , 0.0, 0.0,  tx,
             0.0 ,   b, 0.0,  ty,
-            0.0 , 0.0,   c, tz,
+            0.0 , 0.0,   c,  tz,
             0.0 , 0.0, 0.0, 1.0
         )
     }
