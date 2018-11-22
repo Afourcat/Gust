@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use view::View;
 use window::Window;
 use nalgebra::Matrix4;
@@ -49,10 +48,6 @@ impl Drawer for SharedWindow {
     fn draw<T: Drawable>(&mut self, drawable: &T) {
         self.active();
         drawable.draw(self);
-    }
-
-    fn get_projection(&self) -> &Matrix4<f32> {
-        &self.view.get_projection()
     }
 
     fn projection(&self) -> &Matrix4<f32> {

@@ -13,10 +13,10 @@ extern crate gl;
 use color::Color;
 use std::sync::mpsc::Receiver;
 use std::rc::Rc;
-use draw::{Drawable, Drawer};
+use draw::{Drawable, DrawableMut, Drawer};
 use glfw::Context;
 use draw;
-use ::Vector;
+use Vector;
 use view::{View};
 use rect::Rect;
 use nalgebra;
@@ -251,7 +251,7 @@ impl Drawer for Window {
     }
 
     #[inline]
-    fn draw_mut<T: Drawable>(&mut self, drawable: &mut T) {
+    fn draw_mut<T: DrawableMut>(&mut self, drawable: &mut T) {
         self.active();
         drawable.draw_mut(self);
     }
@@ -263,14 +263,9 @@ impl Drawer for Window {
     }
 
     #[inline]
-    fn draw_with_context_mut<T: Drawable>(&mut self, drawable: &mut T, context: &mut draw::Context) {
+    fn draw_with_context_mut<T: DrawableMut>(&mut self, drawable: &mut T, context: &mut draw::Context) {
         self.active();
         drawable.draw_with_context(context);
-    }
-
-    #[inline]
-    fn get_projection(&self) -> &Matrix4<f32> {
-        self.view.get_projection()
     }
 
     #[inline]

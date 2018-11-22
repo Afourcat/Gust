@@ -4,7 +4,7 @@
 use gl;
 use gl::types::*;
 use std;
-use draw::{Drawable, Drawer, Context, BlendMode, IDENTITY};
+use draw::{Drawable, DrawableMut, Drawer, Context, BlendMode, IDENTITY};
 use texture::Texture;
 use vertex::*;
 use shader::*;
@@ -194,15 +194,20 @@ impl VertexBuffer {
 	}
 }
 
-impl Drawable for VertexBuffer {
-
+impl DrawableMut for VertexBuffer {
     fn draw_mut<T: Drawer>(&mut self, target: &mut T) {
         self.update();
         self.draw(target);
     }
 
-	fn draw<T: Drawer>(&self, target: &mut T) {
+    fn draw_with_context_mut(&mut self, context: &mut Context) {
+        self.update();
+        self.draw_with_context(context);
+    }
+}
 
+impl Drawable for VertexBuffer {
+	fn draw<T: Drawer>(&self, target: &mut T) {
         let texture = if let Some(ref rc_texture) = self.texture {
             Some(rc_texture.as_ref())
         } else {
@@ -227,11 +232,6 @@ impl Drawable for VertexBuffer {
 			self.unbind();
         }
 	}
-
-    fn draw_with_context_mut(&mut self, context: &mut Context) {
-        self.update();
-        self.draw_with_context(context);
-    }
 
     fn draw_with_context(&self, context: &mut Context) {
 		unsafe {
