@@ -281,8 +281,11 @@ impl Drawer for Window {
     #[inline]
     fn get_center(&self) -> Vector<f32> {
         let view_pos = self.view().postition();
-        Vector::new((self.width as f32 / 2.0) + view_pos.x,
-                    (self.height as f32 / 2.0) + view_pos.y)
+        let view_zoom = self.view().get_zoom();
+
+        println!("View pos: {:?}", view_pos);
+        Vector::new((self.width as f32 / 2.0) * (1.0 / view_zoom) + view_pos.x,
+                    (self.height as f32 / 2.0) * (1.0 / view_zoom) + view_pos.y)
     }
 
     fn projection(&self) -> &Matrix4<f32> {

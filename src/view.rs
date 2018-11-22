@@ -124,6 +124,10 @@ impl View {
         self.need_update = true;
     }
 
+    pub fn get_zoom(&self) -> f32 {
+        self.zoom
+    }
+
     pub fn projection(&self) -> Matrix4<f32> {
         self.projection
     }
