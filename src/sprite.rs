@@ -98,7 +98,7 @@ impl Sprite {
     }
 
     /// Set a new texture and set the sprite to update state.
-    fn set_texture(&mut self, texture: &Resource<Texture>) {
+    pub fn set_texture(&mut self, texture: &Resource<Texture>) {
         self.texture = Some(Resource::clone(texture));
         self.need_update = true;
     }
