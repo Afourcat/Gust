@@ -284,8 +284,8 @@ impl Drawer for Window {
         let view_zoom = self.view().get_zoom();
 
         println!("View pos: {:?}", view_pos);
-        Vector::new((self.width as f32 / 2.0) * (1.0 / view_zoom) + view_pos.x,
-                    (self.height as f32 / 2.0) * (1.0 / view_zoom) + view_pos.y)
+        Vector::new((self.width as f32 / (2.0 * view_zoom)) + view_pos.x,
+                    (self.height as f32 / (2.0 * view_zoom)) + view_pos.y)
     }
 
     fn projection(&self) -> &Matrix4<f32> {
