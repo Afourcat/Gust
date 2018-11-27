@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use view::View;
 use window::Window;
 use nalgebra::Matrix4;

@@ -10,7 +10,6 @@ use nalgebra;
 use draw::{Movable};
 use vertex::*;
 use shader::DEFAULT_SHADER;
-use rect::Rect;
 use std::convert::From;
 use std::error::Error;
 use std::fmt;

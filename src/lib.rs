@@ -71,12 +71,10 @@
 #![allow(dead_code)]
 #![feature(test)]
 
-extern crate crossbeam;
 extern crate gl;
 extern crate glfw;
 extern crate nalgebra;
 extern crate freetype;
-extern crate rayon;
 #[macro_use]
 extern crate lazy_static;
 extern crate image;

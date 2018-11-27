@@ -16,12 +16,9 @@ use gl;
 use gl::types::*;
 use std::mem;
 use std::ptr;
-use rayon::prelude::*;
-use std::sync::Mutex;
 use std::rc::Rc;
 use color::Color;
 use nalgebra::Vector4;
-use color;
 
 pub enum BatchError {
     BadTextureRect
