@@ -1,20 +1,10 @@
 extern crate gust;
 extern crate glfw;
 
-use gust::sprite::Sprite;
-use gust::window::Window;
-use gust::{Vector,Point,Key};
-use gust::event::{EventHandler,Events,Event};
 use std::rc::Rc;
-use gust::color::Color;
-use gust::texture::{Texture};
-use gust::draw::{Drawer,Movable};
-use gust::draw::Drawable;
 use std::error::Error;
-use gust::font::Font;
-use gust::{MutResource};
 use std::cell::RefCell;
-use gust::text::Text;
+use gust::prelude::*;
 
 fn window1() -> Result<(), Box<Error>> {
 
@@ -54,7 +44,7 @@ fn window1() -> Result<(), Box<Error>> {
 
 fn window2() -> Result<(), Box<Error>> {
     let mut window = Window::new(500, 500, "Hello2");
-    let font = MutResource::new(
+    let font = Rc::new(
         RefCell::new(Font::from_path("examples/font/terminus.ttf").unwrap())
     );
     let mut text = Text::from_str(&font, "I've been looking forward to this.");
@@ -94,8 +84,8 @@ fn main() {
     });
 
     // Wait for the two other thread to end before ending main
-    waiter.join();
-    waiter2.join();
+    waiter.join().unwrap();
+    waiter2.join().unwrap();
 }
 
 fn event_process(event: Event, window: &mut Window) {

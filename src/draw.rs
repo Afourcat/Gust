@@ -2,7 +2,6 @@
 //!
 
 use nalgebra::{Vector2};
-use nalgebra;
 use texture::Texture;
 use shader::Shader;
 use nalgebra::Matrix4;
@@ -135,8 +134,6 @@ impl<'a> Default for Context<'a> {
     }
 }
 
-
-
 //----------------------------------------------------------------------------
 //
 //
@@ -147,21 +144,23 @@ impl<'a> Default for Context<'a> {
 
 /// Trait defining a drawer
 pub trait Drawer {
-    fn draw_mut<T: Drawable>(&mut self, drawable: &mut T) {
-        self.draw(drawable);
-    }
-
-    /// Function that draw on itself
+    /// Function that draw on itself needed by everything that can be draw.
     fn draw<T: Drawable>(&mut self, drawable: &T);
 
     /// Draw with context fonction if you want to define you own fonction
-    fn draw_with_context_mut<T: Drawable>(&mut self, drawable: &mut T, context: &mut Context) {
+    fn draw_with_context_mut<T: DrawableMut>(&mut self, drawable: &mut T, context: &mut Context) {
         self.draw_with_context(drawable, context);
     }
 
-    fn draw_with_context<T: Drawable>(&mut self, drawable: &mut T, context: &mut Context);
+    /// Function that can draw a DrawableMut.
+    fn draw_mut<T: DrawableMut>(&mut self, drawable: &mut T) {
+        self.draw(drawable);
+    }
 
-    fn get_projection(&self) -> &Matrix4<f32>;
+    /// Draw with context a Drawable.
+    fn draw_with_context<T: Drawable>(&mut self, drawable: &mut T, context: &mut Context) {
+        drawable.draw_with_context(context);
+    }
 
     fn get_center(&self) -> Vector2<f32>;
 
@@ -179,16 +178,6 @@ pub trait Drawable {
     /// Draw with a particular context
     fn draw_with_context(&self, context: &mut Context);
 
-    /// Draw as mutable
-    fn draw_mut<T: Drawer>(&mut self, window: &mut T) {
-        self.draw(window);
-    }
-
-    /// Draw with context as mutable
-    fn draw_with_context_mut(&mut self, context: &mut Context) {
-        self.draw_with_context(context);
-    }
-
     /// Update the openGL state of the drawable entity
     /// Should be call often so be carefull when implementing.
     fn update(&mut self);
@@ -201,36 +190,14 @@ pub trait Drawable {
     }
 }
 
-/// Trait defining movable structures as sprite or higher
-pub trait Movable {
-    /// Move the sprite off the offset
-    fn contain<T: nalgebra::Scalar + From<f32> + Into<f32>>(&self, offset: Vector2<T>) -> bool;
+pub trait DrawableMut: Drawable {
+    /// Mutable version of draw function.
+    fn draw_mut<T: Drawer>(&mut self, window: &mut T) {
+        self.draw(window);
+    }
 
-    /// Move the sprite off the offset
-    fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, offset: Vector2<T>);
-
-    /// Set position of the sprite
-    fn set_position<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, pos: Vector2<T>);
-
-    /// Get current position
-    fn get_position(&self) -> Vector2<f32>;
-
-    /// Scale the sprite from a factor
-    fn scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, factor: Vector2<T>);
-
-    /// Set the scale of the sprite
-    fn set_scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>);
-
-    /// Get the current scale
-    fn get_scale(&self) -> Vector2<f32>;
-
-    fn rotate<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T);
-
-    fn set_rotation<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T);
-
-    fn get_rotation(&self) -> f32;
-
-    fn set_origin<T: nalgebra::Scalar + Into<f32>>(&mut self, origin: Vector2<T>);
-
-    fn get_origin(&self) -> Vector2<f32>;
+    /// Mutable draw context function.
+    fn draw_with_context_mut(&mut self, context: &mut Context) {
+        self.draw_with_context(context);
+    }
 }

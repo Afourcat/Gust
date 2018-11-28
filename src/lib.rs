@@ -8,7 +8,7 @@
 //! ```no_run
 //! extern crate gust;
 //! extern crate glfw;
-//! 
+//!
 //! use gust::sprite::Sprite;
 //! use gust::window::Window;
 //! use gust::{Vector,Point,Key};
@@ -19,7 +19,7 @@
 //! use gust::texture::{Texture};
 //! use gust::draw::{Drawer,Movable};
 //! use gust::draw::Drawable;
-//! 
+//!
 //! fn main()
 //! {
 //!     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
@@ -28,7 +28,7 @@
 //!     let event_handler = EventHandler::new(&window);
 //!     let mut sprite = Sprite::from(&tex_dirt);
 //!     let mut leave = Sprite::from(&tex_leave);
-//! 
+//!
 //!     leave.set_position(Point::new(300.0, 300.0));
 //!     window.set_clear_color(Color::new(0.0, 0.0, 1.0));
 //!     window.enable_cursor();
@@ -40,18 +40,18 @@
 //!         leave.rotate(1.0);
 //!         leave.update();
 //!         sprite.update();
-//! 
+//!
 //!         for event in event_handler.fetch() {
 //!             event_process(event, &mut window);
 //!         }
-//! 
+//!
 //!         window.clear();
 //!         window.draw(&sprite);
 //!         window.draw(&leave);
 //!         window.display();
 //!     }
 //! }
-//! 
+//!
 //! fn event_process(event: Event, window: &mut Window) {
 //!     match event.1 {
 //!         Events::Key(Key::Escape, _, _, _) => {
@@ -71,12 +71,10 @@
 #![allow(dead_code)]
 #![feature(test)]
 
-extern crate crossbeam;
 extern crate gl;
 extern crate glfw;
 extern crate nalgebra;
 extern crate freetype;
-extern crate rayon;
 #[macro_use]
 extern crate lazy_static;
 extern crate image;
@@ -97,7 +95,9 @@ pub mod vertex;
 pub mod view;
 pub mod rect;
 pub mod text;
+pub mod shared_window;
 pub mod font;
+pub mod transform;
 
 pub mod prelude {
     pub use window::Window;
@@ -108,7 +108,8 @@ pub mod prelude {
     pub use text::Text;
     pub use event::{Event, Events, EventHandler};
     pub use super::{Vector, Coord, Point, Action, Key, MouseButtonLeft, MouseButtonRight};
-    pub use draw::{Drawer, Drawable, Movable, Context};
+    pub use draw::{Drawer, Drawable, DrawableMut, Context};
+    pub use transform::{Movable, Transformable, Rotable, Scalable};
     pub use view::View;
     pub use color::Color;
 }
@@ -126,5 +127,5 @@ pub type Vector<T> = nalgebra::Vector2<T>;
 pub type Point<T>  = Vector<T>;
 pub type Coord  = nalgebra::Vector2<usize>;
 
-pub static HEIGHT: usize = 900;
-pub static WIDTH: usize = 1600;
+pub static HEIGHT: u32 = 900;
+pub static WIDTH: u32 = 1600;

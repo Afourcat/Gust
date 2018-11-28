@@ -4,19 +4,12 @@
 //  event.rs
 //  module:
 //! event example
+#[macro_use]
 extern crate gust;
 extern crate glfw;
 
-use gust::sprite::Sprite;
-use gust::window::Window;
-use gust::{Vector,Key};
-use glfw::Action;
-use gust::event::{EventHandler,Events,Event};
+use gust::prelude::*;
 use std::rc::Rc;
-use gust::color::Color;
-use gust::texture::{Texture};
-use gust::draw::{Drawer,Movable};
-use gust::draw::Drawable;
 use std::collections::HashMap;
 
 fn main() {
@@ -52,22 +45,20 @@ fn draw(window: &mut Window, sprites: &mut HashMap<&'static str,Sprite>) {
 
 fn event_process(event: Event, window: &mut Window, sprites: &mut HashMap<&'static str,Sprite>) {
     match event.1 {
-        Events::Key(Key::Escape, _, _, _) => {
-            window.close();
-        },
-        Events::Key(Key::Space, _, Action::Press, _) => {
+        pressed!(Escape) => window.close(),
+        pressed!(Space) => {
             sprites.get_mut("dirt_1").unwrap().rotate(45.0);
         },
-        Events::Key(Key::W, _, _, _) => {
+        pressed!(W) => {
             sprites.get_mut("dirt_2").unwrap().translate(Vector::new(0.0, -10.0));
         },
-        Events::Key(Key::A, _, _, _) => {
+        pressed!(A) => {
             sprites.get_mut("dirt_2").unwrap().translate(Vector::new(-10.0, 0.0));
         },
-        Events::Key(Key::S, _, _, _) => {
+        pressed!(S) => {
             sprites.get_mut("dirt_2").unwrap().translate(Vector::new(0.0, 10.0));
         },
-        Events::Key(Key::D, _, _, _) => {
+        pressed!(D) => {
             sprites.get_mut("dirt_2").unwrap().translate(Vector::new(10.0, 0.0));
         },
         Events::MouseButton(glfw::MouseButtonLeft, Action::Press, _) => {

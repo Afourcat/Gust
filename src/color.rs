@@ -28,7 +28,7 @@ impl Color {
     }
 
     pub fn white() -> Color {
-        Color(1.0, 1.0, 1.0, 1.0)
+        *self::WHITE
     }
 
     pub fn red() -> Color {

@@ -28,10 +28,11 @@
 
 use texture::Texture;
 use font::{Font,CharInfo};
-use draw::{Drawable, Drawer, Context, Movable, BlendMode, IDENTITY};
+use draw::{Drawable, DrawableMut, Drawer, Context, BlendMode, IDENTITY};
+use transform::*;
 use shader;
 use ::{Point,Vector};
-use nalgebra;
+use nalgebra::Scalar;
 use std::{error::Error, rc::Rc};
 use std::cell::RefCell;
 use vertex_buffer::VertexBuffer;
@@ -123,18 +124,70 @@ impl Text {
     }
 }
 
-impl Movable for Text {
-
+impl Transformable for Text {
     fn contain<T>(&self, _point: Point<T>) -> bool
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32>
+        T: Scalar + Into<f32>
     {
         true
     }
 
+    fn set_origin<T>(&mut self, _origin: Vector<T>)
+    where
+        T: Scalar + Into<f32>
+    {
+        unimplemented!();
+    }
+
+    fn get_origin(&self) -> Vector<f32> {
+        Vector::new(0.0, 0.0)
+    }
+}
+
+impl Scalable for Text {
+    fn scale<T>(&mut self, _factor: Vector<T>)
+    where
+        T: Scalar + Into<f32>
+    {
+        unimplemented!();
+    }
+
+    fn set_scale<T>(&mut self, _vec: Vector<T>)
+    where
+        T: Scalar + Into<f32>
+    {
+        unimplemented!();
+    }
+
+    fn get_scale(&self) -> Vector<f32> {
+        unimplemented!();
+    }
+}
+
+impl Rotable for Text {
+    fn rotate<T>(&mut self, _angle: T)
+    where
+        T: Scalar + Into<f32>
+    {
+        unimplemented!();
+    }
+
+    fn set_rotation<T>(&mut self, _angle: T)
+    where
+        T: Scalar + Into<f32>
+    {
+        unimplemented!();
+    }
+
+    fn get_rotation(&self) -> f32 {
+        0.0
+    }
+}
+
+impl Movable for Text {
     fn translate<T>(&mut self, offset: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32>
+        T: Scalar + Into<f32>
     {
         self.pos.x += offset.x.into();
         self.pos.y += offset.y.into();
@@ -143,7 +196,7 @@ impl Movable for Text {
 
     fn set_position<T>(&mut self, pos: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32>
+        T: Scalar + Into<f32>
     {
         self.pos.x = pos.x.into();
         self.pos.y = pos.y.into();
@@ -154,53 +207,18 @@ impl Movable for Text {
         self.pos
     }
 
-    fn scale<T>(&mut self, _factor: Vector<T>)
-    where
-        T: nalgebra::Scalar + From<f32> + Into<f32>
-    {
-        unimplemented!();
+}
+
+impl DrawableMut for Text {
+    fn draw_mut<T: Drawer>(&mut self, target: &mut T) {
+        self.update();
+        self.draw(target);
     }
 
-    fn set_scale<T>(&mut self, _vec: Vector<T>)
-    where
-        T: nalgebra::Scalar + From<f32> + Into<f32>
-    {
-        unimplemented!();
+    fn draw_with_context_mut(&mut self, context: &mut Context) {
+        self.update();
+        self.draw_with_context(context);
     }
-
-    fn get_scale(&self) -> Vector<f32> {
-        unimplemented!();
-    }
-
-    fn rotate<T>(&mut self, _angle: T)
-    where
-        T: nalgebra::Scalar + Into<f32>
-    {
-        unimplemented!();
-    }
-
-    fn set_rotation<T>(&mut self, _angle: T)
-    where
-        T: nalgebra::Scalar + Into<f32>
-    {
-        unimplemented!();
-    }
-
-    fn get_rotation(&self) -> f32 {
-        0.0
-    }
-
-    fn set_origin<T>(&mut self, _origin: Vector<T>)
-    where
-        T: nalgebra::Scalar + Into<f32>
-    {
-        unimplemented!();
-    }
-
-    fn get_origin(&self) -> Vector<f32> {
-        Vector::new(0.0, 0.0)
-    }
-
 }
 
 impl Drawable for Text {
@@ -277,11 +295,6 @@ impl Drawable for Text {
         self.need_update = false;
     }
 
-    fn draw_mut<T: Drawer>(&mut self, target: &mut T) {
-        self.update();
-        self.draw(target);
-    }
-
     fn draw<T: Drawer>(&self, target: &mut T) {
         // If there is no text don't draw
         if self.content.is_empty() { return }
@@ -303,11 +316,6 @@ impl Drawable for Text {
 
         // Draw the vertex_buffer with context
         self.vertex_buffer.draw_with_context(&mut context);
-    }
-
-    fn draw_with_context_mut(&mut self, context: &mut Context) {
-        self.update();
-        self.draw_with_context(context);
     }
 
     fn draw_with_context(&self, context: &mut Context) {

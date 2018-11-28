@@ -5,6 +5,28 @@ pub use glfw::WindowEvent as Events;
 use std::rc::Rc;
 use window::Window;
 
+#[macro_export]
+/// Should expand from pressed!(W) -> Events::Key(Key::W, _, Action::Pressed, _)
+macro_rules! pressed {
+    ($x:ident) => {
+        Events::Key(Key::$x, _, Action::Press, _)
+    }
+}
+
+#[macro_export]
+macro_rules! release {
+    ($x:ident) => {
+        Events::Key(Key::$x, _, Action::Release, _)
+    }
+}
+
+#[macro_export]
+macro_rules! repeat {
+    ($x:ident) => {
+        Events::Key(Key::$x, _, Action::Repeat, _)
+    }
+}
+
 pub type EventMessage<'a> = glfw::FlushedMessages<'a, (f64, Events)>;
 
 /// Event Wrap glfwEvent data

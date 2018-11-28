@@ -1,15 +1,8 @@
 extern crate gust;
-extern crate glfw;
 
-use gust::sprite::Sprite;
-use gust::window::Window;
-use gust::{Vector, Point, Key, Resource};
-use gust::event::{EventHandler,Events,Event};
-use gust::color::Color;
-use gust::texture::{Texture};
-use gust::draw::{Drawer,Movable};
-use gust::draw::Drawable;
+use gust::prelude::*;
 use gust::texture::RgbMode;
+use std::rc::Rc;
 
 fn main()
 {
@@ -26,8 +19,8 @@ fn main()
 
     my_tex.update_block(pix.as_slice(), Vector::new(100, 100), Vector::new(10, 10), None).unwrap();
 
-    let blank_rc = Resource::new(blank);
-    let tex_dirt = Resource::new(my_tex);
+    let blank_rc = Rc::new(blank);
+    let tex_dirt = Rc::new(my_tex);
     let event_handler = EventHandler::new(&window);
     let mut sprite = Sprite::from(&tex_dirt);
     let mut leave = Sprite::from(&blank_rc);
