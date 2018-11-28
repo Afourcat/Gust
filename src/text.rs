@@ -32,7 +32,7 @@ use draw::{Drawable, DrawableMut, Drawer, Context, BlendMode, IDENTITY};
 use transform::*;
 use shader;
 use ::{Point,Vector};
-use nalgebra;
+use nalgebra::Scalar;
 use std::{error::Error, rc::Rc};
 use std::cell::RefCell;
 use vertex_buffer::VertexBuffer;
@@ -127,14 +127,14 @@ impl Text {
 impl Transformable for Text {
     fn contain<T>(&self, _point: Point<T>) -> bool
     where
-        T: nalgebra::Scalar + Into<f32>
+        T: Scalar + Into<f32>
     {
         true
     }
 
     fn set_origin<T>(&mut self, _origin: Vector<T>)
     where
-        T: nalgebra::Scalar + Into<f32>
+        T: Scalar + Into<f32>
     {
         unimplemented!();
     }
@@ -147,14 +147,14 @@ impl Transformable for Text {
 impl Scalable for Text {
     fn scale<T>(&mut self, _factor: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32>
+        T: Scalar + Into<f32>
     {
         unimplemented!();
     }
 
     fn set_scale<T>(&mut self, _vec: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32>
+        T: Scalar + Into<f32>
     {
         unimplemented!();
     }
@@ -167,14 +167,14 @@ impl Scalable for Text {
 impl Rotable for Text {
     fn rotate<T>(&mut self, _angle: T)
     where
-        T: nalgebra::Scalar + Into<f32>
+        T: Scalar + Into<f32>
     {
         unimplemented!();
     }
 
     fn set_rotation<T>(&mut self, _angle: T)
     where
-        T: nalgebra::Scalar + Into<f32>
+        T: Scalar + Into<f32>
     {
         unimplemented!();
     }
@@ -187,7 +187,7 @@ impl Rotable for Text {
 impl Movable for Text {
     fn translate<T>(&mut self, offset: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32>
+        T: Scalar + Into<f32>
     {
         self.pos.x += offset.x.into();
         self.pos.y += offset.y.into();
@@ -196,7 +196,7 @@ impl Movable for Text {
 
     fn set_position<T>(&mut self, pos: Vector<T>)
     where
-        T: nalgebra::Scalar + From<f32> + Into<f32>
+        T: Scalar + Into<f32>
     {
         self.pos.x = pos.x.into();
         self.pos.y = pos.y.into();

@@ -164,7 +164,9 @@ impl Transformable for Sprite {
 }
 
 impl Scalable for Sprite {
-    fn set_scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>) {
+    fn set_scale<T>(&mut self, vec: Vector2<T>)
+    where T: Scalar + Into<f32>
+    {
         self.scale.x = vec.x.into();
         self.scale.y = vec.y.into();
         self.need_update = true;
@@ -174,7 +176,9 @@ impl Scalable for Sprite {
         self.scale
     }
 
-    fn scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, factor: Vector2<T>) {
+    fn scale<T>(&mut self, factor: Vector2<T>)
+    where T: Scalar + Into<f32>
+    {
         self.scale.x += factor.x.into();
         self.scale.y += factor.y.into();
         self.need_update = true;
@@ -182,12 +186,16 @@ impl Scalable for Sprite {
 }
 
 impl Rotable for Sprite {
-    fn rotate<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+    fn rotate<T>(&mut self, angle: T)
+    where T: Scalar + Into<f32>
+    {
         self.rotation += angle.into();
         self.need_update = true;
     }
 
-    fn set_rotation<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+    fn set_rotation<T>(&mut self, angle: T)
+    where T: Scalar + Into<f32>
+    {
         self.rotation = angle.into();
         self.need_update = true;
     }
@@ -198,7 +206,9 @@ impl Rotable for Sprite {
 }
 
 impl Movable for Sprite {
-    fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>) {
+    fn translate<T>(&mut self, vec: Vector2<T>)
+    where T: Scalar + Into<f32>
+    {
         self.pos.x += vec.x.into();
         self.pos.y += vec.y.into();
         self.need_update = true;
@@ -208,7 +218,9 @@ impl Movable for Sprite {
         self.pos
     }
 
-    fn set_position<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>) {
+    fn set_position<T>(&mut self, vec: Vector2<T>)
+    where T: Scalar + Into<f32>
+    {
         self.pos.x = vec.x.into();
         self.pos.y = vec.y.into();
         self.need_update = true;

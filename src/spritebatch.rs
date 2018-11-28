@@ -17,7 +17,7 @@ use std::mem;
 use std::ptr;
 use std::rc::Rc;
 use color::Color;
-use nalgebra::Vector4;
+use nalgebra::{Vector4, Scalar};
 use transform::*;
 
 pub enum BatchError {
@@ -89,11 +89,15 @@ impl Default for SpriteData {
 }
 
 impl Transformable for SpriteData {
-    fn contain<T: nalgebra::Scalar + Into<f32>>(&self, vec: ::Point<T>) -> bool {
+    fn contain<T>(&self, vec: ::Point<T>) -> bool
+    where T: Scalar + Into<f32>
+    {
         true
     }
 
-    fn set_origin<T: nalgebra::Scalar + Into<f32>>(&mut self, origin: Vector<T>) {
+    fn set_origin<T>(&mut self, origin: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
         unimplemented!("No origin for now in SpriteData.");
     }
 
@@ -103,7 +107,9 @@ impl Transformable for SpriteData {
 }
 
 impl Scalable for SpriteData {
-    fn set_scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
+    fn set_scale<T>(&mut self, vec: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
         unimplemented!("For instance no scale to SpriteData.");
     }
 
@@ -111,18 +117,24 @@ impl Scalable for SpriteData {
         unimplemented!("For instance no scale to SpriteData.");
     }
 
-    fn scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, factor: Vector<T>) {
+    fn scale<T>(&mut self, factor: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
         unimplemented!("For instance no scale to SpriteData.");
     }
 }
 
 impl Rotable for SpriteData {
-    fn rotate<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+    fn rotate<T>(&mut self, angle: T)
+    where T: Into<f32> + Scalar
+    {
         self.rotation += angle.into();
         self.need_update = true;
     }
 
-    fn set_rotation<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+    fn set_rotation<T>(&mut self, angle: T)
+    where T: Into<f32> + Scalar
+    {
         self.rotation = angle.into();
         self.need_update = true;
     }
@@ -133,7 +145,9 @@ impl Rotable for SpriteData {
 }
 
 impl Movable for SpriteData {
-    fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
+    fn translate<T>(&mut self, vec: Vector<T>)
+    where T: Into<f32> + Scalar
+    {
         self.pos.x += vec.x.into();
         self.pos.y += vec.y.into();
         self.need_update = true;
@@ -143,7 +157,9 @@ impl Movable for SpriteData {
         self.pos
     }
 
-    fn set_position<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
+    fn set_position<T>(&mut self, vec: Vector<T>)
+    where T: Into<f32> + Scalar
+    {
         self.pos.x = vec.x.into();
         self.pos.y = vec.y.into();
         self.need_update = true;
@@ -410,7 +426,9 @@ impl Transformable for SpriteBatch {
 }
 
 impl Scalable for SpriteBatch {
-    fn set_scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
+    fn set_scale<T>(&mut self, vec: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
         self.glob_scale.x = vec.x.into();
         self.glob_scale.y = vec.y.into();
         self.need_update = true;
@@ -420,7 +438,9 @@ impl Scalable for SpriteBatch {
         self.glob_scale
     }
 
-    fn scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, factor: Vector<T>) {
+    fn scale<T>(&mut self, factor: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
         self.glob_scale.x += factor.x.into();
         self.glob_scale.y += factor.y.into();
         self.need_update = true;
@@ -428,12 +448,16 @@ impl Scalable for SpriteBatch {
 }
 
 impl Rotable for SpriteBatch {
-    fn rotate<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+    fn rotate<T>(&mut self, angle: T)
+    where T: Scalar + Into<f32>
+    {
         self.glob_rotation += angle.into();
         self.need_update = true;
     }
 
-    fn set_rotation<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+    fn set_rotation<T>(&mut self, angle: T)
+    where T: Scalar + Into<f32>
+    {
         self.glob_rotation = angle.into();
         self.need_update = true;
     }
@@ -444,7 +468,9 @@ impl Rotable for SpriteBatch {
 }
 
 impl Movable for SpriteBatch {
-    fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
+    fn translate<T>(&mut self, vec: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
         self.glob_pos.x += vec.x.into();
         self.glob_pos.y += vec.y.into();
         self.need_update = true;
@@ -454,7 +480,9 @@ impl Movable for SpriteBatch {
         self.glob_pos
     }
 
-    fn set_position<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
+    fn set_position<T>(&mut self, vec: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
         self.glob_pos.x = vec.x.into();
         self.glob_pos.y = vec.y.into();
         self.need_update = true;
