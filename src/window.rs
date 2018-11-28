@@ -4,8 +4,8 @@
 // Description:
 //
 
-static DEFAULT_HEIGHT: f32 = 900.0;
-static DEFAULT_WIDTH: f32 = 1600.0;
+static DEFAULT_HEIGHT: u32 = 900;
+static DEFAULT_WIDTH: u32 = 1600;
 
 extern crate glfw;
 extern crate gl;
@@ -13,10 +13,10 @@ extern crate gl;
 use color::Color;
 use std::sync::mpsc::Receiver;
 use std::rc::Rc;
-use draw::{Drawable, Drawer};
+use draw::{Drawable, DrawableMut, Drawer};
 use glfw::Context;
 use draw;
-use ::Vector;
+use Vector;
 use view::{View};
 use rect::Rect;
 use nalgebra;
@@ -33,8 +33,8 @@ lazy_static! {
 /// Window struct
 /// Define a struct by many thing in glfw
 pub struct Window {
-    pub height: usize,
-    pub width: usize,
+    pub height: u32,
+    pub width: u32,
     event: Rc<Receiver<(f64, glfw::WindowEvent)>>,
     pub (in super) win: glfw::Window,
     clear_color: Color,
@@ -51,7 +51,7 @@ lazy_static! {
 impl<'a> Window {
 
     /// Create a new window by default
-    pub fn new(width: usize, height: usize, name: &str) -> Window {
+    pub fn new(width: u32, height: u32, name: &str) -> Window {
         // Init the glfw system
 
         let mut glfw = GLFW_INSTANCE.lock().unwrap();
@@ -63,7 +63,7 @@ impl<'a> Window {
         // Return the glfw::WindowEvent enum and a window
         // That we are trying to wrap in this code
         let (mut win, evt) = glfw.create_window(
-            width as u32, height as u32,
+            width, height,
             name,
             glfw::WindowMode::Windowed
         ).unwrap();
@@ -251,7 +251,7 @@ impl Drawer for Window {
     }
 
     #[inline]
-    fn draw_mut<T: Drawable>(&mut self, drawable: &mut T) {
+    fn draw_mut<T: DrawableMut>(&mut self, drawable: &mut T) {
         self.active();
         drawable.draw_mut(self);
     }
@@ -263,14 +263,9 @@ impl Drawer for Window {
     }
 
     #[inline]
-    fn draw_with_context_mut<T: Drawable>(&mut self, drawable: &mut T, context: &mut draw::Context) {
+    fn draw_with_context_mut<T: DrawableMut>(&mut self, drawable: &mut T, context: &mut draw::Context) {
         self.active();
         drawable.draw_with_context(context);
-    }
-
-    #[inline]
-    fn get_projection(&self) -> &Matrix4<f32> {
-        self.view.get_projection()
     }
 
     #[inline]
@@ -307,8 +302,8 @@ impl Default for Window {
 
         Window {
             view: View::from(Rect::new(0.0, 0.0, DEFAULT_WIDTH as f32, DEFAULT_HEIGHT as f32)),
-            height: DEFAULT_HEIGHT as usize,
-            width: DEFAULT_WIDTH as usize,
+            height: DEFAULT_HEIGHT,
+            width: DEFAULT_WIDTH,
             win,
             event: Rc::new(evt),
             clear_color: Color::new(1.0, 1.0, 1.0),

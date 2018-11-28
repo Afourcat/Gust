@@ -50,10 +50,6 @@ impl Drawer for SharedWindow {
         drawable.draw(self);
     }
 
-    fn get_projection(&self) -> &Matrix4<f32> {
-        &self.view.get_projection()
-    }
-
     fn projection(&self) -> &Matrix4<f32> {
         &self.view.get_projection()
     }

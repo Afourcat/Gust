@@ -2,12 +2,12 @@
 
 use texture::Texture;
 use vertex_buffer::{VertexBuffer,Primitive};
-use draw::{Drawable,Drawer,Context,BlendMode};
+use draw::{Drawable, DrawableMut, Drawer, Context, BlendMode};
 use color::Color;
 use vertex::Vertex;
 use nalgebra::*;
 use nalgebra;
-use draw::{Movable};
+use transform::{Movable, Scalable, Rotable, Transformable};
 use vertex::*;
 use shader::DEFAULT_SHADER;
 use std::convert::From;
@@ -71,9 +71,9 @@ impl Sprite {
     }
 
     /// Get texture sizes
-    pub fn get_sizes(&self) -> Vector2<usize> {
+    pub fn get_sizes(&self) -> Vector2<u32> {
         if let Some(ref texture) = self.texture {
-            Vector2::new(texture.width() as usize, texture.height() as usize)
+            Vector2::new(texture.width() as u32, texture.height() as u32)
         } else {
             Vector2::new(0, 0)
         }
@@ -138,10 +138,9 @@ impl<'a> From<&'a Resource<Texture>> for Sprite {
     }
 }
 
-impl Movable for Sprite {
-
+impl Transformable for Sprite {
     /// TODO: Transform the point tested.
-    fn contain<T: nalgebra::Scalar + From<f32> + Into<f32>>(&self, point: ::Point<T>) -> bool {
+    fn contain<T: nalgebra::Scalar + Into<f32>>(&self, point: ::Point<T>) -> bool {
         //let sizes = self.get_sizes();
         //let b: Vector4<f32> = Matrix4::inverse(self.model) * Vector4::new(point.x.into(), point.y.into(), 0.0, 1.0);
         //let vec: Vector2<f32> = Vector2::new(b.x, b.y);
@@ -153,38 +152,6 @@ impl Movable for Sprite {
         true
     }
 
-    fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>) {
-        self.pos.x += vec.x.into();
-        self.pos.y += vec.y.into();
-        self.need_update = true;
-    }
-
-    fn set_scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>) {
-        self.scale.x = vec.x.into();
-        self.scale.y = vec.y.into();
-        self.need_update = true;
-    }
-
-    fn get_scale(&self) -> Vector2<f32> {
-        self.scale
-    }
-
-    fn scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, factor: Vector2<T>) {
-        self.scale.x += factor.x.into();
-        self.scale.y += factor.y.into();
-        self.need_update = true;
-    }
-
-    fn get_position(&self) -> Vector2<f32> {
-        self.pos
-    }
-
-    fn set_position<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector2<T>) {
-        self.pos.x = vec.x.into();
-        self.pos.y = vec.y.into();
-        self.need_update = true;
-    }
-
     fn set_origin<T: nalgebra::Scalar + Into<f32>>(&mut self, origin: Vector2<T>) {
         self.origin.x = origin.x.into();
         self.origin.y = origin.y.into();
@@ -194,19 +161,69 @@ impl Movable for Sprite {
     fn get_origin(&self) -> Vector2<f32> {
         self.origin
     }
+}
 
-    fn rotate<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+impl Scalable for Sprite {
+    fn set_scale<T>(&mut self, vec: Vector2<T>)
+    where T: Scalar + Into<f32>
+    {
+        self.scale.x = vec.x.into();
+        self.scale.y = vec.y.into();
+        self.need_update = true;
+    }
+
+    fn get_scale(&self) -> Vector2<f32> {
+        self.scale
+    }
+
+    fn scale<T>(&mut self, factor: Vector2<T>)
+    where T: Scalar + Into<f32>
+    {
+        self.scale.x += factor.x.into();
+        self.scale.y += factor.y.into();
+        self.need_update = true;
+    }
+}
+
+impl Rotable for Sprite {
+    fn rotate<T>(&mut self, angle: T)
+    where T: Scalar + Into<f32>
+    {
         self.rotation += angle.into();
         self.need_update = true;
     }
 
-    fn set_rotation<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+    fn set_rotation<T>(&mut self, angle: T)
+    where T: Scalar + Into<f32>
+    {
         self.rotation = angle.into();
         self.need_update = true;
     }
 
     fn get_rotation(&self) -> f32 {
         self.rotation
+    }
+}
+
+impl Movable for Sprite {
+    fn translate<T>(&mut self, vec: Vector2<T>)
+    where T: Scalar + Into<f32>
+    {
+        self.pos.x += vec.x.into();
+        self.pos.y += vec.y.into();
+        self.need_update = true;
+    }
+
+    fn get_position(&self) -> Vector2<f32> {
+        self.pos
+    }
+
+    fn set_position<T>(&mut self, vec: Vector2<T>)
+    where T: Scalar + Into<f32>
+    {
+        self.pos.x = vec.x.into();
+        self.pos.y = vec.y.into();
+        self.need_update = true;
     }
 }
 
@@ -225,15 +242,21 @@ impl Default for Sprite {
     }
 }
 
-/// Drawing trait for sprite sturct
-impl Drawable for Sprite {
-
+impl DrawableMut for Sprite {
     /// Draw the actual sprite on a context
     fn draw_mut<T: Drawer>(&mut self, window: &mut T) {
         self.update();
         self.draw(window);
     }
 
+    fn draw_with_context_mut<'a>(&mut self, context: &'a mut Context) {
+        self.update();
+        self.vertice.draw_with_context(context);
+    }
+}
+
+/// Drawing trait for sprite sturct
+impl Drawable for Sprite {
     /// Draw the actual sprite on a context
     fn draw<T: Drawer>(&self, window: &mut T) {
         let texture = if let Some(ref rc_texture) = self.texture {
@@ -254,10 +277,6 @@ impl Drawable for Sprite {
         self.vertice.draw_with_context(&mut context);
     }
 
-    fn draw_with_context_mut<'a>(&mut self, context: &'a mut Context) {
-        self.update();
-        self.vertice.draw_with_context(context);
-    }
 
     /// Draw the actual sprite with your own context.
     fn draw_with_context<'a>(&self, context: &'a mut Context) {

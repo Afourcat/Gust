@@ -1,15 +1,8 @@
 extern crate gust;
 extern crate glfw;
 
-use gust::window::Window;
-use gust::{Vector,Action,Key};
-use gust::event::{EventHandler,Events,Event};
+use gust::prelude::*;
 use std::rc::Rc;
-use gust::color::Color;
-use gust::draw::{Drawer,Movable};
-use gust::draw::Drawable;
-use gust::text::Text;
-use gust::font::Font;
 use std::cell::RefCell;
 
 fn main() {

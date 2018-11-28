@@ -7,7 +7,6 @@
 use texture::Texture;
 use rect::Rect;
 use draw::*;
-
 use shader::BATCH_SHADER;
 use super::Vector;
 use vertex::Vertex;
@@ -18,7 +17,8 @@ use std::mem;
 use std::ptr;
 use std::rc::Rc;
 use color::Color;
-use nalgebra::Vector4;
+use nalgebra::{Vector4, Scalar};
+use transform::*;
 
 pub enum BatchError {
     BadTextureRect
@@ -51,7 +51,7 @@ impl SpriteData {
     }
 
     /// Set texture rect.
-    pub fn set_texture_rect(&mut self, text_rect: Rect<usize>, texture_size: usize) {
+    pub fn set_texture_rect(&mut self, text_rect: Rect<u32>, texture_size: u32) {
         self.text_coord = [
             Vector::new(
                 text_rect.left as f32 / texture_size as f32,
@@ -65,12 +65,14 @@ impl SpriteData {
     }
 
     /// Get texture rect.
-    pub fn texture_rect(&self, texture_size: usize) -> Rect<usize> {
+    pub fn texture_rect<T>(&self, texture_size: T) -> Rect<u32>
+    where T: Into<f32> + Copy
+    {
         Rect::new(
-            (self.text_coord[0].x * texture_size as f32) as usize,
-            (self.text_coord[0].y * texture_size as f32) as usize,
-            (self.text_coord[1].x * texture_size as f32) as usize,
-            (self.text_coord[1].y * texture_size as f32) as usize
+            (self.text_coord[0].x * texture_size.into()) as u32,
+            (self.text_coord[0].y * texture_size.into()) as u32,
+            (self.text_coord[1].x * texture_size.into()) as u32,
+            (self.text_coord[1].y * texture_size.into()) as u32
         )
     }
 }
@@ -88,18 +90,28 @@ impl Default for SpriteData {
     }
 }
 
-impl Movable for SpriteData {
-    fn contain<T: nalgebra::Scalar + From<f32> + Into<f32>>(&self, vec: ::Point<T>) -> bool {
+impl Transformable for SpriteData {
+    fn contain<T>(&self, vec: ::Point<T>) -> bool
+    where T: Scalar + Into<f32>
+    {
         true
     }
 
-    fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
-        self.pos.x += vec.x.into();
-        self.pos.y += vec.y.into();
-        self.need_update = true;
+    fn set_origin<T>(&mut self, origin: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
+        unimplemented!("No origin for now in SpriteData.");
     }
 
-    fn set_scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
+    fn get_origin(&self) -> Vector<f32> {
+        unimplemented!("No origin for now in SpriteData.");
+    }
+}
+
+impl Scalable for SpriteData {
+    fn set_scale<T>(&mut self, vec: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
         unimplemented!("For instance no scale to SpriteData.");
     }
 
@@ -107,35 +119,24 @@ impl Movable for SpriteData {
         unimplemented!("For instance no scale to SpriteData.");
     }
 
-    fn scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, factor: Vector<T>) {
+    fn scale<T>(&mut self, factor: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
         unimplemented!("For instance no scale to SpriteData.");
     }
+}
 
-    fn get_position(&self) -> Vector<f32> {
-        self.pos
-    }
-
-    fn set_position<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
-        self.pos.x = vec.x.into();
-        self.pos.y = vec.y.into();
-        self.need_update = true;
-    }
-
-    fn set_origin<T: nalgebra::Scalar + Into<f32>>(&mut self, origin: Vector<T>) {
-        unimplemented!("No origin for now in SpriteData.");
-        self.need_update = true;
-    }
-
-    fn get_origin(&self) -> Vector<f32> {
-        unimplemented!("No origin for now in SpriteData.");
-    }
-
-    fn rotate<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+impl Rotable for SpriteData {
+    fn rotate<T>(&mut self, angle: T)
+    where T: Into<f32> + Scalar
+    {
         self.rotation += angle.into();
         self.need_update = true;
     }
 
-    fn set_rotation<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+    fn set_rotation<T>(&mut self, angle: T)
+    where T: Into<f32> + Scalar
+    {
         self.rotation = angle.into();
         self.need_update = true;
     }
@@ -143,6 +144,29 @@ impl Movable for SpriteData {
     fn get_rotation(&self) -> f32 {
         self.rotation
     }
+}
+
+impl Movable for SpriteData {
+    fn translate<T>(&mut self, vec: Vector<T>)
+    where T: Into<f32> + Scalar
+    {
+        self.pos.x += vec.x.into();
+        self.pos.y += vec.y.into();
+        self.need_update = true;
+    }
+
+    fn get_position(&self) -> Vector<f32> {
+        self.pos
+    }
+
+    fn set_position<T>(&mut self, vec: Vector<T>)
+    where T: Into<f32> + Scalar
+    {
+        self.pos.x = vec.x.into();
+        self.pos.y = vec.y.into();
+        self.need_update = true;
+    }
+
 }
 
 #[derive(Clone, Debug)]
@@ -387,42 +411,9 @@ impl SpriteBatch {
     }
 }
 
-impl Movable for SpriteBatch {
-
-    fn contain<T: nalgebra::Scalar + From<f32> + Into<f32>>(&self, vec: ::Point<T>) -> bool {
+impl Transformable for SpriteBatch {
+    fn contain<T: nalgebra::Scalar + Into<f32>>(&self, vec: ::Point<T>) -> bool {
         true
-    }
-
-    fn translate<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
-        self.glob_pos.x += vec.x.into();
-        self.glob_pos.y += vec.y.into();
-        self.need_update = true;
-    }
-
-    fn set_scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
-        self.glob_scale.x = vec.x.into();
-        self.glob_scale.y = vec.y.into();
-        self.need_update = true;
-    }
-
-    fn get_scale(&self) -> Vector<f32> {
-        self.glob_scale
-    }
-
-    fn scale<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, factor: Vector<T>) {
-        self.glob_scale.x += factor.x.into();
-        self.glob_scale.y += factor.y.into();
-        self.need_update = true;
-    }
-
-    fn get_position(&self) -> Vector<f32> {
-        self.glob_pos
-    }
-
-    fn set_position<T: nalgebra::Scalar + From<f32> + Into<f32>>(&mut self, vec: Vector<T>) {
-        self.glob_pos.x = vec.x.into();
-        self.glob_pos.y = vec.y.into();
-        self.need_update = true;
     }
 
     fn set_origin<T: nalgebra::Scalar + Into<f32>>(&mut self, origin: Vector<T>) {
@@ -434,19 +425,76 @@ impl Movable for SpriteBatch {
     fn get_origin(&self) -> Vector<f32> {
         self.glob_origin
     }
+}
 
-    fn rotate<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+impl Scalable for SpriteBatch {
+    fn set_scale<T>(&mut self, vec: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
+        self.glob_scale.x = vec.x.into();
+        self.glob_scale.y = vec.y.into();
+        self.need_update = true;
+    }
+
+    fn get_scale(&self) -> Vector<f32> {
+        self.glob_scale
+    }
+
+    fn scale<T>(&mut self, factor: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
+        self.glob_scale.x += factor.x.into();
+        self.glob_scale.y += factor.y.into();
+        self.need_update = true;
+    }
+}
+
+impl Rotable for SpriteBatch {
+    fn rotate<T>(&mut self, angle: T)
+    where T: Scalar + Into<f32>
+    {
         self.glob_rotation += angle.into();
         self.need_update = true;
     }
 
-    fn set_rotation<T: nalgebra::Scalar + Into<f32>>(&mut self, angle: T) {
+    fn set_rotation<T>(&mut self, angle: T)
+    where T: Scalar + Into<f32>
+    {
         self.glob_rotation = angle.into();
         self.need_update = true;
     }
 
     fn get_rotation(&self) -> f32 {
         self.glob_rotation
+    }
+}
+
+impl Movable for SpriteBatch {
+    fn translate<T>(&mut self, vec: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
+        self.glob_pos.x += vec.x.into();
+        self.glob_pos.y += vec.y.into();
+        self.need_update = true;
+    }
+
+    fn get_position(&self) -> Vector<f32> {
+        self.glob_pos
+    }
+
+    fn set_position<T>(&mut self, vec: Vector<T>)
+    where T: Scalar + Into<f32>
+    {
+        self.glob_pos.x = vec.x.into();
+        self.glob_pos.y = vec.y.into();
+        self.need_update = true;
+    }
+}
+
+impl DrawableMut for SpriteBatch {
+    fn draw_mut<T: Drawer>(&mut self, target: &mut T) {
+        self.update();
+        self.draw(target);
     }
 }
 
@@ -480,11 +528,6 @@ impl Drawable for SpriteBatch {
         }
     }
 
-    fn draw_mut<T: Drawer>(&mut self, target: &mut T) {
-        self.update();
-        self.draw(target);
-    }
-
     fn draw_with_context(&self, context: &mut Context) {
         unimplemented!(
         "Put an issue here please if I forgot to implement it https://github.com/Afourcat/Gust/issues");
@@ -508,21 +551,7 @@ impl Drawable for SpriteBatch {
                 }
             }
         }
-        // Iterate over each sprites and update it if it need it.
-        //            sprites
-        //                .par_iter_mut()
-        //                .enumerate()
-        //                .for_each(|(i, mut elem)| {
-        //                    if elem.need_update {
-        //                        let vert = &mut vertices.lock().unwrap()[(i * 4)..(i * 4 + 4)];
-        //                        self::update_sprite(&mut elem, Vector::new(0.0, 0.0), vert);
-        //                        rex.lock().unwrap().send(true).unwrap();
-        //                    }
-        //                });
-        //
-        //        if sen.iter().max().is_some() {
-        //            self.update_vbo();
-        //        }
+
         if sprite_mod {
             self.update_vbo();
         }
@@ -600,8 +629,8 @@ mod test {
     use self::test::Bencher;
     use ::{Vector, texture::Texture};
     use std::rc::Rc;
-    use draw::{Drawable, Movable};
-    use rayon::prelude::*;
+    use draw::Drawable;
+    use transform::Movable;
 
     #[bench]
     fn sprite_batch_create(bencher: &mut Bencher) {

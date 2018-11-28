@@ -5,16 +5,12 @@ authors = ["alex <alexandre.fourcat@epitech.eu>"]
 autoexamples = true
 
 [dependencies]
-gl = "0.10.0"
-nalgebra = "0.15.0"
-image = "0.19.0"
-lazy_static = "1.1.0"
-freetype-rs = { git = "https://github.com/PistonDevelopers/freetype-rs" }
-alga = "0.7.2"
-
-[dependencies.glfw]
-git = "https://github.com/bjz/glfw-rs.git"
-
-[profile.release]
-debug = true
-
+gl = "*"
+nalgebra = "*"
+image = "*"
+lazy_static = "*"
+freetype-rs = "*"
+rayon = "*"
+crossbeam = "*"
+alga = "*"
+glfw = "*"
