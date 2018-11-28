@@ -51,7 +51,7 @@ impl SpriteData {
     }
 
     /// Set texture rect.
-    pub fn set_texture_rect(&mut self, text_rect: Rect<usize>, texture_size: usize) {
+    pub fn set_texture_rect(&mut self, text_rect: Rect<u32>, texture_size: u32) {
         self.text_coord = [
             Vector::new(
                 text_rect.left as f32 / texture_size as f32,
@@ -65,12 +65,14 @@ impl SpriteData {
     }
 
     /// Get texture rect.
-    pub fn texture_rect(&self, texture_size: usize) -> Rect<usize> {
+    pub fn texture_rect<T>(&self, texture_size: T) -> Rect<u32>
+    where T: Into<f32> + Copy
+    {
         Rect::new(
-            (self.text_coord[0].x * texture_size as f32) as usize,
-            (self.text_coord[0].y * texture_size as f32) as usize,
-            (self.text_coord[1].x * texture_size as f32) as usize,
-            (self.text_coord[1].y * texture_size as f32) as usize
+            (self.text_coord[0].x * texture_size.into()) as u32,
+            (self.text_coord[0].y * texture_size.into()) as u32,
+            (self.text_coord[1].x * texture_size.into()) as u32,
+            (self.text_coord[1].y * texture_size.into()) as u32
         )
     }
 }

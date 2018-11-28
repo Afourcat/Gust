@@ -5,19 +5,19 @@
 //  module:
 //! Rectangle struct and all fonction
 
-use nalgebra;
-use std::ops::{Add,Mul,Div,Sub,MulAssign};
+use nalgebra::Scalar;
+use std::ops::{Add, Mul, Div, Sub, MulAssign};
 
 /// Rect define a rectangle with down/left coord and width/height
 #[derive(Debug,Clone,Copy,PartialEq)]
-pub struct Rect<T: nalgebra::Scalar> {
+pub struct Rect<T: Scalar> {
     pub top: T,
     pub left: T,
     pub width: T,
     pub height: T,
 }
 
-impl<T: nalgebra::Scalar + Add<Output=T>> Add<Rect<T>> for Rect<T> {
+impl<T: Scalar + Add<Output=T>> Add<Rect<T>> for Rect<T> {
     type Output = Rect<T>;
 
     fn add(self, rhs: Rect<T>) ->  Self::Output {
@@ -30,7 +30,7 @@ impl<T: nalgebra::Scalar + Add<Output=T>> Add<Rect<T>> for Rect<T> {
     }
 }
 
-impl<T: nalgebra::Scalar + Div<Output=T>> Div<Rect<T>> for Rect<T> {
+impl<T: Scalar + Div<Output=T>> Div<Rect<T>> for Rect<T> {
     type Output = Rect<T>;
 
     fn div(self, rhs: Rect<T>) -> Self::Output {
@@ -43,7 +43,7 @@ impl<T: nalgebra::Scalar + Div<Output=T>> Div<Rect<T>> for Rect<T> {
     }
 }
 
-impl<T: nalgebra::Scalar + Sub<Output=T>> Sub<Rect<T>> for Rect<T> {
+impl<T: Scalar + Sub<Output=T>> Sub<Rect<T>> for Rect<T> {
     type Output = Rect<T>;
 
     fn sub(self, rhs: Rect<T>) -> Self::Output {
@@ -56,7 +56,7 @@ impl<T: nalgebra::Scalar + Sub<Output=T>> Sub<Rect<T>> for Rect<T> {
     }
 }
 
-impl<T: nalgebra::Scalar + Mul<Output=T>> Mul<Rect<T>> for Rect<T> {
+impl<T: Scalar + Mul<Output=T>> Mul<Rect<T>> for Rect<T> {
     type Output = Rect<T>;
 
     fn mul(self, rhs: Rect<T>) -> Self::Output {
@@ -69,7 +69,7 @@ impl<T: nalgebra::Scalar + Mul<Output=T>> Mul<Rect<T>> for Rect<T> {
     }
 }
 
-impl<T: nalgebra::Scalar + MulAssign<T>> MulAssign<Rect<T>> for Rect<T> {
+impl<T: Scalar + MulAssign<T>> MulAssign<Rect<T>> for Rect<T> {
     fn mul_assign(&mut self, rhs: Rect<T>) {
         self.left *= rhs.left;
         self.top *= rhs.top;
@@ -84,7 +84,9 @@ impl<T: nalgebra::Scalar + MulAssign<T>> MulAssign<Rect<T>> for Rect<T> {
 //
 //------------------
 
-impl<T: nalgebra::Scalar + Add<Output=T> + PartialOrd> Rect<T> {
+impl<T> Rect<T> 
+where T: Scalar + Add<Output=T> + PartialOrd
+{
     pub fn new(left: T, top: T, width: T, height: T) -> Rect<T> {
         Rect {
             top,
@@ -102,18 +104,33 @@ impl<T: nalgebra::Scalar + Add<Output=T> + PartialOrd> Rect<T> {
     }
 }
 
-impl Into<Rect<f32>> for Rect<usize> {
-    fn into(self) -> Rect<f32> {
+impl From<Rect<f32>> for Rect<u32>
+{
+    fn from(this: Rect<f32>) -> Rect<u32> {
         Rect {
-            top: self.top as f32,
-            left: self.left as f32,
-            width: self.width as f32,
-            height: self.height as f32,
+            top: this.top as u32,
+            left: this.left as u32,
+            width: this.width as u32,
+            height: this.height as u32,
         }
     }
 }
 
-impl<T: Default + nalgebra::Scalar> Default for Rect<T> {
+impl From<Rect<u32>> for Rect<f32>
+{
+    fn from(this: Rect<u32>) -> Rect<f32> {
+        Rect {
+            top: this.top as f32,
+            left: this.left as f32,
+            width: this.width as f32,
+            height: this.height as f32,
+        }
+    }
+}
+
+impl<T> Default for Rect<T>
+where T: Default + Scalar
+{
     fn default() -> Rect<T> {
         Rect {
             top: T::default(),
