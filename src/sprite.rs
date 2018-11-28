@@ -71,9 +71,9 @@ impl Sprite {
     }
 
     /// Get texture sizes
-    pub fn get_sizes(&self) -> Vector2<usize> {
+    pub fn get_sizes(&self) -> Vector2<u32> {
         if let Some(ref texture) = self.texture {
-            Vector2::new(texture.width() as usize, texture.height() as usize)
+            Vector2::new(texture.width() as u32, texture.height() as u32)
         } else {
             Vector2::new(0, 0)
         }

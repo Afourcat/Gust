@@ -129,5 +129,5 @@ pub type Vector<T> = nalgebra::Vector2<T>;
 pub type Point<T>  = Vector<T>;
 pub type Coord  = nalgebra::Vector2<usize>;
 
-pub static HEIGHT: usize = 900;
-pub static WIDTH: usize = 1600;
+pub static HEIGHT: u32 = 900;
+pub static WIDTH: u32 = 1600;
