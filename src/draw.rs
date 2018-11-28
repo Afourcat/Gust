@@ -2,7 +2,6 @@
 //!
 
 use nalgebra::{Vector2};
-use nalgebra;
 use texture::Texture;
 use shader::Shader;
 use nalgebra::Matrix4;
