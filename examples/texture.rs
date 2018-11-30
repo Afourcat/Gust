@@ -4,8 +4,7 @@ use gust::prelude::*;
 use gust::texture::RgbMode;
 use std::rc::Rc;
 
-fn main()
-{
+fn main() {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
     let mut pixels: Vec<u8> = vec![125; 200 * 200 * 4];
     let pix: Vec<u8> = vec![255; 100 * 100 * 3];
@@ -17,7 +16,14 @@ fn main()
         blank = Texture::from_data(pixels.as_mut_ptr() as *mut c_void, RgbMode::RGBA, 200, 200);
     }
 
-    my_tex.update_block(pix.as_slice(), Vector::new(100, 100), Vector::new(10, 10), None).unwrap();
+    my_tex
+        .update_block(
+            pix.as_slice(),
+            Vector::new(100, 100),
+            Vector::new(10, 10),
+            None,
+        )
+        .unwrap();
 
     let blank_rc = Rc::new(blank);
     let tex_dirt = Rc::new(my_tex);
@@ -55,14 +61,14 @@ fn event_process(event: Event, window: &mut Window, texture: &Texture, sprite: &
     match event.1 {
         Events::Key(Key::Escape, _, _, _) => {
             window.close();
-        },
+        }
         Events::MouseButton(_, _, _) => {
             println!("Dumping texture to test.png");
             texture.to_file("test.png").unwrap();
-        },
+        }
         Events::CursorPos(x, y) => {
             sprite.set_position(Vector::new(x as f32, y as f32));
-        },
+        }
         _ => {}
     }
 }

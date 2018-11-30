@@ -8,9 +8,9 @@
 extern crate gust;
 
 use gust::prelude::*;
-use std::rc::Rc;
-use std::error::Error;
 use gust::spritebatch::{SpriteBatch, SpriteData};
+use std::error::Error;
+use std::rc::Rc;
 
 fn main() -> Result<(), Box<Error>> {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
@@ -45,20 +45,23 @@ fn event_process(event: Event, window: &mut Window, batch: &mut SpriteBatch) {
     match event.1 {
         Events::Key(Key::Escape, _, _, _) => {
             window.close();
-        },
+        }
         Events::Key(Key::W, _, Action::Press, _) => {
             batch.translate(Vector::new(10.0, 10.0));
-        },
+        }
         Events::Key(Key::D, _, Action::Press, _) => {
-            batch.get_sprite_mut(0).unwrap().translate(Vector::new(10.0, 0.0));
-        },
+            batch
+                .get_sprite_mut(0)
+                .unwrap()
+                .translate(Vector::new(10.0, 0.0));
+        }
         Events::MouseButton(_, _, _) => {
             println!("Mouse button !");
-        },
+        }
         Events::CursorPos(x, y) => {
             println!("x: {}, y: {}", x, y);
-        },
-        _ => { println!("Another event !") }
+        }
+        _ => println!("Another event !"),
     }
     drop(event);
 }

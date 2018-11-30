@@ -10,9 +10,9 @@ pub struct Color(pub f32, pub f32, pub f32, pub f32);
 lazy_static! {
     static ref WHITE: Color = Color(1.0, 1.0, 1.0, 1.0);
     static ref BLACK: Color = Color(0.0, 0.0, 0.0, 1.0);
-    static ref RED: Color   = Color(1.0, 0.0, 0.0, 1.0);
+    static ref RED: Color = Color(1.0, 0.0, 0.0, 1.0);
     static ref GREEN: Color = Color(0.0, 1.0, 0.0, 1.0);
-    static ref BLUE: Color  = Color(0.0, 0.0, 1.0, 1.0);
+    static ref BLUE: Color = Color(0.0, 0.0, 1.0, 1.0);
 }
 
 /// Color class
@@ -95,23 +95,25 @@ impl Into<[u8; 4]> for Color {
             (self.0 * 255.0) as u8,
             (self.1 * 255.0) as u8,
             (self.2 * 255.0) as u8,
-            (self.3 * 255.0) as u8
+            (self.3 * 255.0) as u8,
         ]
     }
 }
 
 impl Into<(u8, u8, u8, u8)> for Color {
     fn into(self) -> (u8, u8, u8, u8) {
-        ((self.0 * 255.0) as u8,
-         (self.1 * 255.0) as u8,
-         (self.2 * 255.0) as u8,
-         (self.3 * 255.0) as u8)
+        (
+            (self.0 * 255.0) as u8,
+            (self.1 * 255.0) as u8,
+            (self.2 * 255.0) as u8,
+            (self.3 * 255.0) as u8,
+        )
     }
 }
 
 impl Default for Color {
     fn default() -> Color {
-        Color (1.0, 1.0, 1.0, 1.0)
+        Color(1.0, 1.0, 1.0, 1.0)
     }
 }
 

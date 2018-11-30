@@ -1,9 +1,9 @@
-extern crate gust;
 extern crate glfw;
+extern crate gust;
 
 use gust::prelude::*;
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 fn main() {
     // Create drawer window
@@ -13,7 +13,9 @@ fn main() {
     let event_handler = EventHandler::new(&window);
 
     // Create font
-    let font = Rc::new(RefCell::new(Font::from_path("examples/font/test.ttf").unwrap()));
+    let font = Rc::new(RefCell::new(
+        Font::from_path("examples/font/test.ttf").unwrap(),
+    ));
 
     // Create text with font
     let mut text = Text::new(&font);
@@ -35,7 +37,9 @@ fn main() {
 
         // Poll event
         window.poll_events();
-        event_handler.fetch().for_each(|event| handle(&event, &mut window, &mut text));
+        event_handler
+            .fetch()
+            .for_each(|event| handle(&event, &mut window, &mut text));
 
         // Draw process (Clear -> Draw -> Display)
         window.clear();
@@ -50,7 +54,7 @@ fn handle(event: &Event, window: &mut Window, text: &mut Text) {
         Events::Key(Key::Escape, _, Action::Press, _) => window.close(),
         Events::CursorPos(x, y) => {
             text.set_position(Vector::new(x as f32, y as f32));
-        },
+        }
         _ => {}
     }
 }

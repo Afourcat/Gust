@@ -5,9 +5,9 @@
 //  module:
 //! ressources trait and functions
 
+use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
-use std::cell::RefCell;
 
 pub type Resource<T> = Rc<T>;
 pub type MutResource<T> = Rc<RefCell<T>>;

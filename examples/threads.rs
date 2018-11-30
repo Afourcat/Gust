@@ -4,11 +4,11 @@
 extern crate gust;
 extern crate glfw;
 
-use std::rc::Rc;
 use gust::prelude::*;
-use std::thread;
 use gust::shared_window::SharedWindow;
+use std::rc::Rc;
 use std::sync::mpsc;
+use std::thread;
 
 fn main() {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
@@ -38,7 +38,8 @@ fn main() {
 
 fn render(shared: &mut SharedWindow, recv: mpsc::Receiver<()>) {
     shared.active();
-    let texture_rc = Rc::new(Texture::from_path("examples/texture/Dirt.png").expect("Cannot open New.png"));
+    let texture_rc =
+        Rc::new(Texture::from_path("examples/texture/Dirt.png").expect("Cannot open New.png"));
     let sprite = Sprite::from(&texture_rc);
 
     loop {

@@ -1,17 +1,17 @@
 //! Shader module
 
 use gl;
-use std;
-use std::io;
-use std::ptr;
 use gl::types::*;
-use std::io::Read;
-use std::fs::File;
+use nalgebra::{Matrix2, Matrix3, Matrix4, Vector2, Vector3, Vector4};
+use std;
 use std::ffi::CString;
-use nalgebra::{Vector3, Vector2, Vector4, Matrix4, Matrix2, Matrix3};
+use std::fs::File;
+use std::io;
+use std::io::Read;
+use std::ptr;
 
 lazy_static! {
-	pub static ref DEFAULT_SHADER: Shader = Shader::default();
+    pub static ref DEFAULT_SHADER: Shader = Shader::default();
 }
 
 lazy_static! {
@@ -19,18 +19,15 @@ lazy_static! {
         let (vert, frag, id);
         unsafe {
             let (v, f, i) = Shader::do_shader(
-                    &CString::new(SPRITE_VS.as_bytes()).unwrap(),
-                    &CString::new(SPRITE_FS.as_bytes()).unwrap()
-            ).unwrap();
+                &CString::new(SPRITE_VS.as_bytes()).unwrap(),
+                &CString::new(SPRITE_FS.as_bytes()).unwrap(),
+            )
+            .unwrap();
             frag = f;
             vert = v;
             id = i;
         }
-        Shader {
-            id,
-            frag,
-            vert
-        }
+        Shader { id, frag, vert }
     };
 }
 
@@ -39,9 +36,10 @@ lazy_static! {
         let (vert, frag, id);
         unsafe {
             let (v, f, i) = Shader::do_shader(
-                    &CString::new(BATCH_VS.as_bytes()).unwrap(),
-                    &CString::new(FS.as_bytes()).unwrap()
-            ).unwrap();
+                &CString::new(BATCH_VS.as_bytes()).unwrap(),
+                &CString::new(FS.as_bytes()).unwrap(),
+            )
+            .unwrap();
             vert = v;
             frag = f;
             id = i;
@@ -49,7 +47,7 @@ lazy_static! {
         Shader {
             id: id,
             frag: frag,
-            vert: vert
+            vert: vert,
         }
     };
 }
@@ -59,9 +57,10 @@ lazy_static! {
         let (vert, frag, id);
         unsafe {
             let (v, f, i) = Shader::do_shader(
-                    &CString::new(VS.as_bytes()).unwrap(),
-                    &CString::new(NO_TEXTURE_FS.as_bytes()).unwrap()
-            ).unwrap();
+                &CString::new(VS.as_bytes()).unwrap(),
+                &CString::new(NO_TEXTURE_FS.as_bytes()).unwrap(),
+            )
+            .unwrap();
             vert = v;
             frag = f;
             id = i;
@@ -69,7 +68,7 @@ lazy_static! {
         Shader {
             id: id,
             frag: frag,
-            vert: vert
+            vert: vert,
         }
     };
 }
@@ -77,13 +76,12 @@ lazy_static! {
 /// Shader object that abstract openGl type
 #[derive(Debug)]
 pub struct Shader {
-	id: u32,
-	vert: u32,
-	frag: u32,
+    id: u32,
+    vert: u32,
+    frag: u32,
 }
 
-static SPRITE_VS: &'static str =
-"#version 330 core
+static SPRITE_VS: &'static str = "#version 330 core
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoord;
 layout (location = 2) in vec3 aColor;
@@ -100,8 +98,7 @@ void main()
     TexCoord = aTexCoord;
 }";
 
-static SPRITE_FS: &'static str =
-"#version 330 core
+static SPRITE_FS: &'static str = "#version 330 core
 out vec4 FragColor;
 in vec3 ourColor;
 in vec2 TexCoord;
@@ -112,8 +109,7 @@ void main()
    FragColor = texture(ourTexture, TexCoord) * vec4(ourColor, 1.0);
 }";
 
-static BATCH_VS: &'static str =
-"#version 330 core
+static BATCH_VS: &'static str = "#version 330 core
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoord;
 layout (location = 2) in vec3 aColor;
@@ -130,8 +126,7 @@ void main()
 }
 ";
 
-static VS: &'static str =
-"#version 330 core
+static VS: &'static str = "#version 330 core
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoord;
 layout (location = 2) in vec3 aColor;
@@ -147,8 +142,7 @@ void main()
    TexCoord = aTexCoord;
 }";
 
-static FS: &'static str =
-"#version 330 core
+static FS: &'static str = "#version 330 core
 out vec4 FragColor;
 in vec3 ourColor;
 in vec2 TexCoord;
@@ -159,8 +153,7 @@ void main()
    FragColor = texture(ourTexture, TexCoord) * vec4(ourColor, 1.0);
 }";
 
-static NO_TEXTURE_FS: &'static str =
-"#version 330 core
+static NO_TEXTURE_FS: &'static str = "#version 330 core
 out vec4 FragColor;
 in vec3 ourColor;
 
@@ -171,83 +164,89 @@ void main()
 
 /// Return a string from a filename
 pub fn file_to_cstring(name: &str) -> Result<CString, io::Error> {
-		let mut content = String::new();
-		File::open(name)?.read_to_string(&mut content)?;
-		Ok(CString::new(content.as_bytes()).unwrap())
+    let mut content = String::new();
+    File::open(name)?.read_to_string(&mut content)?;
+    Ok(CString::new(content.as_bytes()).unwrap())
 }
 
 impl Shader {
+    // Constructors ---------------------------------------------------------------
 
-// Constructors ---------------------------------------------------------------
+    /// Create a new Shader from a filename of vertex and frag
+    pub fn new(vert: &str, frag: &str) -> Result<Shader, io::Error> {
+        let vert_source = file_to_cstring(vert)?;
+        let frag_source = file_to_cstring(frag)?;
+        let (vert_id, frag_id, id);
 
-	/// Create a new Shader from a filename of vertex and frag
-	pub fn new(vert: &str, frag: &str) -> Result<Shader, io::Error> {
-		let vert_source = file_to_cstring(vert)?;
-		let frag_source = file_to_cstring(frag)?;
-		let (vert_id, frag_id, id);
+        unsafe {
+            let (v, f, i) = Shader::do_shader(&vert_source, &frag_source)?;
+            vert_id = v;
+            frag_id = f;
+            id = i;
+        }
 
-		unsafe {
-			let (v, f, i) = Shader::do_shader(&vert_source, &frag_source)?;
-			vert_id = v;
-			frag_id = f;
-			id = i;
-		}
+        Ok(Shader {
+            id,
+            frag: frag_id,
+            vert: vert_id,
+        })
+    }
 
-		Ok (Shader { id, frag: frag_id, vert: vert_id })
-	}
+    /// Do all everything needed for shaders
+    unsafe fn do_shader(
+        vert_code: &CString,
+        frag_code: &CString,
+    ) -> Result<(u32, u32, u32), io::Error> {
+        let id = gl::CreateProgram();
+        let vert_id = Shader::compile_shader(&vert_code, gl::VERTEX_SHADER);
+        let frag_id = Shader::compile_shader(&frag_code, gl::FRAGMENT_SHADER);
 
-	/// Do all everything needed for shaders
-	unsafe fn do_shader(vert_code: &CString, frag_code: &CString)
-	-> Result<(u32, u32, u32), io::Error>
-	{
-		let id = gl::CreateProgram();
-		let vert_id = Shader::compile_shader(&vert_code, gl::VERTEX_SHADER);
-		let frag_id = Shader::compile_shader(&frag_code, gl::FRAGMENT_SHADER);
+        gl::AttachShader(id, vert_id);
+        gl::AttachShader(id, frag_id);
+        gl::LinkProgram(id);
 
+        let mut status: i32 = 0;
+        let s: String = std::iter::repeat(' ').take(512).collect();
+        let info_log: CString = CString::new(s.as_bytes()).unwrap();
+        gl::GetProgramiv(id, gl::LINK_STATUS, &mut status);
+        if status == 0 {
+            gl::GetProgramInfoLog(id, 512, ptr::null_mut(), info_log.as_ptr() as *mut _);
+            println!("Could not link shaders {}", info_log.into_string().unwrap());
+        }
+        gl::DeleteShader(vert_id);
+        gl::DeleteShader(frag_id);
+        Ok((vert_id, frag_id, id))
+    }
 
-		gl::AttachShader(id, vert_id);
-		gl::AttachShader(id, frag_id);
-		gl::LinkProgram(id);
+    /// Compile all shaders
+    unsafe fn compile_shader(code: &CString, gl_type: GLenum) -> u32 {
+        let id = gl::CreateShader(gl_type);
+        gl::ShaderSource(id, 1, &code.as_ptr(), ptr::null());
+        gl::CompileShader(id);
+        let mut success: i32 = 0;
+        let s: String = std::iter::repeat(' ').take(512).collect();
+        let info_log: CString = CString::new(s.as_bytes()).unwrap();
+        gl::GetShaderiv(id, gl::COMPILE_STATUS, &mut success);
+        if success == 0 {
+            gl::GetShaderInfoLog(id, 512, ptr::null_mut(), info_log.as_ptr() as *mut _);
+            println!(
+                "Could not compile shaders {}",
+                info_log.into_string().unwrap()
+            );
+        };
+        id
+    }
 
-		let mut status: i32 = 0;
-		let s: String = std::iter::repeat(' ').take(512).collect();
-		let info_log: CString = CString::new(s.as_bytes()).unwrap();
-		gl::GetProgramiv(id, gl::LINK_STATUS, &mut status);
-		if status == 0 {
-			gl::GetProgramInfoLog(id, 512, ptr::null_mut(), info_log.as_ptr() as *mut _);
-			println!("Could not link shaders {}", info_log.into_string().unwrap());
-		}
-		gl::DeleteShader(vert_id);
-		gl::DeleteShader(frag_id);
-		Ok((vert_id, frag_id, id))
-	}
+    // Usable ---------------------------------------------------------------------
 
-	/// Compile all shaders
-	unsafe fn compile_shader(code: &CString, gl_type: GLenum) -> u32 {
-		let id = gl::CreateShader(gl_type);
-		gl::ShaderSource(id, 1, &code.as_ptr(), ptr::null());
-		gl::CompileShader(id);
-		let mut success: i32 = 0;
-		let s: String = std::iter::repeat(' ').take(512).collect();
-		let info_log: CString = CString::new(s.as_bytes()).unwrap();
-		gl::GetShaderiv(id, gl::COMPILE_STATUS, &mut success);
-		if success == 0 {
-			gl::GetShaderInfoLog(id, 512, ptr::null_mut(), info_log.as_ptr() as *mut _);
-			println!("Could not compile shaders {}", info_log.into_string().unwrap());
-		};
-		id
-	}
+    /// Activate the program
+    pub fn activate(&self) {
+        unsafe {
+            gl::UseProgram(self.id);
+        }
+    }
 
-// Usable ---------------------------------------------------------------------
-
-	/// Activate the program
-	pub fn activate(&self) {
-		unsafe {
-			gl::UseProgram(self.id);
-		}
-	}
-
-// Uniform setter Vector
+    // Uniform setter Vector
 
     pub fn uniform_f4(&mut self, name: &str, value: Vector4<f32>) {
         unsafe {
@@ -277,7 +276,7 @@ impl Shader {
         }
     }
 
-// Uniform setter integer
+    // Uniform setter integer
 
     pub fn uniform_bool(&mut self, name: &str, value: bool) {
         self.uniform_int(name, value as i32);
@@ -311,7 +310,7 @@ impl Shader {
         }
     }
 
-// Uniform setter for matrix
+    // Uniform setter for matrix
 
     pub fn uniform_mat4f(&self, name: &str, value: &Matrix4<f32>) {
         unsafe {
@@ -339,28 +338,32 @@ impl Shader {
 impl Default for Shader {
     /// Default shader mode
     fn default() -> Shader {
-		let vert_source = CString::new(VS.as_bytes()).unwrap();
-		let frag_source = CString::new(FS.as_bytes()).unwrap();
-		let (vert_id, frag_id, id);
+        let vert_source = CString::new(VS.as_bytes()).unwrap();
+        let frag_source = CString::new(FS.as_bytes()).unwrap();
+        let (vert_id, frag_id, id);
 
-		unsafe {
-			let (v, f, i) = Shader::do_shader(&vert_source, &frag_source).unwrap();
-			vert_id = v;
-			frag_id = f;
-			id = i;
-		}
+        unsafe {
+            let (v, f, i) = Shader::do_shader(&vert_source, &frag_source).unwrap();
+            vert_id = v;
+            frag_id = f;
+            id = i;
+        }
 
-		Shader { id, frag: frag_id, vert: vert_id }
+        Shader {
+            id,
+            frag: frag_id,
+            vert: vert_id,
+        }
     }
 }
 
 impl Drop for Shader {
-	fn drop(&mut self) {
-		unsafe {
-			gl::DeleteShader(self.vert);
-			gl::DeleteShader(self.frag);
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteShader(self.vert);
+            gl::DeleteShader(self.frag);
             gl::DeleteProgram(self.id);
-		}
+        }
         println!("Shaders {} deleted.", self.id);
-	}
+    }
 }

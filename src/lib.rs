@@ -71,61 +71,61 @@
 #![allow(dead_code)]
 #![feature(test)]
 
+extern crate freetype;
 extern crate gl;
 extern crate glfw;
 extern crate nalgebra;
-extern crate freetype;
 #[macro_use]
 extern crate lazy_static;
-extern crate image;
 extern crate alga;
+extern crate image;
 
-pub mod spritebatch;
-pub mod resources;
-pub mod gl_error;
-pub mod vertex_buffer;
 pub mod color;
-pub mod window;
 pub mod draw;
-pub mod texture;
 pub mod event;
-pub mod shader;
-pub mod sprite;
-pub mod vertex;
-pub mod view;
-pub mod rect;
-pub mod text;
-pub mod shared_window;
 pub mod font;
+pub mod gl_error;
+pub mod rect;
+pub mod resources;
+pub mod shader;
+pub mod shared_window;
+pub mod sprite;
+pub mod spritebatch;
+pub mod text;
+pub mod texture;
 pub mod transform;
+pub mod vertex;
+pub mod vertex_buffer;
+pub mod view;
+pub mod window;
 
 pub mod prelude {
-    pub use window::Window;
-    pub use texture::Texture;
+    pub use super::{Action, Coord, Key, MouseButtonLeft, MouseButtonRight, Point, Vector};
+    pub use color::Color;
+    pub use draw::{Context, Drawable, DrawableMut, Drawer};
+    pub use event::{Event, EventHandler, Events};
+    pub use font::Font;
     pub use sprite::Sprite;
     pub use spritebatch::{SpriteBatch, SpriteData};
-    pub use font::Font;
     pub use text::Text;
-    pub use event::{Event, Events, EventHandler};
-    pub use super::{Vector, Coord, Point, Action, Key, MouseButtonLeft, MouseButtonRight};
-    pub use draw::{Drawer, Drawable, DrawableMut, Context};
-    pub use transform::{Movable, Transformable, Rotable, Scalable};
+    pub use texture::Texture;
+    pub use transform::{Movable, Rotable, Scalable, Transformable};
     pub use view::View;
-    pub use color::Color;
+    pub use window::Window;
 }
 
+pub use glfw::Action;
 pub use glfw::Key;
 pub use glfw::MouseButton;
 pub use glfw::MouseButtonLeft;
-pub use glfw::MouseButtonRight;
 pub use glfw::MouseButtonMiddle;
-pub use glfw::Action;
-pub use resources::{Resource, MutResource, ThreadResource, MutThreadResource};
+pub use glfw::MouseButtonRight;
 pub use nalgebra::Matrix4;
+pub use resources::{MutResource, MutThreadResource, Resource, ThreadResource};
 
 pub type Vector<T> = nalgebra::Vector2<T>;
-pub type Point<T>  = Vector<T>;
-pub type Coord  = nalgebra::Vector2<usize>;
+pub type Point<T> = Vector<T>;
+pub type Coord = nalgebra::Vector2<usize>;
 
 pub static HEIGHT: u32 = 900;
 pub static WIDTH: u32 = 1600;

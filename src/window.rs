@@ -7,22 +7,22 @@
 static DEFAULT_HEIGHT: u32 = 900;
 static DEFAULT_WIDTH: u32 = 1600;
 
-extern crate glfw;
 extern crate gl;
+extern crate glfw;
 
 use color::Color;
-use std::sync::mpsc::Receiver;
-use std::rc::Rc;
-use draw::{Drawable, DrawableMut, Drawer};
-use glfw::Context;
 use draw;
-use Vector;
-use view::{View};
-use rect::Rect;
+use draw::{Drawable, DrawableMut, Drawer};
+use event::{EventReceiver, EventType};
+use glfw::Context;
 use nalgebra;
 use nalgebra::Matrix4;
-use event::{EventType, EventReceiver};
+use rect::Rect;
+use std::rc::Rc;
+use std::sync::mpsc::Receiver;
 use std::sync::Mutex;
+use view::View;
+use Vector;
 
 static DEFAULT_FPS: u32 = 60;
 
@@ -36,20 +36,20 @@ pub struct Window {
     pub height: u32,
     pub width: u32,
     event: Rc<Receiver<(f64, glfw::WindowEvent)>>,
-    pub (in super) win: glfw::Window,
+    pub(super) win: glfw::Window,
     clear_color: Color,
     already_init: bool,
     view: View,
-    fps_limit: u32
+    fps_limit: u32,
 }
 
 lazy_static! {
-    static ref GLFW_INSTANCE: Mutex<glfw::Glfw> = Mutex::new(glfw::init(glfw::FAIL_ON_ERRORS).unwrap());
+    static ref GLFW_INSTANCE: Mutex<glfw::Glfw> =
+        Mutex::new(glfw::init(glfw::FAIL_ON_ERRORS).unwrap());
 }
 
 /// Window structure implementation
 impl<'a> Window {
-
     /// Create a new window by default
     pub fn new(width: u32, height: u32, name: &str) -> Window {
         // Init the glfw system
@@ -57,17 +57,16 @@ impl<'a> Window {
         let mut glfw = GLFW_INSTANCE.lock().unwrap();
 
         glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
-        glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
+        glfw.window_hint(glfw::WindowHint::OpenGlProfile(
+            glfw::OpenGlProfileHint::Core,
+        ));
 
         // Create window from Glfw method create_window
         // Return the glfw::WindowEvent enum and a window
         // That we are trying to wrap in this code
-        let (mut win, evt) = glfw.create_window(
-            width, height,
-            name,
-            glfw::WindowMode::Windowed
-        ).unwrap();
-
+        let (mut win, evt) = glfw
+            .create_window(width, height, name, glfw::WindowMode::Windowed)
+            .unwrap();
 
         // Load all the gl function from the user configuration
         gl::load_with(|s| win.get_proc_address(s) as *const _);
@@ -90,12 +89,13 @@ impl<'a> Window {
             event: Rc::new(evt),
             clear_color: Color::new(1.0, 1.0, 1.0),
             already_init: true,
-            fps_limit: self::DEFAULT_FPS
+            fps_limit: self::DEFAULT_FPS,
         }
     }
 
     pub fn set_mouse_pos<T: nalgebra::Scalar + Into<f32>>(&mut self, vec: Vector<T>) {
-        self.win.set_cursor_pos(f64::from(vec.x.into()), f64::from(vec.y.into()))
+        self.win
+            .set_cursor_pos(f64::from(vec.x.into()), f64::from(vec.y.into()))
     }
 
     pub fn poll<T: Into<Option<EventType>>>(&mut self, event: T) {
@@ -123,7 +123,7 @@ impl<'a> Window {
                 EventType::CursorPos => window.win.set_cursor_pos_polling(active),
                 EventType::CursorEnter => window.win.set_cursor_enter_polling(active),
                 EventType::Scroll => window.win.set_scroll_polling(active),
-                EventType::FrameBuffer => window.win.set_framebuffer_size_polling(active)
+                EventType::FrameBuffer => window.win.set_framebuffer_size_polling(active),
             }
         }
     }
@@ -150,7 +150,7 @@ impl<'a> Window {
 
     /// Check if the window is open
     pub fn is_open(&self) -> bool {
-       !self.win.should_close()
+        !self.win.should_close()
     }
 
     /// Poll the event
@@ -183,7 +183,10 @@ impl<'a> Window {
 
     /// Activate window on OpenGl context
     pub fn active(&mut self) -> bool {
-        GLFW_INSTANCE.lock().unwrap().make_context_current(Some(&self.win));
+        GLFW_INSTANCE
+            .lock()
+            .unwrap()
+            .make_context_current(Some(&self.win));
         true
     }
 
@@ -205,14 +208,17 @@ impl<'a> Window {
     fn set_input_mode(&self, im: &InputMode) {
         let (mode, value) = im.to_i32();
         unsafe {
-            glfw::ffi::glfwSetInputMode(self.win.window_ptr() ,mode, value);
+            glfw::ffi::glfwSetInputMode(self.win.window_ptr(), mode, value);
         }
     }
 
     /// Should not be used (low level glfw function)
     fn input_mode(&self, im: &InputMode) -> InputMode {
         unsafe {
-            InputMode::from(glfw::ffi::glfwGetInputMode(self.win.window_ptr(), im.to_i32().0))
+            InputMode::from(glfw::ffi::glfwGetInputMode(
+                self.win.window_ptr(),
+                im.to_i32().0,
+            ))
         }
     }
 
@@ -244,7 +250,6 @@ impl<'a> Window {
 }
 
 impl Drawer for Window {
-
     fn draw<T: Drawable>(&mut self, drawable: &T) {
         self.active();
         drawable.draw(self);
@@ -263,7 +268,11 @@ impl Drawer for Window {
     }
 
     #[inline]
-    fn draw_with_context_mut<T: DrawableMut>(&mut self, drawable: &mut T, context: &mut draw::Context) {
+    fn draw_with_context_mut<T: DrawableMut>(
+        &mut self,
+        drawable: &mut T,
+        context: &mut draw::Context,
+    ) {
         self.active();
         drawable.draw_with_context(context);
     }
@@ -279,29 +288,40 @@ impl Drawer for Window {
         let view_zoom = self.view().get_zoom();
 
         println!("View pos: {:?}", view_pos);
-        Vector::new((self.width as f32 / (2.0 * (1.0 / view_zoom))) + view_pos.x,
-                    (self.height as f32 / (2.0 * (1.0 / view_zoom))) + view_pos.y)
+        Vector::new(
+            (self.width as f32 / (2.0 * (1.0 / view_zoom))) + view_pos.x,
+            (self.height as f32 / (2.0 * (1.0 / view_zoom))) + view_pos.y,
+        )
     }
 
     fn projection(&self) -> &Matrix4<f32> {
-        self.view.get_projection()
+        self.view.projection()
     }
 }
 
 /// Default trait implementation for window
 impl Default for Window {
     fn default() -> Window {
-
-        let (mut win, evt) = GLFW_INSTANCE.lock().unwrap().create_window(
-            DEFAULT_HEIGHT as u32, DEFAULT_WIDTH as u32,
-            "Gust",
-            glfw::WindowMode::Windowed
-        ).unwrap();
+        let (mut win, evt) = GLFW_INSTANCE
+            .lock()
+            .unwrap()
+            .create_window(
+                DEFAULT_HEIGHT as u32,
+                DEFAULT_WIDTH as u32,
+                "Gust",
+                glfw::WindowMode::Windowed,
+            )
+            .unwrap();
 
         gl::load_with(|s| win.get_proc_address(s) as *const _);
 
         Window {
-            view: View::from(Rect::new(0.0, 0.0, DEFAULT_WIDTH as f32, DEFAULT_HEIGHT as f32)),
+            view: View::from(Rect::new(
+                0.0,
+                0.0,
+                DEFAULT_WIDTH as f32,
+                DEFAULT_HEIGHT as f32,
+            )),
             height: DEFAULT_HEIGHT,
             width: DEFAULT_WIDTH,
             win,
@@ -323,10 +343,10 @@ pub enum InputMode {
 impl InputMode {
     fn to_i32(&self) -> (i32, i32) {
         match self {
-            InputMode::CursorMode(a)        => { (0x0003_3001, a as *const _ as i32) },
-            InputMode::StickKeys            => { (0x0003_3002, 1) },
-            InputMode::StickMouseButtons    => { (0x0003_3003, 1) },
-            InputMode::NotDefined           => { (-1, -1) }
+            InputMode::CursorMode(a) => (0x0003_3001, a as *const _ as i32),
+            InputMode::StickKeys => (0x0003_3002, 1),
+            InputMode::StickMouseButtons => (0x0003_3003, 1),
+            InputMode::NotDefined => (-1, -1),
         }
     }
 }
@@ -334,16 +354,16 @@ impl InputMode {
 impl From<i32> for InputMode {
     fn from(value: i32) -> InputMode {
         match value {
-            0x0003_3001  => InputMode::CursorMode(InputState::Normal),
-            0x0003_3002  => InputMode::StickKeys,
-            0x0003_3003  => InputMode::StickMouseButtons,
-            _           => InputMode::NotDefined,
+            0x0003_3001 => InputMode::CursorMode(InputState::Normal),
+            0x0003_3002 => InputMode::StickKeys,
+            0x0003_3003 => InputMode::StickMouseButtons,
+            _ => InputMode::NotDefined,
         }
     }
 }
 
 pub enum InputState {
     Normal = 0x0003_4001,
-    Hidden =  0x0003_4002,
+    Hidden = 0x0003_4002,
     Disable = 0x0003_4003,
 }

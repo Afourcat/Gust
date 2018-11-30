@@ -1,9 +1,9 @@
-extern crate gust;
 extern crate glfw;
+extern crate gust;
 
-use std::rc::Rc;
-use std::error::Error;
 use gust::prelude::*;
+use std::error::Error;
+use std::rc::Rc;
 
 fn main() -> Result<(), Box<Error>> {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<Error>> {
     window.set_clear_color(Color::new(0.45, 0.0, 1.0));
     window.enable_cursor();
     window.poll(None);
-    
+
     while window.is_open() {
         window.poll_events();
         leave.rotate(1.0);
@@ -46,13 +46,13 @@ fn event_process(event: Event, window: &mut Window) {
     match event.1 {
         Events::Key(Key::Escape, _, _, _) => {
             window.close();
-        },
+        }
         Events::MouseButton(_, _, _) => {
             println!("Mouse button !");
-        },
+        }
         Events::CursorPos(x, y) => {
             println!("x: {}, y: {}", x, y);
-        },
-        _ => { println!("Another event !") }
+        }
+        _ => println!("Another event !"),
     }
 }

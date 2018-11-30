@@ -2,16 +2,15 @@
 //! Importing, Loading, Pushing into OpenGl
 //! I'm using image crate that is really useful
 
-
-use image::{DynamicImage,ImageBuffer};
-use image;
+use color::Color;
 use gl;
 use gl::types::*;
-use std::os::raw::c_void;
-use ::Vector;
+use image;
+use image::{DynamicImage, ImageBuffer};
 use std::error::Error;
-use color::Color;
+use std::os::raw::c_void;
 use std::path::Path;
+use Vector;
 
 /// # Texture structure
 /// A texture is an id inside openGL that can contain a array of byte
@@ -31,22 +30,23 @@ pub struct Texture {
     pub id: u32,
     width: u32,
     height: u32,
-    rgb_mode: RgbMode
+    rgb_mode: RgbMode,
 }
 
 impl Texture {
-
-//--------------------CONSTRUCTOR---------------------//
+    //--------------------CONSTRUCTOR---------------------//
 
     /// Create an empty texture
     pub fn new() -> Texture {
         let mut id = 0;
-        unsafe { gl::GenTextures(1, &mut id); };
+        unsafe {
+            gl::GenTextures(1, &mut id);
+        };
         Texture {
             id,
             width: 0,
             height: 0,
-            rgb_mode: RgbMode::RGBA
+            rgb_mode: RgbMode::RGBA,
         }
     }
 
@@ -57,7 +57,7 @@ impl Texture {
             id: Self::create(data, mode.as_gl(), width as i32, height as i32),
             width: width as u32,
             height: height as u32,
-            rgb_mode: mode
+            rgb_mode: mode,
         }
     }
 
@@ -65,10 +65,14 @@ impl Texture {
     pub fn from_slice(data: &mut [u8], mode: RgbMode, width: u32, height: u32) -> Texture {
         Texture {
             id: Self::create(
-                data.as_mut_ptr() as *mut c_void, mode.as_gl(), width as i32, height as i32),
+                data.as_mut_ptr() as *mut c_void,
+                mode.as_gl(),
+                width as i32,
+                height as i32,
+            ),
             width: width as u32,
             height: height as u32,
-            rgb_mode: mode
+            rgb_mode: mode,
         }
     }
 
@@ -95,7 +99,7 @@ impl Texture {
     }
 
     /// Create a texture from an image
-    pub fn from_image(img: DynamicImage) -> Result<Texture,TextureError> {
+    pub fn from_image(img: DynamicImage) -> Result<Texture, TextureError> {
         let id;
         let mut size = (0, 0);
         let mode;
@@ -108,10 +112,10 @@ impl Texture {
                     &data.into_raw()[0] as *const u8 as *mut std::ffi::c_void,
                     gl::RGBA,
                     size.0 as i32,
-                    size.1 as i32
+                    size.1 as i32,
                 );
                 mode = RgbMode::RGBA;
-            },
+            }
             DynamicImage::ImageRgb8(data) => {
                 size.0 = data.width();
                 size.1 = data.height();
@@ -119,26 +123,25 @@ impl Texture {
                     &data.into_raw()[0] as *const u8 as *mut std::ffi::c_void,
                     gl::RGB,
                     size.0 as i32,
-                    size.1 as i32
+                    size.1 as i32,
                 );
                 mode = RgbMode::RGB;
-            },
+            }
             _ => {
                 return Err(TextureError::ImageLoading);
-            },
+            }
         }
 
-        Ok(
-        Texture {
+        Ok(Texture {
             id,
             width: size.0,
             height: size.1,
-            rgb_mode: mode
+            rgb_mode: mode,
         })
     }
 
     /// Create new texture from file path
-    pub fn from_path<P: AsRef<Path>>(path_to_file: P) -> Result<Texture,TextureError> {
+    pub fn from_path<P: AsRef<Path>>(path_to_file: P) -> Result<Texture, TextureError> {
         if let Ok(img) = image::open(path_to_file) {
             Texture::from_image(img)
         } else {
@@ -146,50 +149,55 @@ impl Texture {
         }
     }
 
-    pub fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(),Box<Error>> {
+    pub fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), Box<Error>> {
         let data = self.get_data();
 
         match self.rgb_mode {
             RgbMode::RGBA => {
-                let image: Option<image::RgbaImage>
-                    = ImageBuffer::from_vec(self.width, self.height, data);
+                let image: Option<image::RgbaImage> =
+                    ImageBuffer::from_vec(self.width, self.height, data);
 
                 if let Some(img) = image {
                     img.save(path)?;
                 } else {
                     return Err(Box::new(TextureError::WriteFile));
                 }
-            },
+            }
             RgbMode::RGB => {
-                let image: Option<image::RgbImage>
-                    = ImageBuffer::from_vec(self.width, self.height, data);
+                let image: Option<image::RgbImage> =
+                    ImageBuffer::from_vec(self.width, self.height, data);
 
                 if let Some(img) = image {
                     img.save(path)?;
                 } else {
                     return Err(Box::new(TextureError::WriteFile));
                 }
-            },
-            _ => { unimplemented!() }
+            }
+            _ => unimplemented!(),
         }
         Ok(())
     }
 
     /// Create a texture with a
-    fn create
-    (data: *mut c_void, rgb_mode: GLenum, width: i32, height: i32) -> u32 {
+    fn create(data: *mut c_void, rgb_mode: GLenum, width: i32, height: i32) -> u32 {
         let mut id = 0;
         unsafe {
             gl::GenTextures(1, &mut id);
             gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexStorage2D(   // Create the storage
+            gl::TexStorage2D(
+                // Create the storage
                 gl::TEXTURE_2D,
                 1,
-                if rgb_mode == gl::RGBA { gl::RGBA8 } else { gl::RGB8 },
+                if rgb_mode == gl::RGBA {
+                    gl::RGBA8
+                } else {
+                    gl::RGB8
+                },
                 width,
-                height
+                height,
             );
-            gl::TexSubImage2D(  // Put pixel inside the storage
+            gl::TexSubImage2D(
+                // Put pixel inside the storage
                 gl::TEXTURE_2D,
                 0,
                 0,
@@ -198,7 +206,7 @@ impl Texture {
                 height,
                 rgb_mode,
                 gl::UNSIGNED_BYTE,
-                data
+                data,
             );
             Texture::default_param();
             gl::GenerateMipmap(gl::TEXTURE_2D);
@@ -214,11 +222,11 @@ impl Texture {
         data: &[u8],
         sizes: Vector<u32>,
         pos: T,
-        rgb_mode: U
+        rgb_mode: U,
     ) -> Result<(), TextureError>
     where
         T: Into<Option<Vector<u32>>>,
-        U: Into<Option<RgbMode>>
+        U: Into<Option<RgbMode>>,
     {
         let pos = pos.into().unwrap_or_else(|| Vector::new(0, 0));
         let rgb_mode = rgb_mode.into().unwrap_or(self.rgb_mode);
@@ -227,7 +235,11 @@ impl Texture {
             Ok(())
         } else if pos.x + sizes.x > self.width || pos.y + sizes.y > self.height {
             Err(TextureError::UpdateSize(
-                self.width, pos.x + sizes.x, self.height, pos.y + sizes.y))
+                self.width,
+                pos.x + sizes.x,
+                self.height,
+                pos.y + sizes.y,
+            ))
         } else {
             // Bind the texture then give it to opengl
             unsafe {
@@ -241,8 +253,7 @@ impl Texture {
                     sizes.y as i32,
                     rgb_mode.as_gl(),
                     gl::UNSIGNED_BYTE,
-                    data as *const _ as *const c_void
-                    //mem::transmute(data.as_ptr())
+                    data as *const _ as *const c_void, //mem::transmute(data.as_ptr())
                 );
                 gl::BindTexture(gl::TEXTURE_2D, 0);
                 gl::Flush();
@@ -253,15 +264,9 @@ impl Texture {
 
     pub fn get_rawsize(&self) -> usize {
         match self.rgb_mode {
-            RgbMode::RGBA => {
-                (self.height * self.width * 4) as usize
-            },
-            RgbMode::RGB => {
-                (self.height * self.width * 3) as usize
-            },
-            RgbMode::RED => {
-                (self.height * self.width) as usize
-            }
+            RgbMode::RGBA => (self.height * self.width * 4) as usize,
+            RgbMode::RGB => (self.height * self.width * 3) as usize,
+            RgbMode::RED => (self.height * self.width) as usize,
         }
     }
 
@@ -281,17 +286,20 @@ impl Texture {
                     0,
                     self.rgb_mode.as_gl(),
                     gl::UNSIGNED_BYTE,
-                    data.as_mut_ptr() as *mut c_void
-                    );
+                    data.as_mut_ptr() as *mut c_void,
+                );
                 gl::BindTexture(gl::TEXTURE_2D, 0);
             };
-           data
+            data
         }
     }
 
     /// Nicely working efficiently legacy fb deleted
-    pub fn update_from_texture
-    (&mut self, texture: &Texture, pos: Vector<u32>) -> Result<(),TextureError>{
+    pub fn update_from_texture(
+        &mut self,
+        texture: &Texture,
+        pos: Vector<u32>,
+    ) -> Result<(), TextureError> {
         let size = texture.get_rawsize();
         let mut data: Vec<u8> = Vec::with_capacity(size);
 
@@ -306,7 +314,7 @@ impl Texture {
                 0,
                 self.rgb_mode.as_gl(),
                 gl::UNSIGNED_BYTE,
-                data.as_mut_ptr() as *mut c_void
+                data.as_mut_ptr() as *mut c_void,
             );
             gl::BindTexture(gl::TEXTURE_2D, 0);
         }
@@ -318,7 +326,7 @@ impl Texture {
     }
 
     /// Update the data of the texture
-    pub fn update<T>(&mut self, data: &[u8], mode: T) -> Result<(),TextureError>
+    pub fn update<T>(&mut self, data: &[u8], mode: T) -> Result<(), TextureError>
     where
         T: Into<Option<RgbMode>>,
     {
@@ -330,17 +338,15 @@ impl Texture {
         Ok(())
     }
 
-//--------------------------UTILS----------------------------//
+    //--------------------------UTILS----------------------------//
 
     /// Repeat mode texture wrap
     pub fn repeat_mode(&self) {
         self.active(0);
         unsafe {
-            gl::TexParameteri
-            (gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
 
-            gl::TexParameteri
-            (gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
         }
         self.unbind();
     }
@@ -349,10 +355,8 @@ impl Texture {
     pub fn linear_mode(&self) {
         self.active(0);
         unsafe {
-            gl::TexParameteri
-                (gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
-            gl::TexParameteri
-                (gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
         }
         self.unbind();
     }
@@ -360,7 +364,9 @@ impl Texture {
     #[inline]
     /// Unbind the texture
     pub fn unbind(&self) {
-        unsafe { gl::BindTexture(gl::TEXTURE_2D, 0); }
+        unsafe {
+            gl::BindTexture(gl::TEXTURE_2D, 0);
+        }
     }
 
     #[inline]
@@ -373,14 +379,10 @@ impl Texture {
     }
 
     unsafe fn default_param() {
-        gl::TexParameteri
-            (gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-        gl::TexParameteri
-            (gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-        gl::TexParameteri
-            (gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
-        gl::TexParameteri
-            (gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
     }
 
     //-------------------------GETTER-----------------------//
@@ -419,7 +421,7 @@ impl Default for Texture {
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                data.as_ptr() as *const c_void
+                data.as_ptr() as *const c_void,
             );
         };
 
@@ -427,25 +429,25 @@ impl Default for Texture {
             id,
             width: 1,
             height: 1,
-            rgb_mode: RgbMode::RGBA
+            rgb_mode: RgbMode::RGBA,
         }
     }
 }
 
 /// Enum to wrap gl RGB modes
-#[derive(PartialEq,Clone,Copy,Debug,Eq)]
+#[derive(PartialEq, Clone, Copy, Debug, Eq)]
 pub enum RgbMode {
     RGBA,
     RGB,
-    RED
+    RED,
 }
 
 impl RgbMode {
     pub fn as_gl(self) -> GLenum {
         match self {
-            RgbMode::RGBA => { gl::RGBA },
-            RgbMode::RGB => { gl::RGB },
-            RgbMode::RED => { gl::RED }
+            RgbMode::RGBA => gl::RGBA,
+            RgbMode::RGB => gl::RGB,
+            RgbMode::RED => gl::RED,
         }
     }
 }
@@ -456,7 +458,7 @@ pub enum TextureError {
     UpdateMode(RgbMode, RgbMode),
     FileError,
     ImageLoading,
-    WriteFile
+    WriteFile,
 }
 
 use std::fmt;
@@ -464,24 +466,22 @@ use std::fmt;
 impl fmt::Display for TextureError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            TextureError::UpdateSize(x, new_x, y, new_y) => {
-                write!(f, "
+            TextureError::UpdateSize(x, new_x, y, new_y) => write!(
+                f,
+                "
 Error while updating texture: Sizes are not
 okay with this texture. x: {}
-< new_x: {}  | y: {} new_y: {}", x, new_x, y, new_y)
-            },
-            TextureError::FileError => {
-                write!(f, "Error while openning given file.")
-            },
-            TextureError::ImageLoading => {
-                write!(f, "Error While loading image.")
-            },
-            TextureError::WriteFile => {
-                write!(f, "Error while writing texture to file.")
-            },
-            TextureError::UpdateMode(a, b) => {
-                write!(f, "You were trying to update a {:?} with a {:?} Texture", a, b)
-            }
+< new_x: {}  | y: {} new_y: {}",
+                x, new_x, y, new_y
+            ),
+            TextureError::FileError => write!(f, "Error while openning given file."),
+            TextureError::ImageLoading => write!(f, "Error While loading image."),
+            TextureError::WriteFile => write!(f, "Error while writing texture to file."),
+            TextureError::UpdateMode(a, b) => write!(
+                f,
+                "You were trying to update a {:?} with a {:?} Texture",
+                a, b
+            ),
         }
     }
 }
@@ -505,12 +505,12 @@ impl Drop for Texture {
 mod test {
     extern crate test;
 
-    use super::Vector;
-    use texture::Texture;
     use self::test::Bencher;
+    use super::Vector;
     use color::Color;
-    use window::Window;
     use texture::RgbMode;
+    use texture::Texture;
+    use window::Window;
 
     #[bench]
     fn from_color(b: &mut Bencher) {
@@ -540,11 +540,14 @@ mod test {
         let text_guest = Texture::from_color(Color::new(0.0, 0.0, 1.0), Vector::new(10, 10));
 
         b.iter(|| {
-            text_host.update_block(
-                text_guest.get_data().as_slice(),
-                Vector::new(10, 10),
-                Vector::new(10, 10),
-                None).unwrap();
+            text_host
+                .update_block(
+                    text_guest.get_data().as_slice(),
+                    Vector::new(10, 10),
+                    Vector::new(10, 10),
+                    None,
+                )
+                .unwrap();
         });
     }
 }

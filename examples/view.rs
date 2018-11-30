@@ -1,11 +1,10 @@
-extern crate gust;
 extern crate glfw;
+extern crate gust;
 
-use std::rc::Rc;
 use gust::prelude::*;
+use std::rc::Rc;
 
-fn main()
-{
+fn main() {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");
     let tex_leave = Rc::new(Texture::from_path("examples/texture/Z.png").unwrap());
     let tex_dirt = Rc::new(Texture::from_path("examples/texture/Dirt.png").unwrap());
@@ -18,7 +17,9 @@ fn main()
     window.enable_cursor();
     window.poll(None);
     leave.set_scale(Vector::new(0.5, 0.5));
-    leave.set_origin_to_center().unwrap_or_else(|e| println!("{}", e));
+    leave
+        .set_origin_to_center()
+        .unwrap_or_else(|e| println!("{}", e));
     while window.is_open() {
         window.poll_events();
         leave.rotate(1.0);
@@ -41,18 +42,18 @@ fn event_process(event: Event, window: &mut Window) {
     match event.1 {
         Events::Key(Key::Escape, _, _, _) => {
             window.close();
-        },
+        }
         Events::Key(Key::Up, _, _, _) => {
             window.view_mut().zoom(2.0);
-        },
+        }
         Events::Key(Key::Down, _, _, _) => {
             window.view_mut().zoom(0.5);
-        },
+        }
         Events::CursorPos(x, y) => {
             let center = Vector::new(x as f32, y as f32);
             window.view_mut().set_center(center);
             window.set_mouse_pos(center)
-        },
-        _ => { println!("Another event !") }
+        }
+        _ => println!("Another event !"),
     }
 }

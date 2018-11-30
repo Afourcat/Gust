@@ -4,6 +4,13 @@
 //  text.rs
 //  module:
 //! text render utils
+use color::Color;
+use draw::{BlendMode, Context, Drawable, DrawableMut, Drawer, IDENTITY};
+use font::{CharInfo, Font};
+use nalgebra::Scalar;
+use shader;
+use std::cell::RefCell;
+use std::{error::Error, rc::Rc};
 /// # How to use
 /// ```no_run
 /// use gust::text::Text;
@@ -25,19 +32,11 @@
 /// }
 /// ```
 /// It's made from the Text system of the C++ library SFML.
-
 use texture::Texture;
-use font::{Font,CharInfo};
-use draw::{Drawable, DrawableMut, Drawer, Context, BlendMode, IDENTITY};
 use transform::*;
-use shader;
-use ::{Point,Vector};
-use nalgebra::Scalar;
-use std::{error::Error, rc::Rc};
-use std::cell::RefCell;
-use vertex_buffer::VertexBuffer;
 use vertex::Vertex;
-use color::Color;
+use vertex_buffer::VertexBuffer;
+use {Point, Vector};
 
 extern crate freetype as ft;
 
@@ -52,13 +51,12 @@ pub struct Text {
     actual_size: u32,
     vertex_buffer: VertexBuffer,
     need_update: bool,
-    pos: Vector<f32>
+    pos: Vector<f32>,
 }
 
 impl Text {
-
     /// Dump the font texture to a file
-    pub fn dump_texture(&mut self) -> Result<(), Box<Error>>{
+    pub fn dump_texture(&mut self) -> Result<(), Box<Error>> {
         // Get the texture
         let font_ref = self.font.try_borrow().unwrap();
         let texture = font_ref.texture(self.actual_size).unwrap();
@@ -68,14 +66,14 @@ impl Text {
     }
 
     /// Create a new text from a font previously created
-	pub fn new(font: &Rc<RefCell<Font>>) -> Text {
+    pub fn new(font: &Rc<RefCell<Font>>) -> Text {
         Text {
             font: Rc::clone(font),
             content: String::new(),
             actual_size: 14,
             vertex_buffer: VertexBuffer::default(),
             need_update: true,
-            pos: Vector::new(0.0, 0.0)
+            pos: Vector::new(0.0, 0.0),
         }
     }
 
@@ -87,7 +85,7 @@ impl Text {
             actual_size: 14,
             vertex_buffer: VertexBuffer::default(),
             need_update: true,
-            pos: Vector::new(0.0, 0.0)
+            pos: Vector::new(0.0, 0.0),
         }
     }
 
@@ -127,14 +125,14 @@ impl Text {
 impl Transformable for Text {
     fn contain<T>(&self, _point: Point<T>) -> bool
     where
-        T: Scalar + Into<f32>
+        T: Scalar + Into<f32>,
     {
         true
     }
 
     fn set_origin<T>(&mut self, _origin: Vector<T>)
     where
-        T: Scalar + Into<f32>
+        T: Scalar + Into<f32>,
     {
         unimplemented!();
     }
@@ -147,14 +145,14 @@ impl Transformable for Text {
 impl Scalable for Text {
     fn scale<T>(&mut self, _factor: Vector<T>)
     where
-        T: Scalar + Into<f32>
+        T: Scalar + Into<f32>,
     {
         unimplemented!();
     }
 
     fn set_scale<T>(&mut self, _vec: Vector<T>)
     where
-        T: Scalar + Into<f32>
+        T: Scalar + Into<f32>,
     {
         unimplemented!();
     }
@@ -167,14 +165,14 @@ impl Scalable for Text {
 impl Rotable for Text {
     fn rotate<T>(&mut self, _angle: T)
     where
-        T: Scalar + Into<f32>
+        T: Scalar + Into<f32>,
     {
         unimplemented!();
     }
 
     fn set_rotation<T>(&mut self, _angle: T)
     where
-        T: Scalar + Into<f32>
+        T: Scalar + Into<f32>,
     {
         unimplemented!();
     }
@@ -187,7 +185,7 @@ impl Rotable for Text {
 impl Movable for Text {
     fn translate<T>(&mut self, offset: Vector<T>)
     where
-        T: Scalar + Into<f32>
+        T: Scalar + Into<f32>,
     {
         self.pos.x += offset.x.into();
         self.pos.y += offset.y.into();
@@ -196,7 +194,7 @@ impl Movable for Text {
 
     fn set_position<T>(&mut self, pos: Vector<T>)
     where
-        T: Scalar + Into<f32>
+        T: Scalar + Into<f32>,
     {
         self.pos.x = pos.x.into();
         self.pos.y = pos.y.into();
@@ -206,7 +204,6 @@ impl Movable for Text {
     fn get_position(&self) -> Vector<f32> {
         self.pos
     }
-
 }
 
 impl DrawableMut for Text {
@@ -222,19 +219,18 @@ impl DrawableMut for Text {
 }
 
 impl Drawable for Text {
-
     fn update(&mut self) {
         // Si l'update n'est pas necessaire
-        if !self.need_update { return }
+        if !self.need_update {
+            return;
+        }
 
         // Relative position
         let mut pos = self.pos;
         let mut offset = 0.0;
 
         // Get reference to the font that is a reference counter
-        let mut font_ref = self.font
-                        .try_borrow_mut()
-                        .unwrap();
+        let mut font_ref = self.font.try_borrow_mut().unwrap();
 
         // Get the whitespace x size
         let whitespace;
@@ -256,24 +252,23 @@ impl Drawable for Text {
 
         // Iter of character of the content to create a geometry for each one of them
         for charr in self.content.as_str().chars() {
-
             // If the char is a special one
             match charr {
-                '\n'    => {
+                '\n' => {
                     pos.y += height;
                     offset = 0.0;
                     continue;
-                },
-                '\r'    => continue,
-                '\t'    => {
+                }
+                '\r' => continue,
+                '\t' => {
                     offset += 4.0 * whitespace;
                     continue;
-                },
-                ' '     => {
+                }
+                ' ' => {
                     offset += whitespace;
                     continue;
-                },
-                _       => {}
+                }
+                _ => {}
             };
 
             // Get the glyph from the the font
@@ -297,7 +292,9 @@ impl Drawable for Text {
 
     fn draw<T: Drawer>(&self, target: &mut T) {
         // If there is no text don't draw
-        if self.content.is_empty() { return }
+        if self.content.is_empty() {
+            return;
+        }
 
         // Get the texture
         let font_ref = self.font.try_borrow().unwrap();
@@ -309,9 +306,9 @@ impl Drawable for Text {
             &*shader::DEFAULT_SHADER,
             vec![
                 ("transform".to_string(), &*IDENTITY),
-                ("projection".to_string(), target.projection())
+                ("projection".to_string(), target.projection()),
             ],
-            BlendMode::Alpha
+            BlendMode::Alpha,
         );
 
         // Draw the vertex_buffer with context
@@ -324,28 +321,59 @@ impl Drawable for Text {
 }
 
 /// Get a vertice from a character information, padding and offset
-fn get_vertice_letter(char_info: &CharInfo, pos: Vector<f32>, padding: f32, offset: f32) -> [Vertex; 6] {
+fn get_vertice_letter(
+    char_info: &CharInfo,
+    pos: Vector<f32>,
+    padding: f32,
+    offset: f32,
+) -> [Vertex; 6] {
     let x = pos.x + offset;
     let y = pos.y;
 
     // Set geometry for 1 character
-    let left   = char_info.rect.left - padding;
-    let top    = char_info.rect.top - padding;
-    let right  = char_info.rect.left + char_info.rect.width + padding;
-    let bottom = char_info.rect.top  + char_info.rect.height + padding;
+    let left = char_info.rect.left - padding;
+    let top = char_info.rect.top - padding;
+    let right = char_info.rect.left + char_info.rect.width + padding;
+    let bottom = char_info.rect.top + char_info.rect.height + padding;
 
     // Set texture coord for each character
     let u1 = ((char_info.tex_coord.left - padding as u32) as f32) / 128.0;
     let v1 = ((char_info.tex_coord.top - padding as u32) as f32) / 128.0;
-    let u2 = ((char_info.tex_coord.left + char_info.tex_coord.width + padding as u32) as f32) / 128.0;
-    let v2 = ((char_info.tex_coord.top  + char_info.tex_coord.height + padding as u32) as f32) / 128.0;
+    let u2 =
+        ((char_info.tex_coord.left + char_info.tex_coord.width + padding as u32) as f32) / 128.0;
+    let v2 =
+        ((char_info.tex_coord.top + char_info.tex_coord.height + padding as u32) as f32) / 128.0;
 
     [
-        Vertex::new(Vector::new(x + left,   y + top),       Vector::new(u1, v1), Color::white()),
-        Vertex::new(Vector::new(x + left,   y + bottom),    Vector::new(u1, v2), Color::white()),
-        Vertex::new(Vector::new(x + right,  y + bottom),    Vector::new(u2, v2), Color::white()),
-        Vertex::new(Vector::new(x + left,   y + top),       Vector::new(u1, v1), Color::white()),
-        Vertex::new(Vector::new(x + right,  y + bottom),    Vector::new(u2, v2), Color::white()),
-        Vertex::new(Vector::new(x + right,  y + top),       Vector::new(u2, v1), Color::white()),
+        Vertex::new(
+            Vector::new(x + left, y + top),
+            Vector::new(u1, v1),
+            Color::white(),
+        ),
+        Vertex::new(
+            Vector::new(x + left, y + bottom),
+            Vector::new(u1, v2),
+            Color::white(),
+        ),
+        Vertex::new(
+            Vector::new(x + right, y + bottom),
+            Vector::new(u2, v2),
+            Color::white(),
+        ),
+        Vertex::new(
+            Vector::new(x + left, y + top),
+            Vector::new(u1, v1),
+            Color::white(),
+        ),
+        Vertex::new(
+            Vector::new(x + right, y + bottom),
+            Vector::new(u2, v2),
+            Color::white(),
+        ),
+        Vertex::new(
+            Vector::new(x + right, y + top),
+            Vector::new(u2, v1),
+            Color::white(),
+        ),
     ]
 }

@@ -1,13 +1,12 @@
-extern crate gust;
 extern crate glfw;
+extern crate gust;
 
-use std::rc::Rc;
-use std::error::Error;
-use std::cell::RefCell;
 use gust::prelude::*;
+use std::cell::RefCell;
+use std::error::Error;
+use std::rc::Rc;
 
 fn window1() -> Result<(), Box<Error>> {
-
     let mut window = Window::new(600, 600, "Hello1");
     let tex_leave = Rc::new(Texture::from_path("examples/texture/Z.png").unwrap());
     let tex_dirt = Rc::new(Texture::from_path("examples/texture/Dirt.png").unwrap());
@@ -44,9 +43,9 @@ fn window1() -> Result<(), Box<Error>> {
 
 fn window2() -> Result<(), Box<Error>> {
     let mut window = Window::new(500, 500, "Hello2");
-    let font = Rc::new(
-        RefCell::new(Font::from_path("examples/font/terminus.ttf").unwrap())
-    );
+    let font = Rc::new(RefCell::new(
+        Font::from_path("examples/font/terminus.ttf").unwrap(),
+    ));
     let mut text = Text::from_str(&font, "I've been looking forward to this.");
     text.set_position(Vector::new(5.0, 40.0));
     let event_handler = EventHandler::new(&window);
@@ -92,13 +91,13 @@ fn event_process(event: Event, window: &mut Window) {
     match event.1 {
         Events::Key(Key::Escape, _, _, _) => {
             window.close();
-        },
+        }
         Events::MouseButton(_, _, _) => {
             println!("Mouse button !");
-        },
+        }
         Events::CursorPos(x, y) => {
             println!("x: {}, y: {}", x, y);
-        },
-        _ => { println!("Another event !") }
+        }
+        _ => println!("Another event !"),
     }
 }

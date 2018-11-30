@@ -5,8 +5,8 @@
 //  module:
 //! gl error system
 
-use std::error::Error;
 use gl;
+use std::error::Error;
 
 #[derive(Debug)]
 pub enum GlError {
@@ -15,21 +15,21 @@ pub enum GlError {
     InvalidValue,
     InvalidOperation,
     InvalidFramebufferOperation,
-    OutOfMemory
+    OutOfMemory,
 }
 
 impl GlError {
     pub fn new() -> Result<(), GlError> {
         unsafe {
-        match gl::GetError() {
-            gl::NO_ERROR => Ok(()),
-            gl::INVALID_ENUM => Err(GlError::InvalidEnum),
-            gl::INVALID_VALUE => Err(GlError::InvalidValue),
-            gl::INVALID_OPERATION => Err(GlError::InvalidOperation),
-            gl::INVALID_FRAMEBUFFER_OPERATION => Err(GlError::InvalidFramebufferOperation),
-            gl::OUT_OF_MEMORY => Err(GlError::OutOfMemory),
-            _ => Ok(())
-        }
+            match gl::GetError() {
+                gl::NO_ERROR => Ok(()),
+                gl::INVALID_ENUM => Err(GlError::InvalidEnum),
+                gl::INVALID_VALUE => Err(GlError::InvalidValue),
+                gl::INVALID_OPERATION => Err(GlError::InvalidOperation),
+                gl::INVALID_FRAMEBUFFER_OPERATION => Err(GlError::InvalidFramebufferOperation),
+                gl::OUT_OF_MEMORY => Err(GlError::OutOfMemory),
+                _ => Ok(()),
+            }
         }
     }
 }
@@ -45,14 +45,12 @@ use std::fmt;
 impl fmt::Display for GlError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            GlError::NoError => { write!(f, "No Error") },
-            GlError::InvalidEnum => { write!(f, "Bad enum argument") },
-            GlError::InvalidValue => { write!(f, "Bad value argument") },
-            GlError::InvalidOperation => { write!(f, "Bad operation") },
-            GlError::InvalidFramebufferOperation => { write!(f, "Bad framebuffer operation") },
-            GlError::OutOfMemory => { write!(f, "No more gl memory") }
+            GlError::NoError => write!(f, "No Error"),
+            GlError::InvalidEnum => write!(f, "Bad enum argument"),
+            GlError::InvalidValue => write!(f, "Bad value argument"),
+            GlError::InvalidOperation => write!(f, "Bad operation"),
+            GlError::InvalidFramebufferOperation => write!(f, "Bad framebuffer operation"),
+            GlError::OutOfMemory => write!(f, "No more gl memory"),
         }
     }
 }
-
-

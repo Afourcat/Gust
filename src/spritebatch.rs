@@ -4,24 +4,24 @@
 //  module:
 //! spritebatch test system
 
-use texture::Texture;
-use rect::Rect;
-use draw::*;
-use shader::BATCH_SHADER;
 use super::Vector;
-use vertex::Vertex;
-use nalgebra::{Matrix4, Vector3};
+use color::Color;
+use draw::*;
 use gl;
 use gl::types::*;
+use nalgebra::{Matrix4, Vector3};
+use nalgebra::{Scalar, Vector4};
+use rect::Rect;
+use shader::BATCH_SHADER;
 use std::mem;
 use std::ptr;
 use std::rc::Rc;
-use color::Color;
-use nalgebra::{Vector4, Scalar};
+use texture::Texture;
 use transform::*;
+use vertex::Vertex;
 
 pub enum BatchError {
-    BadTextureRect
+    BadTextureRect,
 }
 
 #[derive(Debug, Clone)]
@@ -32,11 +32,10 @@ pub struct SpriteData {
     model: Matrix4<f32>,
     need_update: bool,
     text_coord: [Vector<f32>; 2],
-    color: Option<Color>
+    color: Option<Color>,
 }
 
 impl SpriteData {
-
     /// Create a new SpriteData needed by SpriteBatch
     pub fn new(pos: Vector<f32>) -> Self {
         SpriteData {
@@ -55,24 +54,25 @@ impl SpriteData {
         self.text_coord = [
             Vector::new(
                 text_rect.left as f32 / texture_size as f32,
-                text_rect.top as f32 / texture_size as f32
+                text_rect.top as f32 / texture_size as f32,
             ),
             Vector::new(
                 text_rect.width as f32 / texture_size as f32,
-                text_rect.height as f32 / texture_size as f32
+                text_rect.height as f32 / texture_size as f32,
             ),
         ];
     }
 
     /// Get texture rect.
     pub fn texture_rect<T>(&self, texture_size: T) -> Rect<u32>
-    where T: Into<f32> + Copy
+    where
+        T: Into<f32> + Copy,
     {
         Rect::new(
             (self.text_coord[0].x * texture_size.into()) as u32,
             (self.text_coord[0].y * texture_size.into()) as u32,
             (self.text_coord[1].x * texture_size.into()) as u32,
-            (self.text_coord[1].y * texture_size.into()) as u32
+            (self.text_coord[1].y * texture_size.into()) as u32,
         )
     }
 }
@@ -85,20 +85,22 @@ impl Default for SpriteData {
             model: Matrix4::identity(),
             need_update: true,
             text_coord: [Vector::new(0.0, 0.0), Vector::new(1.0, 1.0)],
-            color: None
+            color: None,
         }
     }
 }
 
 impl Transformable for SpriteData {
     fn contain<T>(&self, vec: ::Point<T>) -> bool
-    where T: Scalar + Into<f32>
+    where
+        T: Scalar + Into<f32>,
     {
         true
     }
 
     fn set_origin<T>(&mut self, origin: Vector<T>)
-    where T: Scalar + Into<f32>
+    where
+        T: Scalar + Into<f32>,
     {
         unimplemented!("No origin for now in SpriteData.");
     }
@@ -110,7 +112,8 @@ impl Transformable for SpriteData {
 
 impl Scalable for SpriteData {
     fn set_scale<T>(&mut self, vec: Vector<T>)
-    where T: Scalar + Into<f32>
+    where
+        T: Scalar + Into<f32>,
     {
         unimplemented!("For instance no scale to SpriteData.");
     }
@@ -120,7 +123,8 @@ impl Scalable for SpriteData {
     }
 
     fn scale<T>(&mut self, factor: Vector<T>)
-    where T: Scalar + Into<f32>
+    where
+        T: Scalar + Into<f32>,
     {
         unimplemented!("For instance no scale to SpriteData.");
     }
@@ -128,14 +132,16 @@ impl Scalable for SpriteData {
 
 impl Rotable for SpriteData {
     fn rotate<T>(&mut self, angle: T)
-    where T: Into<f32> + Scalar
+    where
+        T: Into<f32> + Scalar,
     {
         self.rotation += angle.into();
         self.need_update = true;
     }
 
     fn set_rotation<T>(&mut self, angle: T)
-    where T: Into<f32> + Scalar
+    where
+        T: Into<f32> + Scalar,
     {
         self.rotation = angle.into();
         self.need_update = true;
@@ -148,7 +154,8 @@ impl Rotable for SpriteData {
 
 impl Movable for SpriteData {
     fn translate<T>(&mut self, vec: Vector<T>)
-    where T: Into<f32> + Scalar
+    where
+        T: Into<f32> + Scalar,
     {
         self.pos.x += vec.x.into();
         self.pos.y += vec.y.into();
@@ -160,13 +167,13 @@ impl Movable for SpriteData {
     }
 
     fn set_position<T>(&mut self, vec: Vector<T>)
-    where T: Into<f32> + Scalar
+    where
+        T: Into<f32> + Scalar,
     {
         self.pos.x = vec.x.into();
         self.pos.y = vec.y.into();
         self.need_update = true;
     }
-
 }
 
 #[derive(Clone, Debug)]
@@ -195,12 +202,11 @@ pub struct SpriteBatch {
     glob_rotation: f32,
     len: usize,
     need_update: bool,
-    model: Matrix4<f32>
+    model: Matrix4<f32>,
 }
 
 // For maximum efficiency we will not use the previously implemented abstraction of VertexBuffer
 impl SpriteBatch {
-
     /// Create a new empty spriteBatch
     pub fn new() -> SpriteBatch {
         SpriteBatch::default()
@@ -210,17 +216,34 @@ impl SpriteBatch {
         {
             let vertice = &mut self.vertice;
 
-            let (w, h) = self.texture
-                            .as_ref()
-                            .map_or((0.0, 0.0), |x| (x.width() as f32, x.height() as f32));
+            let (w, h) = self
+                .texture
+                .as_ref()
+                .map_or((0.0, 0.0), |x| (x.width() as f32, x.height() as f32));
 
             for x in slice.iter_mut() {
                 x.need_update = true;
                 vertice.extend_from_slice(&[
-                    Vertex::new(Vector::new(0.0, 0.0), Vector::new(x.text_coord[0].x, x.text_coord[0].y), x.color.unwrap_or(Color::white())),
-                    Vertex::new(Vector::new(0.0,   h), Vector::new(x.text_coord[0].x, x.text_coord[1].y), x.color.unwrap_or(Color::white())),
-                    Vertex::new(Vector::new(w,   0.0), Vector::new(x.text_coord[1].x, x.text_coord[0].y), x.color.unwrap_or(Color::white())),
-                    Vertex::new(Vector::new(w,     h), Vector::new(x.text_coord[1].x, x.text_coord[1].y), x.color.unwrap_or(Color::white()))
+                    Vertex::new(
+                        Vector::new(0.0, 0.0),
+                        Vector::new(x.text_coord[0].x, x.text_coord[0].y),
+                        x.color.unwrap_or(Color::white()),
+                    ),
+                    Vertex::new(
+                        Vector::new(0.0, h),
+                        Vector::new(x.text_coord[0].x, x.text_coord[1].y),
+                        x.color.unwrap_or(Color::white()),
+                    ),
+                    Vertex::new(
+                        Vector::new(w, 0.0),
+                        Vector::new(x.text_coord[1].x, x.text_coord[0].y),
+                        x.color.unwrap_or(Color::white()),
+                    ),
+                    Vertex::new(
+                        Vector::new(w, h),
+                        Vector::new(x.text_coord[1].x, x.text_coord[1].y),
+                        x.color.unwrap_or(Color::white()),
+                    ),
                 ]);
             }
         }
@@ -262,17 +285,33 @@ impl SpriteBatch {
 
     pub fn push_sprite(&mut self, mut sprites: SpriteData) {
         sprites.need_update = true;
-        let (w , h) = if let Some(ref texture) = self.texture {
+        let (w, h) = if let Some(ref texture) = self.texture {
             (texture.width() as f32, texture.height() as f32)
         } else {
             (0.0, 0.0)
         };
 
         self.vertice.extend_from_slice(&[
-            Vertex::new(Vector::new(0.0, 0.0), Vector::new(sprites.text_coord[0].x, sprites.text_coord[0].y), Color::white()),
-            Vertex::new(Vector::new(0.0,   h), Vector::new(sprites.text_coord[0].x, sprites.text_coord[1].y), Color::white()),
-            Vertex::new(Vector::new(w,   0.0), Vector::new(sprites.text_coord[1].x, sprites.text_coord[0].y), Color::white()),
-            Vertex::new(Vector::new(w,     h), Vector::new(sprites.text_coord[1].x, sprites.text_coord[1].y), Color::white()),
+            Vertex::new(
+                Vector::new(0.0, 0.0),
+                Vector::new(sprites.text_coord[0].x, sprites.text_coord[0].y),
+                Color::white(),
+            ),
+            Vertex::new(
+                Vector::new(0.0, h),
+                Vector::new(sprites.text_coord[0].x, sprites.text_coord[1].y),
+                Color::white(),
+            ),
+            Vertex::new(
+                Vector::new(w, 0.0),
+                Vector::new(sprites.text_coord[1].x, sprites.text_coord[0].y),
+                Color::white(),
+            ),
+            Vertex::new(
+                Vector::new(w, h),
+                Vector::new(sprites.text_coord[1].x, sprites.text_coord[1].y),
+                Color::white(),
+            ),
         ]);
         self.sprites.push(sprites);
     }
@@ -288,12 +327,12 @@ impl SpriteBatch {
         unsafe {
             gl::BindBuffer(gl::ARRAY_BUFFER, self.gl_objects.1);
 
-            if self.len != self.vertice.len() / 4{
+            if self.len != self.vertice.len() / 4 {
                 gl::BufferData(
                     gl::ARRAY_BUFFER,
                     (std::mem::size_of::<GLfloat>() * self.vertice.len() * 8) as GLsizeiptr,
                     self.vertice.as_ptr() as *const GLvoid,
-                    gl::STATIC_DRAW
+                    gl::STATIC_DRAW,
                 );
                 self.len = self.vertice.len() / 4;
             }
@@ -325,32 +364,32 @@ impl SpriteBatch {
             gl::BindVertexArray(self.gl_objects.0);
             // position (of each vertex)
             gl::VertexAttribPointer(
-                            0,
-                            2,
-                            gl::FLOAT,
-                            gl::FALSE,
-                            (8 * mem::size_of::<GLfloat>()) as GLsizei,
-                            ptr::null()
+                0,
+                2,
+                gl::FLOAT,
+                gl::FALSE,
+                (8 * mem::size_of::<GLfloat>()) as GLsizei,
+                ptr::null(),
             );
             gl::EnableVertexAttribArray(0);
             // texture coord (of each vertex)
             gl::VertexAttribPointer(
-                            1,
-                            2,
-                            gl::FLOAT,
-                            gl::FALSE,
-                            (8 * mem::size_of::<GLfloat>()) as GLsizei,
-                            (2 * mem::size_of::<GLfloat>()) as *const _,
+                1,
+                2,
+                gl::FLOAT,
+                gl::FALSE,
+                (8 * mem::size_of::<GLfloat>()) as GLsizei,
+                (2 * mem::size_of::<GLfloat>()) as *const _,
             );
             gl::EnableVertexAttribArray(1);
             // color (of each vertex)
             gl::VertexAttribPointer(
-                            2,
-                            3,
-                            gl::FLOAT,
-                            gl::FALSE,
-                            (8 * mem::size_of::<GLfloat>()) as GLsizei,
-                            (4 * mem::size_of::<GLfloat>()) as *const _,
+                2,
+                3,
+                gl::FLOAT,
+                gl::FALSE,
+                (8 * mem::size_of::<GLfloat>()) as GLsizei,
+                (4 * mem::size_of::<GLfloat>()) as *const _,
             );
             gl::EnableVertexAttribArray(2);
 
@@ -367,7 +406,7 @@ impl SpriteBatch {
                 gl::ARRAY_BUFFER,
                 (std::mem::size_of::<GLfloat>() * self.vertice.len() * 8) as GLsizeiptr,
                 self.vertice.as_ptr() as *const GLvoid,
-                gl::STATIC_DRAW
+                gl::STATIC_DRAW,
             );
             self.update_vao();
 
@@ -377,29 +416,33 @@ impl SpriteBatch {
 
     fn update_model(&mut self) {
         //translate to glob_glob_glob_position
-        self.model = Matrix4::<f32>::identity().append_translation(
-            &Vector3::new(
-                self.glob_pos.x - self.glob_origin.x, self.glob_pos.y - self.glob_origin.y, 0.0
-            )
-        );
+        self.model = Matrix4::<f32>::identity().append_translation(&Vector3::new(
+            self.glob_pos.x - self.glob_origin.x,
+            self.glob_pos.y - self.glob_origin.y,
+            0.0,
+        ));
         if self.glob_origin.x != 0.0 && self.glob_origin.y != 0.0 {
-            self.model.append_translation_mut(
-                &Vector3::new(self.glob_origin.x, self.glob_origin.y, 0.0)
-            );
-            self.model *= Matrix4::from_euler_angles(
-                    0.0, 0.0, self.glob_rotation * (3.14116 * 180.0)
-            );
-            self.model.prepend_translation_mut(
-                &Vector3::new(-self.glob_origin.x, -self.glob_origin.y, 0.0)
-            );
+            self.model.append_translation_mut(&Vector3::new(
+                self.glob_origin.x,
+                self.glob_origin.y,
+                0.0,
+            ));
+            self.model *=
+                Matrix4::from_euler_angles(0.0, 0.0, self.glob_rotation * (3.14116 * 180.0));
+            self.model.prepend_translation_mut(&Vector3::new(
+                -self.glob_origin.x,
+                -self.glob_origin.y,
+                0.0,
+            ));
         } else {
-            self.model *= Matrix4::from_euler_angles(
-                0.0, 0.0, self.glob_rotation * (3.14116 * 180.0)
-            );
+            self.model *=
+                Matrix4::from_euler_angles(0.0, 0.0, self.glob_rotation * (3.14116 * 180.0));
         }
-        self.model.append_nonuniform_scaling_mut(
-            &Vector3::new(self.glob_scale.x, self.glob_scale.y, 0.0)
-        );
+        self.model.append_nonuniform_scaling_mut(&Vector3::new(
+            self.glob_scale.x,
+            self.glob_scale.y,
+            0.0,
+        ));
         if self.glob_rotation > 360.0 {
             self.glob_rotation = 0.0;
         }
@@ -429,7 +472,8 @@ impl Transformable for SpriteBatch {
 
 impl Scalable for SpriteBatch {
     fn set_scale<T>(&mut self, vec: Vector<T>)
-    where T: Scalar + Into<f32>
+    where
+        T: Scalar + Into<f32>,
     {
         self.glob_scale.x = vec.x.into();
         self.glob_scale.y = vec.y.into();
@@ -441,7 +485,8 @@ impl Scalable for SpriteBatch {
     }
 
     fn scale<T>(&mut self, factor: Vector<T>)
-    where T: Scalar + Into<f32>
+    where
+        T: Scalar + Into<f32>,
     {
         self.glob_scale.x += factor.x.into();
         self.glob_scale.y += factor.y.into();
@@ -451,14 +496,16 @@ impl Scalable for SpriteBatch {
 
 impl Rotable for SpriteBatch {
     fn rotate<T>(&mut self, angle: T)
-    where T: Scalar + Into<f32>
+    where
+        T: Scalar + Into<f32>,
     {
         self.glob_rotation += angle.into();
         self.need_update = true;
     }
 
     fn set_rotation<T>(&mut self, angle: T)
-    where T: Scalar + Into<f32>
+    where
+        T: Scalar + Into<f32>,
     {
         self.glob_rotation = angle.into();
         self.need_update = true;
@@ -471,7 +518,8 @@ impl Rotable for SpriteBatch {
 
 impl Movable for SpriteBatch {
     fn translate<T>(&mut self, vec: Vector<T>)
-    where T: Scalar + Into<f32>
+    where
+        T: Scalar + Into<f32>,
     {
         self.glob_pos.x += vec.x.into();
         self.glob_pos.y += vec.y.into();
@@ -483,7 +531,8 @@ impl Movable for SpriteBatch {
     }
 
     fn set_position<T>(&mut self, vec: Vector<T>)
-    where T: Scalar + Into<f32>
+    where
+        T: Scalar + Into<f32>,
     {
         self.glob_pos.x = vec.x.into();
         self.glob_pos.y = vec.y.into();
@@ -511,9 +560,9 @@ impl Drawable for SpriteBatch {
             &*BATCH_SHADER,
             vec![
                 ("projection".to_string(), target.projection()),
-                ("glob_model".to_string(), &self.model)
+                ("glob_model".to_string(), &self.model),
             ],
-            BlendMode::Alpha
+            BlendMode::Alpha,
         );
 
         self.setup_draw(&mut context);
@@ -562,13 +611,13 @@ impl Drawable for SpriteBatch {
 }
 
 fn update_sprite(data: &mut SpriteData, origin: Vector<f32>, vertice: &mut [Vertex]) {
-    data.model = Matrix4::identity().append_translation(
-        &Vector3::new(data.pos.x - origin.x, data.pos.y - origin.y, 0.0)
-    );
+    data.model = Matrix4::identity().append_translation(&Vector3::new(
+        data.pos.x - origin.x,
+        data.pos.y - origin.y,
+        0.0,
+    ));
 
-    data.model *= Matrix4::from_euler_angles(
-        0.0, 0.0, data.rotation * (3.14116 * 180.0)
-    );
+    data.model *= Matrix4::from_euler_angles(0.0, 0.0, data.rotation * (3.14116 * 180.0));
 
     for vertex in vertice {
         let b = data.model * Vector4::new(vertex.pos.x, vertex.pos.y, 0.0, 1.0);
@@ -595,7 +644,7 @@ impl Default for SpriteBatch {
             glob_rotation: 0.0,
             len: 0,
             need_update: false,
-            model: Matrix4::identity()
+            model: Matrix4::identity(),
         }
     }
 }
@@ -615,7 +664,7 @@ impl From<&Rc<Texture>> for SpriteBatch {
             glob_rotation: 0.0,
             len: 0,
             need_update: false,
-            model: Matrix4::identity()
+            model: Matrix4::identity(),
         }
     }
 }
@@ -624,13 +673,13 @@ impl From<&Rc<Texture>> for SpriteBatch {
 mod test {
     extern crate test;
 
-    use super::{SpriteBatch, SpriteData};
-    use window::Window;
     use self::test::Bencher;
-    use ::{Vector, texture::Texture};
-    use std::rc::Rc;
+    use super::{SpriteBatch, SpriteData};
     use draw::Drawable;
+    use std::rc::Rc;
     use transform::Movable;
+    use window::Window;
+    use {texture::Texture, Vector};
 
     #[bench]
     fn sprite_batch_create(bencher: &mut Bencher) {
@@ -646,7 +695,9 @@ mod test {
         Window::new(100, 100, "Loader");
         let texture = Rc::new(Texture::from_path("examples/texture/test.jpg").unwrap());
         let mut vec = Vec::with_capacity(1000);
-        (0..1000).into_iter().for_each(|i| { vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))) });
+        (0..1000)
+            .into_iter()
+            .for_each(|i| vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))));
 
         bencher.iter(|| {
             let mut batch = SpriteBatch::from(&texture);
@@ -659,7 +710,9 @@ mod test {
         Window::new(100, 100, "Loader");
         let texture = Rc::new(Texture::from_path("examples/texture/test.jpg").unwrap());
         let mut vec = Vec::with_capacity(1000);
-        (0..1000).into_iter().for_each(|i| { vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))) });
+        (0..1000)
+            .into_iter()
+            .for_each(|i| vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))));
         let mut batch = SpriteBatch::from(&texture);
         batch.extend_from_slice(&mut vec);
 
@@ -673,7 +726,9 @@ mod test {
         Window::new(100, 100, "Loader");
         let texture = Rc::new(Texture::from_path("examples/texture/test.jpg").unwrap());
         let mut vec = Vec::with_capacity(1000);
-        (0..1000).into_iter().for_each(|i| { vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))) });
+        (0..1000)
+            .into_iter()
+            .for_each(|i| vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))));
         let mut batch = SpriteBatch::from(&texture);
         batch.extend_from_slice(&mut vec);
 
@@ -683,7 +738,10 @@ mod test {
             // /!\ Be careful when calling heavy function.
             batch.update();
             batch.translate(Vector::new(100.0, 0.0));
-            batch.get_sprite_mut(0).unwrap().translate(Vector::new(100.0, 0.0));
+            batch
+                .get_sprite_mut(0)
+                .unwrap()
+                .translate(Vector::new(100.0, 0.0));
             batch.update();
         });
     }
@@ -693,13 +751,17 @@ mod test {
         Window::new(100, 100, "Loader");
         let texture = Rc::new(Texture::from_path("examples/texture/test.jpg").unwrap());
         let mut vec = Vec::with_capacity(1000);
-        (0..1000).into_iter().for_each(|i| { vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))) });
+        (0..1000)
+            .into_iter()
+            .for_each(|i| vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))));
         let mut batch = SpriteBatch::from(&texture);
         batch.extend_from_slice(&mut vec);
 
         bencher.iter(|| {
             batch.translate(Vector::new(100.0, 0.0));
-            batch.get_sprite_mut(0).map(|x| x.translate(Vector::new(100.0, 0.0)));
+            batch
+                .get_sprite_mut(0)
+                .map(|x| x.translate(Vector::new(100.0, 0.0)));
             batch.update();
         });
     }
@@ -709,12 +771,17 @@ mod test {
         Window::new(100, 100, "Loader");
         let texture = Rc::new(Texture::from_path("examples/texture/Dirt.png").unwrap());
         let mut vec = Vec::with_capacity(100000);
-        (0..100000).into_iter().for_each(|i| { vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))) });
+        (0..100000)
+            .into_iter()
+            .for_each(|i| vec.push(SpriteData::new(Vector::new((i * 10 + 10) as f32, 10.0))));
         let mut batch = SpriteBatch::from(&texture);
         batch.extend_from_slice(&mut vec);
 
         bencher.iter(|| {
-            batch.sprites_mut().iter_mut().for_each(|x| x.translate(Vector::new(10.0, 0.0)));
+            batch
+                .sprites_mut()
+                .iter_mut()
+                .for_each(|x| x.translate(Vector::new(10.0, 0.0)));
             batch.update();
         });
     }

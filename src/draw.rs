@@ -1,12 +1,12 @@
 //! Every traits needed by drawable object
 //!
 
-use nalgebra::{Vector2};
-use texture::Texture;
-use shader::Shader;
-use nalgebra::Matrix4;
 use gl;
+use nalgebra::Matrix4;
+use nalgebra::Vector2;
+use shader::Shader;
 use shader::DEFAULT_SHADER;
+use texture::Texture;
 
 //----------------------------------------------------------------------------
 //
@@ -29,14 +29,14 @@ lazy_static! {
 pub enum BlendMode {
     Alpha,
     Beta,
-    Ceta
+    Ceta,
 }
 
 impl BlendMode {
     fn blend_to_gl(&self) {
         match self {
             BlendMode::Alpha => unsafe { gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA) },
-            _ => {},
+            _ => {}
         }
     }
 
@@ -52,10 +52,10 @@ impl BlendMode {
             match self {
                 BlendMode::Alpha => {
                     gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-                },
+                }
                 BlendMode::Beta => {
                     gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-                },
+                }
                 BlendMode::Ceta => {
                     gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
                 }
@@ -84,19 +84,18 @@ pub struct Context<'a> {
 }
 
 impl<'a> Context<'a> {
-
     /// Create a new context from texture, shader, transform, blend_mode
     pub fn new(
         texture: Option<&'a Texture>,
         shader: &'a Shader,
         transform: Vec<(String, &'a Matrix4<f32>)>,
-        blend_mode: BlendMode
+        blend_mode: BlendMode,
     ) -> Context<'a> {
         Context {
             texture,
             shader,
             transform,
-            blend_mode
+            blend_mode,
         }
     }
 
@@ -122,7 +121,6 @@ impl<'a> Context<'a> {
 }
 
 impl<'a> Default for Context<'a> {
-
     /// Default Context implementation
     fn default() -> Context<'a> {
         Context {
@@ -171,7 +169,6 @@ pub trait Drawer {
 
 /// Trait that can be use to draw on window
 pub trait Drawable {
-
     /// Draw the drawable structure, you need a Drawer(Where the struct will be draw)
     fn draw<T: Drawer>(&self, window: &mut T);
 

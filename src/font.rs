@@ -6,22 +6,14 @@
 //! font datastructures and fonctions made from Font.cpp of SFML
 
 use self::ft::{
-    library::Library,
-    face::{
-        Face,
-        LoadFlag
-    },
     bitmap::PixelMode,
-
+    face::{Face, LoadFlag},
+    library::Library,
 };
-use rect::Rect;
-use texture::{Texture,RgbMode};
 use super::Vector;
-use std::{
-    fmt,
-    error::Error,
-    collections::HashMap
-};
+use rect::Rect;
+use std::{collections::HashMap, error::Error, fmt};
+use texture::{RgbMode, Texture};
 
 extern crate freetype as ft;
 
@@ -51,11 +43,11 @@ struct GlyphMap {
     pub map: Utf8Map,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 struct Row {
     pub width: u32,
     pub height: u32,
-    pub pos: u32
+    pub pos: u32,
 }
 
 impl Row {
@@ -63,23 +55,24 @@ impl Row {
         Row {
             width: 0,
             height,
-            pos
+            pos,
         }
     }
 }
 
 /// Contain the global texture and texture information
 impl GlyphMap {
-
     /// Create a new glyph_map
     pub fn new() -> GlyphMap {
         let mut data: Vec<u8> = vec![255; 128 * 128 * 4];
-        for elem in data.chunks_mut(4) { elem[3] = 0 };
+        for elem in data.chunks_mut(4) {
+            elem[3] = 0
+        }
 
         GlyphMap {
             texture: Texture::from_slice(data.as_mut_slice(), RgbMode::RGBA, 128, 128),
             rows: Vec::with_capacity(1),
-            map: Utf8Map::with_capacity(10)
+            map: Utf8Map::with_capacity(10),
         }
     }
 
@@ -90,7 +83,7 @@ impl GlyphMap {
         let mut ret: Option<Rect<u32>> = None;
         // Iter over all element
         for mut row in self.rows.iter_mut() {
-            if (row.width + width  > self.texture.width()) || (row.height < height) {
+            if (row.width + width > self.texture.width()) || (row.height < height) {
                 continue;
             }
             ret = Some(Rect::new(row.width, row.pos, width, height));
@@ -105,11 +98,15 @@ impl GlyphMap {
             let last_pos = self.rows.iter().map(|x| x.height).sum();
 
             // while last_pos
-            while last_pos + (height + height / 10) > self.texture.height() || width > self.texture.width() {
-                let mut new = Texture::from_size(
-                    Vector::new(self.texture.width() * 2, self.texture.height() * 2)
-                );
-                new.update_from_texture(&self.texture, Vector::new(0, 0)).unwrap();
+            while last_pos + (height + height / 10) > self.texture.height()
+                || width > self.texture.width()
+            {
+                let mut new = Texture::from_size(Vector::new(
+                    self.texture.width() * 2,
+                    self.texture.height() * 2,
+                ));
+                new.update_from_texture(&self.texture, Vector::new(0, 0))
+                    .unwrap();
                 self.texture = new;
             }
             let mut new_row = Row::new(height + height / 10, last_pos);
@@ -121,13 +118,12 @@ impl GlyphMap {
     }
 
     /// Create a new texture from Utf8Map
-    pub fn update_texture
-    (&mut self, char_info: &CharInfo, data: &[u8]) -> Result<(), Box<Error>> {
+    pub fn update_texture(&mut self, char_info: &CharInfo, data: &[u8]) -> Result<(), Box<Error>> {
         self.texture.update_block(
             data,
             Vector::new(char_info.tex_coord.width, char_info.tex_coord.height),
             Vector::new(char_info.tex_coord.left, char_info.tex_coord.top),
-            RgbMode::RGBA
+            RgbMode::RGBA,
         )?;
         Ok(())
     }
@@ -145,17 +141,16 @@ impl GlyphMap {
 pub struct CharInfo {
     pub rect: Rect<f32>,
     pub tex_coord: Rect<u32>,
-    pub advance: f32
+    pub advance: f32,
 }
 
 impl CharInfo {
-
     /// Create an empty CharInfo
     pub fn new() -> CharInfo {
         CharInfo {
             rect: Default::default(),
             tex_coord: Default::default(),
-            advance: 0.0
+            advance: 0.0,
         }
     }
 
@@ -164,7 +159,7 @@ impl CharInfo {
         CharInfo {
             rect,
             tex_coord,
-            advance
+            advance,
         }
     }
 }
@@ -175,7 +170,7 @@ impl CharInfo {
 pub struct Font {
     face: Face,
     lib: Library,
-    map: FontMap
+    map: FontMap,
 }
 
 impl fmt::Display for Font {
@@ -191,7 +186,6 @@ impl fmt::Debug for Font {
 }
 
 impl Font {
-
     /// Create a new font from a file path.
     pub fn from_path(path: &str) -> Option<Font> {
         let lib = Library::init().unwrap();
@@ -199,13 +193,13 @@ impl Font {
             Err(err) => {
                 println!("Font loading error: {}", err);
                 None
-            },
+            }
             Ok(face) => {
                 face.set_pixel_sizes(0, 30).unwrap();
                 Some(Font {
                     face,
                     lib,
-                    map: FontMap::with_capacity(1)
+                    map: FontMap::with_capacity(1),
                 })
             }
         }
@@ -245,18 +239,20 @@ impl Font {
 
             // Get the glyph and informations
             let mut to_insert = CharInfo::new();
-            to_insert.rect.left     = metrics.horiBearingX as f32 / (1 << 6) as f32;
-            to_insert.rect.top      = -metrics.horiBearingY as f32 / (1 << 6) as f32;
-            to_insert.rect.width    = metrics.width as f32 / (1 << 6) as f32;
-            to_insert.rect.height   = metrics.height as f32 / (1 << 6) as f32;
-            to_insert.advance       = (metrics.horiAdvance + 2) as f32 / (1 << 6) as f32;
+            to_insert.rect.left = metrics.horiBearingX as f32 / (1 << 6) as f32;
+            to_insert.rect.top = -metrics.horiBearingY as f32 / (1 << 6) as f32;
+            to_insert.rect.width = metrics.width as f32 / (1 << 6) as f32;
+            to_insert.rect.height = metrics.height as f32 / (1 << 6) as f32;
+            to_insert.advance = (metrics.horiAdvance + 2) as f32 / (1 << 6) as f32;
 
             // Look at the glyph texture and try to find a place inside it
             to_insert.tex_coord = glyph_map.get_texture_rect(width as u32, height as u32);
 
             // Resize buffer
             let mut data = vec![255; (height * width * 4) as usize];
-            for elem in &mut data.chunks_mut(4) { elem[3] = 0; }
+            for elem in &mut data.chunks_mut(4) {
+                elem[3] = 0;
+            }
 
             // fill pixel buffer
             let pixels: Vec<u8> = Vec::from(bitmap.buffer());
@@ -264,20 +260,23 @@ impl Font {
             match bitmap.pixel_mode().unwrap() {
                 PixelMode::None => {
                     panic!("Error while creating glyph");
-                },
+                }
                 PixelMode::Mono => {
-
                     // If it's mono just change the alpha of each pixel to make it black or white
                     for y in 0..height {
                         for x in 0..width {
                             let index = ((x + y * width) * 4 + 3) as usize;
                             let pix = pixels[(offset + (x / 8)) as usize];
 
-                            data[index] = if (pix & (1 << (7 - (x % 8)))) != 0 { 255 } else { 0 };
+                            data[index] = if (pix & (1 << (7 - (x % 8)))) != 0 {
+                                255
+                            } else {
+                                0
+                            };
                         }
                         offset += bitmap.pitch();
                     }
-                },
+                }
                 _ => {
                     // Just change the alpha to make thw whole blakc or white
                     for y in 0..height {
@@ -296,10 +295,7 @@ impl Font {
             glyph_map.update_texture(&to_insert, data.as_slice())?;
 
             // Insert the new glyph map into the hasmap
-            glyph_map.map.insert(
-                code,
-                to_insert
-            );
+            glyph_map.map.insert(code, to_insert);
         }
 
         // Return the newly inserted charinfo
@@ -330,7 +326,7 @@ impl Font {
 
 #[derive(Debug)]
 pub enum TextError {
-    NoTexture
+    NoTexture,
 }
 
 impl fmt::Display for TextError {

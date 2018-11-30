@@ -43,37 +43,30 @@
 //! VertexArray::new(vertice);
 //! ```
 
-use nalgebra::{Vector2};
 use color::Color;
 use gl;
-use std::ptr;
-use std::mem;
 use gl::types::*;
-use std::ops::{Index,IndexMut};
+use nalgebra::Vector2;
+use std::mem;
+use std::ops::{Index, IndexMut};
+use std::ptr;
 
 /// Vertex structure defined by texture coord, space coors and color
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub struct Vertex {
-    pub pos:    Vector2<f32>,
-    pub tex:    Vector2<f32>,
-    pub color:  Color,
+    pub pos: Vector2<f32>,
+    pub tex: Vector2<f32>,
+    pub color: Color,
 }
 
 impl Vertex {
-
     /// Create a vertex containing position, texCoord and Color
-    pub fn new
-    (pos: Vector2<f32>, tex: Vector2<f32>, color: Color) -> Vertex {
-        Vertex {
-            pos,
-            tex,
-            color
-        }
+    pub fn new(pos: Vector2<f32>, tex: Vector2<f32>, color: Color) -> Vertex {
+        Vertex { pos, tex, color }
     }
 }
 
 impl From<Vector2<f32>> for Vertex {
-
     /// create a vertex with just a position in 2D space
     fn from(pos: Vector2<f32>) -> Vertex {
         Vertex {
@@ -85,7 +78,6 @@ impl From<Vector2<f32>> for Vertex {
 }
 
 impl From<(Vector2<f32>, Color)> for Vertex {
-
     /// datas.0 = pos
     /// datas.1 = color
     fn from(datas: (Vector2<f32>, Color)) -> Vertex {
@@ -98,7 +90,6 @@ impl From<(Vector2<f32>, Color)> for Vertex {
 }
 
 impl From<(Vector2<f32>, Vector2<f32>)> for Vertex {
-
     /// datas.0 = position
     /// datas.1 = texCoord
     fn from(datas: (Vector2<f32>, Vector2<f32>)) -> Vertex {
@@ -111,7 +102,6 @@ impl From<(Vector2<f32>, Vector2<f32>)> for Vertex {
 }
 
 impl Default for Vertex {
-
     /// Default vertex
     fn default() -> Vertex {
         Vertex {
@@ -125,21 +115,23 @@ impl Default for Vertex {
 /// VertexArray is a vertex data structure that is drawable and it's the basic system
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct VertexArray {
-	array: Vec<Vertex>,
+    array: Vec<Vertex>,
     id: u32,
 }
 
 impl VertexArray {
-	/// Create a empty vertex array
-	pub fn new() -> VertexArray {
+    /// Create a empty vertex array
+    pub fn new() -> VertexArray {
         let mut id = 0;
 
-        unsafe { gl::GenVertexArrays(1, &mut id); }
+        unsafe {
+            gl::GenVertexArrays(1, &mut id);
+        }
 
-		VertexArray {
-			array: Vec::new(),
+        VertexArray {
+            array: Vec::new(),
             id,
-		}
+        }
     }
 
     pub fn array(&self) -> &Vec<Vertex> {
@@ -160,32 +152,32 @@ impl VertexArray {
 
             // Position (Of each vertex)
             gl::VertexAttribPointer(
-                            0,
-                            2,
-                            gl::FLOAT,
-                            gl::FALSE,
-                            (8 * mem::size_of::<GLfloat>()) as GLsizei,
-                            ptr::null()
+                0,
+                2,
+                gl::FLOAT,
+                gl::FALSE,
+                (8 * mem::size_of::<GLfloat>()) as GLsizei,
+                ptr::null(),
             );
             gl::EnableVertexAttribArray(0);
             // Texture Coord (Of each vertex)
             gl::VertexAttribPointer(
-                            1,
-                            2,
-                            gl::FLOAT,
-                            gl::FALSE,
-                            (8 * mem::size_of::<GLfloat>()) as GLsizei,
-                            (2 * mem::size_of::<GLfloat>()) as *const _,
+                1,
+                2,
+                gl::FLOAT,
+                gl::FALSE,
+                (8 * mem::size_of::<GLfloat>()) as GLsizei,
+                (2 * mem::size_of::<GLfloat>()) as *const _,
             );
             gl::EnableVertexAttribArray(1);
             // Color (of each vertex)
             gl::VertexAttribPointer(
-                            2,
-                            3,
-                            gl::FLOAT,
-                            gl::FALSE,
-                            (8 * mem::size_of::<GLfloat>()) as GLsizei,
-                            (4 * mem::size_of::<GLfloat>()) as *const _,
+                2,
+                3,
+                gl::FLOAT,
+                gl::FALSE,
+                (8 * mem::size_of::<GLfloat>()) as GLsizei,
+                (4 * mem::size_of::<GLfloat>()) as *const _,
             );
             gl::EnableVertexAttribArray(2);
         }
@@ -225,7 +217,7 @@ impl<'a> From<&'a [Vertex]> for VertexArray {
             unsafe { gl::GenVertexArrays(1, &mut id) };
             VertexArray {
                 array: Vec::from(array),
-                id
+                id,
             }
         }
     }
@@ -238,20 +230,15 @@ impl<'a> From<&'a [f32]> for VertexArray {
         } else {
             let mut arr = Vec::new();
             for elem in array.windows(8) {
-                arr.push(
-                        Vertex::new(
-                            Vector2::new(elem[0],elem[1]),
-                            Vector2::new(elem[2], elem[3]),
-                            Color::new(elem[4], elem[5], elem[6])
-                        )
-                );
+                arr.push(Vertex::new(
+                    Vector2::new(elem[0], elem[1]),
+                    Vector2::new(elem[2], elem[3]),
+                    Color::new(elem[4], elem[5], elem[6]),
+                ));
             }
             let mut id = 0;
             unsafe { gl::GenVertexArrays(1, &mut id) };
-            VertexArray {
-                array: arr,
-                id
-            }
+            VertexArray { array: arr, id }
         }
     }
 }

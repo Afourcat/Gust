@@ -11,18 +11,21 @@
 //! use gust::window::Window;
 //! use gust::rect::Rect;
 //!
-//! let window = Window::new(1920, 1080, "Example View");
+//! let window = Window::new(1920, 1080, "View mod");
 //! let view = View::from(Rect::new(500.0, 500.0, 10.0, 10.0));
-//!
+//! let view2 = View::from(Rect::new(0.0, 0.0, 500.0, 500.0))
 //! ```
 
 use nalgebra;
 use nalgebra::Matrix4;
-use ::{Point,Vector};
 use rect::Rect;
+use {Point, Vector};
 
-/// A View is a 2D camera
-#[derive(Debug,Clone,PartialEq)]
+/// A View is a 2D camera.
+/// It's the screen viewport.
+/// You can make multiple views and use them as Minimap, 2nd player screen etc...
+/// The view is attached to a gust::Window.
+#[derive(Debug, Clone, PartialEq)]
 pub struct View {
     projection: Matrix4<f32>,
     sizes: Vector<f32>,
@@ -34,7 +37,6 @@ pub struct View {
 }
 
 impl View {
-
     /// Create a new View from a pos point and a Rect
     pub fn new(pos: Point<f32>, rect: Rect<f32>) -> View {
         View {
@@ -43,7 +45,8 @@ impl View {
                 rect.width as f32,
                 rect.top as f32,
                 rect.height as f32,
-                -1.0, 1.0
+                -1.0,
+                1.0,
             ),
             zoom: 1.0,
             angle: 0.0,
@@ -57,11 +60,12 @@ impl View {
     /// Reset the rect if you don't want to you can use (set_sizes)[]
     pub fn reset(&mut self, rect: Rect<f32>) {
         self.projection = Matrix4::new_orthographic(
-                rect.left as f32,
-                rect.width as f32,
-                rect.top as f32,
-                rect.height as f32,
-                -1.0, 1.0
+            rect.left as f32,
+            rect.width as f32,
+            rect.top as f32,
+            rect.height as f32,
+            -1.0,
+            1.0,
         );
         self.sizes = Vector::new(rect.width, rect.height);
         self.need_update = true;
@@ -86,16 +90,14 @@ impl View {
         self.sizes.y = sizes.y;
     }
 
-    pub fn get_projection(&self) -> &Matrix4<f32> {
-        &self.projection
-    }
-
+    /// Move the view from actual position with the offset `offset`.
     pub fn translate<T: nalgebra::Scalar + Into<f32>>(&mut self, offset: Vector<T>) {
         self.pos.x += offset.x.into();
         self.pos.y += offset.y.into();
         self.need_update = true;
     }
 
+    /// Update the view: Apply all transformations.
     pub fn update(&mut self) {
         if self.need_update {
             let width = self.sizes.x * self.zoom;
@@ -106,50 +108,56 @@ impl View {
                 width + self.pos.x,
                 height + self.pos.y,
                 self.pos.y,
-                -1.0, 1.0
+                -1.0,
+                1.0,
             );
             self.need_update = false;
         }
     }
 
+    /// Set the view zoom.
     pub fn set_zoom(&mut self, zoom: f32) {
-        if zoom != self.zoom {
-            self.zoom = zoom;
-            self.need_update = true;
-        }
-    }
-
-    pub fn zoom(&mut self, zoom: f32) {
-        self.zoom *= zoom;
+        self.zoom = zoom;
         self.need_update = true;
     }
 
+    /// Multiply the current zoom by this one.
+    pub fn zoom(&mut self, zoom: f32) {
+        self.zoom *= 1.0 / zoom;
+        self.need_update = true;
+    }
+
+    /// Return zoom.
     pub fn get_zoom(&self) -> f32 {
         self.zoom
     }
 
-    pub fn projection(&self) -> Matrix4<f32> {
-        self.projection
+    /// Return projection Matrix4.
+    pub fn projection(&self) -> &Matrix4<f32> {
+        &self.projection
     }
 
+    /// Return sizes in a Vector<f32>.
     pub fn sizes(&self) -> Vector<f32> {
         self.sizes
     }
 
+    /// Return position of the view in a Vector<f32>.
     pub fn postition(&self) -> Vector<f32> {
         self.pos
     }
 }
 
 impl From<Rect<f32>> for View {
-
     fn from(rect: Rect<f32>) -> View {
         let proj = Matrix4::new_ortho(
             rect.left,
             rect.width + rect.left,
             rect.height + rect.top,
             rect.top,
-            -1.0, 1.0);
+            -1.0,
+            1.0,
+        );
         View {
             pos: Vector::new(rect.left, rect.top),
             projection: proj,
@@ -162,10 +170,19 @@ impl From<Rect<f32>> for View {
     }
 }
 
+/// TEST implementation on crate type.
 impl Ortho for Matrix4<f32> {}
 
+/// Trait that implement fonction new_ortho for Matrix4.
 trait Ortho {
-    fn new_ortho(left: f32, right: f32, bottom:f32, top: f32, near: f32, far: f32) -> Matrix4<f32> {
+    fn new_ortho(
+        left: f32,
+        right: f32,
+        bottom: f32,
+        top: f32,
+        near: f32,
+        far: f32,
+    ) -> Matrix4<f32> {
         let width = right - left;
         let height = top - bottom;
         let a = 2.0 / width;
@@ -176,10 +193,7 @@ trait Ortho {
         let tz = -(far + near) / far - near;
 
         Matrix4::new(
-            a   , 0.0, 0.0,  tx,
-            0.0 ,   b, 0.0,  ty,
-            0.0 , 0.0,   c,  tz,
-            0.0 , 0.0, 0.0, 1.0
+            a, 0.0, 0.0, tx, 0.0, b, 0.0, ty, 0.0, 0.0, c, tz, 0.0, 0.0, 0.0, 1.0,
         )
     }
 }
