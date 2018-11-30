@@ -1,6 +1,6 @@
 [package]
 name = "gust"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["alex <alexandre.fourcat@epitech.eu>"]
 autoexamples = true
 
