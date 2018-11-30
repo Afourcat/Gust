@@ -274,7 +274,7 @@ dependencies = [
 
 [[package]]
 name = "gust"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "alga 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "crossbeam 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",

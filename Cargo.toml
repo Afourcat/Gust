@@ -2,6 +2,14 @@
 name = "gust"
 version = "0.2.0"
 authors = ["alex <alexandre.fourcat@epitech.eu>"]
+description = "Gust is a simple 2D graphical library inspired by SFML."
+repository = "https://github.com/Afourcat/Gust/tree/master"
+homepage = "https://afourcat.github.io/Gust/"
+readme = "README.md"
+keywords = ["opengl", "graphic", "gust", "gl", "glfw", "2D", "game", "video-game", "rendering"]
+categories = ["rendering::engine", "rendering"]
+license-file = "LICENSE"
+maintenance = { status = "experimental" }
 autoexamples = true
 
 [dependencies]
