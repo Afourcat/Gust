@@ -1,5 +1,5 @@
 extern crate glfw;
-extern crate gust;
+extern crate gust_render as gust;
 
 use gust::prelude::*;
 use std::error::Error;

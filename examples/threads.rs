@@ -1,7 +1,7 @@
 /// Threads test.
 /// This is a test to draw with the glfw RenderContext shareable between thread.
 #[macro_use]
-extern crate gust;
+extern crate gust_render as gust;
 extern crate glfw;
 
 use gust::prelude::*;

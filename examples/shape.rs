@@ -1,12 +1,9 @@
-extern crate gust;
+extern crate gust_render as gust;
 
-use gust::color::Color;
-use gust::draw::Drawer;
-use gust::event::{EventHandler, EventType, Events};
+use gust::prelude::*;
 use gust::vertex::{Vertex, VertexArray};
-use gust::vertex_buffer::{Primitive, VertexBuffer};
-use gust::window::Window;
-use gust::{Action, Key, Vector};
+use gust::vertex_buffer::{VertexBuffer, Primitive};
+use gust::event::EventType;
 
 fn main() {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");

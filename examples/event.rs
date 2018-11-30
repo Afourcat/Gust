@@ -5,7 +5,7 @@
 //  module:
 //! event example
 #[macro_use]
-extern crate gust;
+extern crate gust_render as gust;
 extern crate glfw;
 
 use gust::prelude::*;

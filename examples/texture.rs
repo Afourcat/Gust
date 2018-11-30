@@ -1,4 +1,4 @@
-extern crate gust;
+extern crate gust_render as gust;
 
 use gust::prelude::*;
 use gust::texture::RgbMode;
