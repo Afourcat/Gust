@@ -91,14 +91,14 @@ impl Default for SpriteData {
 }
 
 impl Transformable for SpriteData {
-    fn contain<T>(&self, vec: ::Point<T>) -> bool
+    fn contain<T>(&self, _vec: ::Point<T>) -> bool
     where
         T: Scalar + Into<f32>,
     {
         true
     }
 
-    fn set_origin<T>(&mut self, origin: Vector<T>)
+    fn set_origin<T>(&mut self, _origin: Vector<T>)
     where
         T: Scalar + Into<f32>,
     {
@@ -111,7 +111,7 @@ impl Transformable for SpriteData {
 }
 
 impl Scalable for SpriteData {
-    fn set_scale<T>(&mut self, vec: Vector<T>)
+    fn set_scale<T>(&mut self, _vec: Vector<T>)
     where
         T: Scalar + Into<f32>,
     {
@@ -122,7 +122,7 @@ impl Scalable for SpriteData {
         unimplemented!("For instance no scale to SpriteData.");
     }
 
-    fn scale<T>(&mut self, factor: Vector<T>)
+    fn scale<T>(&mut self, _factor: Vector<T>)
     where
         T: Scalar + Into<f32>,
     {
@@ -455,7 +455,7 @@ impl SpriteBatch {
 }
 
 impl Transformable for SpriteBatch {
-    fn contain<T: nalgebra::Scalar + Into<f32>>(&self, vec: ::Point<T>) -> bool {
+    fn contain<T: nalgebra::Scalar + Into<f32>>(&self, _vec: ::Point<T>) -> bool {
         true
     }
 
@@ -577,7 +577,7 @@ impl Drawable for SpriteBatch {
         }
     }
 
-    fn draw_with_context(&self, context: &mut Context) {
+    fn draw_with_context(&self, _context: &mut Context) {
         unimplemented!(
         "Put an issue here please if I forgot to implement it https://github.com/Afourcat/Gust/issues");
     }

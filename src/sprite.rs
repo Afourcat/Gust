@@ -164,7 +164,7 @@ impl<'a> From<&'a Resource<Texture>> for Sprite {
 
 impl Transformable for Sprite {
     /// TODO: Transform the point tested.
-    fn contain<T: nalgebra::Scalar + Into<f32>>(&self, point: ::Point<T>) -> bool {
+    fn contain<T: nalgebra::Scalar + Into<f32>>(&self, _point: ::Point<T>) -> bool {
         //let sizes = self.get_sizes();
         //let b: Vector4<f32> = Matrix4::inverse(self.model) * Vector4::new(point.x.into(), point.y.into(), 0.0, 1.0);
         //let vec: Vector2<f32> = Vector2::new(b.x, b.y);
