@@ -4,13 +4,10 @@
 //  text.rs
 //  module:
 //! text render utils
-use color::Color;
-use draw::{BlendMode, Context, Drawable, DrawableMut, Drawer, IDENTITY};
-use font::{CharInfo, Font};
-use nalgebra::Scalar;
-use shader;
-use std::cell::RefCell;
-use std::{error::Error, rc::Rc};
+use crate::color::Color;
+use crate::draw::{BlendMode, Context, Drawable, DrawableMut, Drawer, IDENTITY};
+use crate::font::{CharInfo, Font};
+use crate::shader;
 /// # How to use
 /// ```no_run
 /// use gust::text::Text;
@@ -31,14 +28,15 @@ use std::{error::Error, rc::Rc};
 ///     }
 /// }
 /// ```
-/// It's made from the Text system of the C++ library SFML.
-use texture::Texture;
-use transform::*;
-use vertex::Vertex;
-use vertex_buffer::VertexBuffer;
-use {Point, Vector};
-
-extern crate freetype as ft;
+/// This module is inspired (translated) from the Text system of the C++ library SFML.
+use crate::texture::Texture;
+use crate::transform::*;
+use crate::vertex::Vertex;
+use crate::vertex_buffer::VertexBuffer;
+use crate::{Point, Vector};
+use nalgebra::Scalar;
+use std::cell::RefCell;
+use std::{error::Error, rc::Rc};
 
 #[derive(Debug)]
 /// # Text struct
@@ -212,9 +210,9 @@ impl DrawableMut for Text {
         self.draw(target);
     }
 
-    fn draw_with_context_mut(&mut self, context: &mut Context) {
+    fn draw_with_context_mut<T: Drawer>(&mut self, target: &mut T, context: &mut Context) {
         self.update();
-        self.draw_with_context(context);
+        self.draw_with_context(target, context);
     }
 }
 
@@ -306,17 +304,17 @@ impl Drawable for Text {
             &*shader::DEFAULT_SHADER,
             vec![
                 ("transform".to_string(), &*IDENTITY),
-                ("projection".to_string(), target.projection()),
+                ("projection".to_string(), &target.projection()),
             ],
             BlendMode::Alpha,
         );
 
         // Draw the vertex_buffer with context
-        self.vertex_buffer.draw_with_context(&mut context);
+        target.draw_vertex_buffer(&self.vertex_buffer, &mut context);
     }
 
-    fn draw_with_context(&self, context: &mut Context) {
-        self.vertex_buffer.draw_with_context(context);
+    fn draw_with_context<T: Drawer>(&self, target: &mut T, context: &mut Context) {
+        target.draw_vertex_buffer(&self.vertex_buffer, context);
     }
 }
 

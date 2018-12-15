@@ -16,10 +16,10 @@
 //! let view2 = View::from(Rect::new(0.0, 0.0, 500.0, 500.0))
 //! ```
 
+use crate::rect::Rect;
+use crate::{Point, Vector};
 use nalgebra;
 use nalgebra::Matrix4;
-use rect::Rect;
-use {Point, Vector};
 
 /// A View is a 2D camera.
 /// It's the screen viewport.

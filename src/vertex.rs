@@ -43,7 +43,7 @@
 //! VertexArray::new(vertice);
 //! ```
 
-use color::Color;
+use crate::color::Color;
 use gl;
 use gl::types::*;
 use nalgebra::Vector2;

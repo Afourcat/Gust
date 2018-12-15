@@ -1,9 +1,9 @@
 extern crate gust_render as gust;
 
+use gust::event::EventType;
 use gust::prelude::*;
 use gust::vertex::{Vertex, VertexArray};
-use gust::vertex_buffer::{VertexBuffer, Primitive};
-use gust::event::EventType;
+use gust::vertex_buffer::{Primitive, VertexBuffer};
 
 fn main() {
     let mut window = Window::new(gust::WIDTH, gust::HEIGHT, "Hello");

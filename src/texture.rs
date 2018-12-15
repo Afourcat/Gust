@@ -2,7 +2,8 @@
 //! Importing, Loading, Pushing into OpenGl
 //! I'm using image crate that is really useful
 
-use color::Color;
+use crate::color::Color;
+use crate::Vector;
 use gl;
 use gl::types::*;
 use image;
@@ -10,7 +11,6 @@ use image::{DynamicImage, ImageBuffer};
 use std::error::Error;
 use std::os::raw::c_void;
 use std::path::Path;
-use Vector;
 
 /// # Texture structure
 /// A texture is an id inside openGL that can contain a array of byte
@@ -507,10 +507,9 @@ mod test {
 
     use self::test::Bencher;
     use super::Vector;
-    use color::Color;
-    use texture::RgbMode;
-    use texture::Texture;
-    use window::Window;
+    use crate::color::Color;
+    use crate::texture::{RgbMode, Texture};
+    use crate::window::Window;
 
     #[bench]
     fn from_color(b: &mut Bencher) {

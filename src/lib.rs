@@ -6,8 +6,6 @@
 //! when I was trying to do computer graphics.
 //! Here is some gust code
 //! ```no_run
-//! extern crate gust;
-//! extern crate glfw;
 //!
 //! use gust::sprite::Sprite;
 //! use gust::window::Window;
@@ -98,20 +96,22 @@ pub mod vertex;
 pub mod vertex_buffer;
 pub mod view;
 pub mod window;
+mod gl_utils;
+
 
 pub mod prelude {
     pub use super::{Action, Coord, Key, MouseButtonLeft, MouseButtonRight, Point, Vector};
-    pub use color::Color;
-    pub use draw::{Context, Drawable, DrawableMut, Drawer};
-    pub use event::{Event, EventHandler, Events};
-    pub use font::Font;
-    pub use sprite::Sprite;
-    pub use spritebatch::{SpriteBatch, SpriteData};
-    pub use text::Text;
-    pub use texture::Texture;
-    pub use transform::{Movable, Rotable, Scalable, Transformable};
-    pub use view::View;
-    pub use window::Window;
+    pub use crate::color::Color;
+    pub use crate::draw::{Context, Drawable, DrawableMut, Drawer};
+    pub use crate::event::{Event, EventHandler, Events};
+    pub use crate::font::Font;
+    pub use crate::sprite::Sprite;
+    pub use crate::spritebatch::{SpriteBatch, SpriteData};
+    pub use crate::text::Text;
+    pub use crate::texture::Texture;
+    pub use crate::transform::{Movable, Rotable, Scalable, Transformable};
+    pub use crate::view::View;
+    pub use crate::window::Window;
 }
 
 pub use glfw::Action;
@@ -121,7 +121,6 @@ pub use glfw::MouseButtonLeft;
 pub use glfw::MouseButtonMiddle;
 pub use glfw::MouseButtonRight;
 pub use nalgebra::Matrix4;
-pub use resources::{MutResource, MutThreadResource, Resource, ThreadResource};
 
 pub type Vector<T> = nalgebra::Vector2<T>;
 pub type Point<T> = Vector<T>;

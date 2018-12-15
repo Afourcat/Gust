@@ -4,21 +4,23 @@
 //  module:
 //! spritebatch test system
 
-use super::Vector;
-use color::Color;
-use draw::*;
+use crate::color::Color;
+use crate::draw::*;
+use crate::rect::Rect;
+use crate::shader::BATCH_SHADER;
+use crate::texture::Texture;
+use crate::transform::*;
+use crate::vertex::Vertex;
+use crate::vertex_buffer::{VertexBuffer, Primitive};
+use crate::{Point, Vector};
 use gl;
 use gl::types::*;
 use nalgebra::{Matrix4, Vector3};
 use nalgebra::{Scalar, Vector4};
-use rect::Rect;
-use shader::BATCH_SHADER;
 use std::mem;
 use std::ptr;
 use std::rc::Rc;
-use texture::Texture;
-use transform::*;
-use vertex::Vertex;
+use crate::gl_utils;
 
 pub enum BatchError {
     BadTextureRect,
@@ -91,7 +93,7 @@ impl Default for SpriteData {
 }
 
 impl Transformable for SpriteData {
-    fn contain<T>(&self, _vec: ::Point<T>) -> bool
+    fn contain<T>(&self, _vec: Vector<T>) -> bool
     where
         T: Scalar + Into<f32>,
     {
@@ -323,97 +325,6 @@ impl SpriteBatch {
         self.sprites.pop()
     }
 
-    fn update_vbo(&mut self) {
-        unsafe {
-            gl::BindBuffer(gl::ARRAY_BUFFER, self.gl_objects.1);
-
-            if self.len != self.vertice.len() / 4 {
-                gl::BufferData(
-                    gl::ARRAY_BUFFER,
-                    (std::mem::size_of::<GLfloat>() * self.vertice.len() * 8) as GLsizeiptr,
-                    self.vertice.as_ptr() as *const GLvoid,
-                    gl::STATIC_DRAW,
-                );
-                self.len = self.vertice.len() / 4;
-            }
-            gl::BufferSubData(
-                gl::ARRAY_BUFFER,
-                0,
-                (std::mem::size_of::<GLfloat>() * self.vertice.len() * 8) as GLsizeiptr,
-                self.vertice.as_ptr() as *const GLvoid,
-            );
-            self.update_vao();
-            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-        }
-    }
-
-    fn create_vbo() -> (u32, u32) {
-        let (mut vao, mut vbo) = (0, 0);
-        unsafe {
-            gl::GenVertexArrays(1, &mut vao);
-
-            gl::GenBuffers(1, &mut vbo);
-
-            gl::BindVertexArray(0);
-        }
-        (vao, vbo)
-    }
-
-    fn update_vao(&mut self) {
-        unsafe {
-            gl::BindVertexArray(self.gl_objects.0);
-            // position (of each vertex)
-            gl::VertexAttribPointer(
-                0,
-                2,
-                gl::FLOAT,
-                gl::FALSE,
-                (8 * mem::size_of::<GLfloat>()) as GLsizei,
-                ptr::null(),
-            );
-            gl::EnableVertexAttribArray(0);
-            // texture coord (of each vertex)
-            gl::VertexAttribPointer(
-                1,
-                2,
-                gl::FLOAT,
-                gl::FALSE,
-                (8 * mem::size_of::<GLfloat>()) as GLsizei,
-                (2 * mem::size_of::<GLfloat>()) as *const _,
-            );
-            gl::EnableVertexAttribArray(1);
-            // color (of each vertex)
-            gl::VertexAttribPointer(
-                2,
-                3,
-                gl::FLOAT,
-                gl::FALSE,
-                (8 * mem::size_of::<GLfloat>()) as GLsizei,
-                (4 * mem::size_of::<GLfloat>()) as *const _,
-            );
-            gl::EnableVertexAttribArray(2);
-
-            gl::BindVertexArray(0);
-        }
-    }
-
-    fn fill_vbo(&mut self) {
-        unsafe {
-            gl::BindVertexArray(self.gl_objects.0);
-            gl::BindBuffer(gl::ARRAY_BUFFER, self.gl_objects.1);
-
-            gl::BufferData(
-                gl::ARRAY_BUFFER,
-                (std::mem::size_of::<GLfloat>() * self.vertice.len() * 8) as GLsizeiptr,
-                self.vertice.as_ptr() as *const GLvoid,
-                gl::STATIC_DRAW,
-            );
-            self.update_vao();
-
-            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-        }
-    }
-
     fn update_model(&mut self) {
         //translate to glob_glob_glob_position
         self.model = Matrix4::<f32>::identity().append_translation(&Vector3::new(
@@ -455,7 +366,7 @@ impl SpriteBatch {
 }
 
 impl Transformable for SpriteBatch {
-    fn contain<T: nalgebra::Scalar + Into<f32>>(&self, _vec: ::Point<T>) -> bool {
+    fn contain<T: nalgebra::Scalar + Into<f32>>(&self, _vec: Vector<T>) -> bool {
         true
     }
 
@@ -559,25 +470,15 @@ impl Drawable for SpriteBatch {
             texture,
             &*BATCH_SHADER,
             vec![
-                ("projection".to_string(), target.projection()),
+                ("projection".to_string(), &target.projection()),
                 ("glob_model".to_string(), &self.model),
             ],
             BlendMode::Alpha,
         );
-
-        self.setup_draw(&mut context);
-        unsafe {
-            gl::BindVertexArray(self.gl_objects.0);
-            gl::BindBuffer(gl::ARRAY_BUFFER, self.gl_objects.1);
-
-            gl::DrawArrays(gl::TRIANGLE_STRIP, 0, self.vertice.len() as i32);
-
-            gl::BindVertexArray(0);
-            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-        }
+        target.draw_vertex_buffer(self.vertex_buffer, &mut context);
     }
 
-    fn draw_with_context(&self, _context: &mut Context) {
+    fn draw_with_context<T: Drawer>(&self, _target: &mut T, _context: &mut Context) {
         unimplemented!(
         "Put an issue here please if I forgot to implement it https://github.com/Afourcat/Gust/issues");
     }
@@ -602,7 +503,7 @@ impl Drawable for SpriteBatch {
         }
 
         if sprite_mod {
-            self.update_vbo();
+            gl_utils::update_vbo(self.gl_objects.1, self.gl_objects.0, &self.vertice, self.len());
         }
         if self.need_update {
             self.update_model();
@@ -637,7 +538,7 @@ impl Default for SpriteBatch {
             texture: None,
             sprites: Vec::new(),
             vertice: Vec::new(),
-            gl_objects: Self::create_vbo(),
+            gl_objects: gl_utils::create_vo(),
             glob_origin: Vector::new(0.0, 0.0),
             glob_pos: Vector::new(0.0, 0.0),
             glob_scale: Vector::new(0.0, 0.0),
@@ -657,7 +558,7 @@ impl From<&Rc<Texture>> for SpriteBatch {
             texture: Some(Rc::clone(what)),
             sprites: Vec::new(),
             vertice: Vec::new(),
-            gl_objects: Self::create_vbo(),
+            gl_objects: gl_utils::create_vbo(),
             glob_origin: Vector::new((width / 2) as f32, (height / 2) as f32),
             glob_pos: Vector::new(0.0, 0.0),
             glob_scale: Vector::new(1.0, 1.0),
@@ -675,11 +576,11 @@ mod test {
 
     use self::test::Bencher;
     use super::{SpriteBatch, SpriteData};
-    use draw::Drawable;
+    use crate::draw::Drawable;
+    use crate::transform::Movable;
+    use crate::window::Window;
+    use crate::{texture::Texture, Vector};
     use std::rc::Rc;
-    use transform::Movable;
-    use window::Window;
-    use {texture::Texture, Vector};
 
     #[bench]
     fn sprite_batch_create(bencher: &mut Bencher) {

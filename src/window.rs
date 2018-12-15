@@ -10,19 +10,23 @@ static DEFAULT_WIDTH: u32 = 1600;
 extern crate gl;
 extern crate glfw;
 
-use color::Color;
-use draw;
-use draw::{Drawable, DrawableMut, Drawer};
-use event::{EventReceiver, EventType};
-use glfw::Context;
-use nalgebra;
-use nalgebra::Matrix4;
-use rect::Rect;
 use std::rc::Rc;
 use std::sync::mpsc::Receiver;
 use std::sync::Mutex;
-use view::View;
-use Vector;
+
+use glfw::Context;
+use nalgebra;
+use nalgebra::Matrix4;
+
+use crate::color::Color;
+use crate::draw;
+use crate::draw::{Drawable, DrawableMut, Drawer};
+use crate::event::{EventReceiver, EventType};
+use crate::rect::Rect;
+use crate::vertex::{Vertex, VertexArray};
+use crate::vertex_buffer::{Primitive, VertexBuffer};
+use crate::view::View;
+use crate::Vector;
 
 static DEFAULT_FPS: u32 = 60;
 
@@ -255,49 +259,116 @@ impl Drawer for Window {
         drawable.draw(self);
     }
 
-    #[inline]
     fn draw_mut<T: DrawableMut>(&mut self, drawable: &mut T) {
         self.active();
         drawable.draw_mut(self);
     }
 
-    #[inline]
-    fn draw_with_context<T: Drawable>(&mut self, drawable: &mut T, context: &mut draw::Context) {
+    fn draw_with_context<T: Drawable>(&mut self, drawable: &T, context: &mut draw::Context) {
         self.active();
-        drawable.draw_with_context(context);
+        drawable.draw_with_context(self, context);
     }
 
-    #[inline]
     fn draw_with_context_mut<T: DrawableMut>(
         &mut self,
         drawable: &mut T,
         context: &mut draw::Context,
     ) {
         self.active();
-        drawable.draw_with_context(context);
+        drawable.draw_with_context_mut(self, context);
     }
 
-    #[inline]
-    fn get_sizes(&self) -> Vector<f32> {
-        Vector::new(self.width as f32, self.height as f32)
+    fn draw_vertices(
+        &self,
+        vertices: &[Vertex],
+        primitive: Primitive,
+        context: &mut draw::Context,
+    ) {
+        unimplemented!("Draw vertices");
     }
 
-    #[inline]
-    fn get_center(&self) -> Vector<f32> {
-        let view_pos = self.view().postition();
-        let view_zoom = self.view().get_zoom();
-
-        println!("View pos: {:?}", view_pos);
-        Vector::new(
-            (self.width as f32 / (2.0 * (1.0 / view_zoom))) + view_pos.x,
-            (self.height as f32 / (2.0 * (1.0 / view_zoom))) + view_pos.y,
-        )
+    fn draw_vertex_array(&self, vertices: &VertexArray, context: &mut draw::Context) {
+        unimplemented!("Vertex Array");
     }
 
-    fn projection(&self) -> &Matrix4<f32> {
-        self.view.projection()
+    fn draw_vertex_buffer(&self, vertex_buffer: &VertexBuffer, context: &mut draw::Context) {
+        context.setup_draw();
+        vertex_buffer.bind();
+        gl::DrawArrays(vertex_buffer.get_gl_type(), 0, vertex_buffer.len() as i32);
+        vertex_buffer.unbind();
+    }
+
+    unsafe fn draw_from_raw(
+        &self,
+        raw: *const std::ffi::c_void,
+        len: usize,
+        context: &mut draw::Context,
+    ) {
+        unimplemented!("Raw");
+    }
+
+    fn center(&self) -> Vector<f32> {
+        Self::center(self)
+    }
+
+    fn sizes(&self) -> Vector<f32> {
+        Self::sizes(self)
+    }
+
+    fn projection(&self) -> Matrix4<f32> {
+        Self::projection(self)
     }
 }
+
+//impl Drawer for Window {
+//    fn draw<T: Drawable>(&mut self, drawable: &T) {
+//        self.active();
+//        drawable.draw(self);
+//    }
+//
+//    #[inline]
+//    fn draw_mut<T: DrawableMut>(&mut self, drawable: &mut T) {
+//        self.active();
+//        drawable.draw_mut(self);
+//    }
+//
+//    #[inline]
+//    fn draw_with_context<T: Drawable>(&mut self, drawable: &mut T, context: &mut draw::Context) {
+//        self.active();
+//        drawable.draw_with_context(context);
+//    }
+//
+//    #[inline]
+//    fn draw_with_context_mut<T: DrawableMut>(
+//        &mut self,
+//        drawable: &mut T,
+//        context: &mut draw::Context,
+//    ) {
+//        self.active();
+//        drawable.draw_with_context(context);
+//    }
+//
+//    #[inline]
+//    fn get_sizes(&self) -> Vector<f32> {
+//        Vector::new(self.width as f32, self.height as f32)
+//    }
+//
+//    #[inline]
+//    fn get_center(&self) -> Vector<f32> {
+//        let view_pos = self.view().postition();
+//        let view_zoom = self.view().get_zoom();
+//
+//        println!("View pos: {:?}", view_pos);
+//        Vector::new(
+//            (self.width as f32 / (2.0 * (1.0 / view_zoom))) + view_pos.x,
+//            (self.height as f32 / (2.0 * (1.0 / view_zoom))) + view_pos.y,
+//        )
+//    }
+//
+//    fn projection(&self) -> &Matrix4<f32> {
+//        self.view.projection()
+//    }
+//}
 
 /// Default trait implementation for window
 impl Default for Window {

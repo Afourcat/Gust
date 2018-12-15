@@ -1,9 +1,9 @@
 //! Module to handle keyboard and mouse event one day
+use crate::window::Window;
 use glfw;
 pub use glfw::WindowEvent as Events;
 use std::rc::Rc;
 use std::sync::mpsc::Receiver;
-use window::Window;
 
 #[macro_export]
 /// Should expand from pressed!(W) -> Events::Key(Key::W, _, Action::Pressed, _)

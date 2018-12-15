@@ -1,12 +1,14 @@
 //! Every traits needed by drawable object
 //!
 
+use crate::shader::Shader;
+use crate::shader::DEFAULT_SHADER;
+use crate::texture::Texture;
+use crate::vertex::{Vertex, VertexArray};
+use crate::vertex_buffer::{Primitive, VertexBuffer};
 use gl;
 use nalgebra::Matrix4;
 use nalgebra::Vector2;
-use shader::Shader;
-use shader::DEFAULT_SHADER;
-use texture::Texture;
 
 //----------------------------------------------------------------------------
 //
@@ -118,6 +120,13 @@ impl<'a> Context<'a> {
             self.shader.uniform_mat4f(name.as_str(), mat);
         }
     }
+
+    /// Setup the draw for the final system you don't have to implement it in a normal drawable
+    pub fn setup_draw(&mut self) {
+        self.apply_texture(0);
+        self.apply_blendmode();
+        self.setup_shader();
+    }
 }
 
 impl<'a> Default for Context<'a> {
@@ -140,61 +149,65 @@ impl<'a> Default for Context<'a> {
 //
 //----------------------------------------------------------------------------
 
-/// Trait defining a drawer
-pub trait Drawer {
-    /// Function that draw on itself needed by everything that can be draw.
-    fn draw<T: Drawable>(&mut self, drawable: &T);
-
-    /// Draw with context fonction if you want to define you own fonction
-    fn draw_with_context_mut<T: DrawableMut>(&mut self, drawable: &mut T, context: &mut Context) {
-        self.draw_with_context(drawable, context);
+/// Trait that should be implemented by all backend. It define a all way to draw something from
+/// some vertex / vertex_array / vertex_buffer.
+pub trait Drawer: Sized {
+    /// Function call by the final user to draw a `Drawable`.
+    fn draw<T: Drawable>(&mut self, drawable: &T) {
+        drawable.draw(self);
     }
 
-    /// Function that can draw a DrawableMut.
+    /// Function call by the final user to draw a `DrawableMut`.
     fn draw_mut<T: DrawableMut>(&mut self, drawable: &mut T) {
-        self.draw(drawable);
+        drawable.draw_mut(self);
     }
 
-    /// Draw with context a Drawable.
-    fn draw_with_context<T: Drawable>(&mut self, drawable: &mut T, context: &mut Context) {
-        drawable.draw_with_context(context);
-    }
+    fn draw_with_context<T: Drawable>(&mut self, drawable: &T, context: &mut Context);
 
-    fn get_center(&self) -> Vector2<f32>;
+    fn draw_with_context_mut<T: DrawableMut>(&mut self, drawable: &mut T, context: &mut Context);
 
-    fn get_sizes(&self) -> Vector2<f32>;
+    /// Draw from a slice of vertex.
+    fn draw_vertices(&self, vertices: &[Vertex], primitive: Primitive, context: &mut Context);
 
-    fn projection(&self) -> &Matrix4<f32>;
+    /// Draw from the vertex array.
+    fn draw_vertex_array(&self, vertices: &VertexArray, context: &mut Context);
+
+    /// Draw from a vertex buffer.
+    fn draw_vertex_buffer(&self, vertex_buffer: &VertexBuffer, context: &mut Context);
+
+    unsafe fn draw_from_raw(&self, raw: *const std::ffi::c_void, len: usize, context: &mut Context);
+
+    /// Get the center of the window.
+    fn center(&self) -> Vector2<f32>;
+
+    /// Get the sizes of the current window.
+    fn sizes(&self) -> Vector2<f32>;
+
+    /// Get the projection of the current window.
+    fn projection(&self) -> Matrix4<f32>;
 }
 
 /// Trait that can be use to draw on window
 pub trait Drawable {
     /// Draw the drawable structure, you need a Drawer(Where the struct will be draw)
-    fn draw<T: Drawer>(&self, window: &mut T);
+    fn draw<T: Drawer>(&self, target: &mut T);
 
     /// Draw with a particular context
-    fn draw_with_context(&self, context: &mut Context);
+    fn draw_with_context<T: Drawer>(&self, target: &mut T, context: &mut Context);
 
     /// Update the openGL state of the drawable entity
     /// Should be call often so be carefull when implementing.
     fn update(&mut self);
-
-    /// Setup the draw for the final system you don't have to implement it in a normal drawable
-    fn setup_draw(&self, context: &mut Context) {
-        context.apply_texture(0);
-        context.apply_blendmode();
-        context.setup_shader();
-    }
 }
 
 pub trait DrawableMut: Drawable {
     /// Mutable version of draw function.
-    fn draw_mut<T: Drawer>(&mut self, window: &mut T) {
-        self.draw(window);
+    fn draw_mut<T: Drawer>(&mut self, target: &mut T) {
+        self.draw(target);
     }
 
     /// Mutable draw context function.
-    fn draw_with_context_mut(&mut self, context: &mut Context) {
-        self.draw_with_context(context);
+    fn draw_with_context_mut<T: Drawer>(&mut self, target: &mut T, context: &mut Context) {
+        self.draw_with_context(target, context);
     }
 }

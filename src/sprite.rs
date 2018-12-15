@@ -1,19 +1,19 @@
 //! Module to handle drawable texture that are called Sprite
 
-use color::Color;
-use draw::{BlendMode, Context, Drawable, DrawableMut, Drawer};
-use nalgebra;
+use crate::color::Color;
+use crate::draw::*;
+use crate::resources::Resource;
+use crate::shader::DEFAULT_SHADER;
+use crate::texture::Texture;
+use crate::transform::{Movable, Rotable, Scalable, Transformable};
+use crate::vertex::Vertex;
+use crate::vertex::*;
+use crate::vertex_buffer::{Primitive, VertexBuffer};
 use nalgebra::*;
-use resources::Resource;
-use shader::DEFAULT_SHADER;
 use std::convert::From;
 use std::error::Error;
 use std::fmt;
-use texture::Texture;
-use transform::{Movable, Rotable, Scalable, Transformable};
-use vertex::Vertex;
-use vertex::*;
-use vertex_buffer::{Primitive, VertexBuffer};
+use crate::draw::Drawer;
 
 /// A sprite is a transformable
 /// drawable sprite
@@ -164,7 +164,7 @@ impl<'a> From<&'a Resource<Texture>> for Sprite {
 
 impl Transformable for Sprite {
     /// TODO: Transform the point tested.
-    fn contain<T: nalgebra::Scalar + Into<f32>>(&self, _point: ::Point<T>) -> bool {
+    fn contain<T: nalgebra::Scalar + Into<f32>>(&self, _point: Vector2<T>) -> bool {
         //let sizes = self.get_sizes();
         //let b: Vector4<f32> = Matrix4::inverse(self.model) * Vector4::new(point.x.into(), point.y.into(), 0.0, 1.0);
         //let vec: Vector2<f32> = Vector2::new(b.x, b.y);
@@ -279,16 +279,16 @@ impl DrawableMut for Sprite {
         self.draw(window);
     }
 
-    fn draw_with_context_mut<'a>(&mut self, context: &'a mut Context) {
+    fn draw_with_context_mut<T: Drawer>(&mut self, target: &mut T, context: &mut Context) {
         self.update();
-        self.vertice.draw_with_context(context);
+        target.draw_vertex_buffer(&self.vertice, &mut context);
     }
 }
 
 /// Drawing trait for sprite sturct
 impl Drawable for Sprite {
     /// Draw the actual sprite on a context
-    fn draw<T: Drawer>(&self, window: &mut T) {
+    fn draw<T: Drawer>(&self, target: &mut T) {
         let texture = if let Some(ref rc_texture) = self.texture {
             Some(rc_texture.as_ref())
         } else {
@@ -300,16 +300,16 @@ impl Drawable for Sprite {
             &*DEFAULT_SHADER,
             vec![
                 ("transform".to_string(), &self.model),
-                ("projection".to_string(), window.projection()),
+                ("projection".to_string(), &target.projection()),
             ],
             BlendMode::Alpha,
         );
-        self.vertice.draw_with_context(&mut context);
+        target.draw_vertex_buffer(&self.vertice, &mut context);
     }
 
     /// Draw the actual sprite with your own context.
-    fn draw_with_context<'a>(&self, context: &'a mut Context) {
-        self.vertice.draw_with_context(context);
+    fn draw_with_context<T: Drawer>(&self, target: &mut T, context: &mut Context) {
+        target.draw_vertex_buffer(&self.vertice, &mut context);
     }
 
     /// Update the sprite, this is a heavy operation because it's an operation that reconstruct

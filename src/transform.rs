@@ -2,8 +2,8 @@
 //! this mod is a groupment of all traits dedicated to the movement of a gust entity.
 //! You can attach these trait to anything that you need to move.
 
+use crate::Vector;
 use nalgebra::Scalar;
-use Vector;
 
 /// A trait that define something fully transformable.
 pub trait Transformable: Movable + Rotable + Scalable {

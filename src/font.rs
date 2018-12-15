@@ -11,9 +11,9 @@ use self::ft::{
     library::Library,
 };
 use super::Vector;
-use rect::Rect;
+use crate::rect::Rect;
+use crate::texture::{RgbMode, Texture};
 use std::{collections::HashMap, error::Error, fmt};
-use texture::{RgbMode, Texture};
 
 extern crate freetype as ft;
 

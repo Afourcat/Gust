@@ -1,15 +1,15 @@
 //! This module encapsulate the system of vertexBuffer
 //! Here you can create a drawable object easily with a VertexArray
 
-use draw::{BlendMode, Context, Drawable, DrawableMut, Drawer, IDENTITY};
+use crate::draw::{BlendMode, Context, Drawable, DrawableMut, Drawer, IDENTITY};
+use crate::resources::Resource;
+use crate::shader::*;
+use crate::texture::Texture;
+use crate::vertex::*;
 use gl;
 use gl::types::*;
-use resources::Resource;
-use shader::*;
 use std;
 use std::ops::{Index, IndexMut};
-use texture::Texture;
-use vertex::*;
 
 /// Vertex Buffer structure
 #[derive(Debug, Clone, PartialEq)]
@@ -133,7 +133,7 @@ impl VertexBuffer {
         let vertex_buffer = VertexBuffer {
             id: buffer_id,
             texture: None,
-            primitive: Self::get_gl_type(t),
+            primitive: t.get_gl_type(),
             len: vertice.len(),
             array: vertice,
         };
@@ -148,15 +148,8 @@ impl VertexBuffer {
     }
 
     /// Get primitive type
-    fn get_gl_type(prim: Primitive) -> GLenum {
-        match prim {
-            Primitive::Quads => gl::QUADS,
-            Primitive::Triangles => gl::TRIANGLES,
-            Primitive::Points => gl::POINTS,
-            Primitive::Lines => gl::LINES,
-            Primitive::TrianglesStrip => gl::TRIANGLE_STRIP,
-            Primitive::TriangleFan => gl::TRIANGLE_FAN,
-        }
+    pub(crate) fn get_gl_type(&self) -> GLenum {
+        self.primitive
     }
 
     fn set_texture(&mut self, texture: &Resource<Texture>) {
@@ -181,8 +174,14 @@ impl VertexBuffer {
     #[inline]
     pub fn bind(&self) {
         unsafe {
+            self.array.bind();
             gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
         }
+    }
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.len
     }
 
     #[inline]
@@ -199,9 +198,9 @@ impl DrawableMut for VertexBuffer {
         self.draw(target);
     }
 
-    fn draw_with_context_mut(&mut self, context: &mut Context) {
+    fn draw_with_context_mut<T: Drawer>(&mut self, target: &mut T, context: &mut Context) {
         self.update();
-        self.draw_with_context(context);
+        self.draw_with_context(target, context);
     }
 }
 
@@ -222,28 +221,15 @@ impl Drawable for VertexBuffer {
             },
             vec![
                 ("transform".to_string(), &*IDENTITY),
-                ("projection".to_string(), target.projection()),
+                ("projection".to_string(), &target.projection()),
             ],
             BlendMode::Alpha,
         );
-
-        unsafe {
-            self.setup_draw(&mut context);
-            self.array.bind();
-            self.bind();
-            gl::DrawArrays(self.primitive, 0, self.array.len() as i32);
-            self.unbind();
-        }
+        target.draw_vertex_buffer(self, &mut context);
     }
 
-    fn draw_with_context(&self, context: &mut Context) {
-        unsafe {
-            self.setup_draw(context);
-            self.array.bind();
-            self.bind();
-            gl::DrawArrays(self.primitive, 0, self.array.len() as i32);
-            self.unbind();
-        }
+    fn draw_with_context<T: Drawer>(&self, target: &mut T, context: &mut Context) {
+        target.draw_vertex_buffer(self, &mut context);
     }
 
     fn update(&mut self) {
