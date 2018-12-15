@@ -47,7 +47,7 @@ pub struct Text {
     font: Rc<RefCell<Font>>,
     content: String,
     actual_size: u32,
-    vertex_buffer: VertexBuffer,
+    vertices: Vec<Vertex>,
     need_update: bool,
     pos: Vector<f32>,
 }
@@ -69,7 +69,7 @@ impl Text {
             font: Rc::clone(font),
             content: String::new(),
             actual_size: 14,
-            vertex_buffer: VertexBuffer::default(),
+            vertices: Vec::with_capacity(10),
             need_update: true,
             pos: Vector::new(0.0, 0.0),
         }
@@ -81,7 +81,7 @@ impl Text {
             font: Rc::clone(font),
             content: String::from(content),
             actual_size: 14,
-            vertex_buffer: VertexBuffer::default(),
+            vertices: Vec::with_capacity(10),
             need_update: true,
             pos: Vector::new(0.0, 0.0),
         }
@@ -246,7 +246,7 @@ impl Drawable for Text {
         let padding = 0.0;
 
         // Clear the buffer of the data
-        self.vertex_buffer.clear();
+        self.vertices.clear();
 
         // Iter of character of the content to create a geometry for each one of them
         for charr in self.content.as_str().chars() {
@@ -276,14 +276,11 @@ impl Drawable for Text {
             let vertices = get_vertice_letter(&char_info, pos, padding, offset);
 
             // append vertice to vertex_buffer
-            self.vertex_buffer.append(&vertices);
+            self.vertices.extend_from_slice(&vertices);
 
             // x position of the character
             offset += char_info.advance as f32;
         }
-        // Update final buffer
-        self.vertex_buffer.update();
-
         // Set to false the boolean that contral this function
         self.need_update = false;
     }
@@ -310,11 +307,11 @@ impl Drawable for Text {
         );
 
         // Draw the vertex_buffer with context
-        target.draw_vertex_buffer(&self.vertex_buffer, &mut context);
+        target.draw_vertices(&self.vertices, crate::vertex_buffer::Primitive::Triangles, &mut context);
     }
 
     fn draw_with_context<T: Drawer>(&self, target: &mut T, context: &mut Context) {
-        target.draw_vertex_buffer(&self.vertex_buffer, context);
+        target.draw_vertices(&self.vertices, crate::vertex_buffer::Primitive::Triangles, &mut context);
     }
 }
 

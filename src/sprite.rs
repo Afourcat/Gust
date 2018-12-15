@@ -1,6 +1,7 @@
 //! Module to handle drawable texture that are called Sprite
 
 use crate::color::Color;
+use crate::draw::Drawer;
 use crate::draw::*;
 use crate::resources::Resource;
 use crate::shader::DEFAULT_SHADER;
@@ -13,7 +14,6 @@ use nalgebra::*;
 use std::convert::From;
 use std::error::Error;
 use std::fmt;
-use crate::draw::Drawer;
 
 /// A sprite is a transformable
 /// drawable sprite
@@ -34,7 +34,7 @@ pub struct Sprite {
     scale: Vector2<f32>,
     rotation: f32,
     origin: Vector2<f32>,
-    vertice: VertexBuffer,
+    vertice: [Vertex; 4],
     texture: Option<Resource<Texture>>,
     model: Matrix4<f32>,
     need_update: bool,
@@ -47,18 +47,7 @@ impl Sprite {
         Sprite {
             pos: Vector2::new(0.0, 0.0),
             scale: Vector2::new(1.0, 1.0),
-            vertice: VertexBuffer::new(
-                Primitive::TrianglesStrip,
-                VertexArray::from(
-                    vec![
-                        Vertex::default(),
-                        Vertex::default(),
-                        Vertex::default(),
-                        Vertex::default(),
-                    ]
-                    .as_slice(),
-                ),
-            ),
+            vertice: [Vertex::default(); 4],
             need_update: true,
             texture: None,
             origin: Vector2::new(0.0, 0.0),
@@ -73,7 +62,6 @@ impl Sprite {
         self.vertice[1].color = *color;
         self.vertice[2].color = *color;
         self.vertice[3].color = *color;
-        self.vertice.update();
     }
 
     /// Get texture sizes
@@ -125,34 +113,28 @@ impl<'a> From<&'a Resource<Texture>> for Sprite {
         Sprite {
             pos,
             scale: Vector2::new(1.0, 1.0),
-            vertice: VertexBuffer::new(
-                Primitive::TrianglesStrip,
-                VertexArray::from(
-                    vec![
-                        Vertex::new(
-                            Vector2::new(0.0, 0.0),
-                            Vector2::new(0.0, 0.0),
-                            Color::white(),
-                        ),
-                        Vertex::new(
-                            Vector2::new(0.0, height),
-                            Vector2::new(0.0, 1.0),
-                            Color::white(),
+            vertice: [
+                Vertex::new(
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(0.0, 0.0),
+                    Color::white(),
+                    ),
+                    Vertex::new(
+                        Vector2::new(0.0, height),
+                        Vector2::new(0.0, 1.0),
+                        Color::white(),
                         ),
                         Vertex::new(
                             Vector2::new(width, 0.0),
                             Vector2::new(1.0, 0.0),
                             Color::white(),
-                        ),
-                        Vertex::new(
-                            Vector2::new(width, height),
-                            Vector2::new(1.0, 1.0),
-                            Color::white(),
-                        ),
-                    ]
-                    .as_slice(),
-                ),
-            ),
+                            ),
+                            Vertex::new(
+                                Vector2::new(width, height),
+                                Vector2::new(1.0, 1.0),
+                                Color::white(),
+                                ),
+                            ],
             texture: Some(Resource::clone(tex)),
             need_update: true,
             model: Matrix4::identity().append_translation(&Vector3::new(pos.x, pos.y, 0.0)),
@@ -264,7 +246,7 @@ impl Default for Sprite {
             scale: Vector2::new(0.0, 0.0),
             rotation: 0.0,
             origin: Vector2::new(0.0, 0.0),
-            vertice: VertexBuffer::default(),
+            vertice: [Vertex::default(); 4],
             texture: Some(Resource::new(Texture::default())),
             model: Matrix4::<f32>::identity(),
             need_update: false,
@@ -281,7 +263,7 @@ impl DrawableMut for Sprite {
 
     fn draw_with_context_mut<T: Drawer>(&mut self, target: &mut T, context: &mut Context) {
         self.update();
-        target.draw_vertex_buffer(&self.vertice, &mut context);
+        self.draw_with_context(target, context);
     }
 }
 
@@ -304,12 +286,12 @@ impl Drawable for Sprite {
             ],
             BlendMode::Alpha,
         );
-        target.draw_vertex_buffer(&self.vertice, &mut context);
+        target.draw_vertices(&self.vertice, Primitive::TrianglesStrip, &mut context);
     }
 
     /// Draw the actual sprite with your own context.
     fn draw_with_context<T: Drawer>(&self, target: &mut T, context: &mut Context) {
-        target.draw_vertex_buffer(&self.vertice, &mut context);
+        target.draw_vertices(&self.vertice, Primitive::TrianglesStrip, &mut context);
     }
 
     /// Update the sprite, this is a heavy operation because it's an operation that reconstruct

@@ -5,15 +5,15 @@
 //  module:
 //! Private module. GlUtils.
 
+use crate::vertex::Vertex;
 use gl;
 use gl::types::*;
 use std::mem;
-use crate::vertex::Vertex;
 use std::ptr;
 
 /// Update a vao by settings up it's sizes for each field.
 /// A Buffer as to be binded.
-pub (crate) unsafe fn update_vao(va: u32) {
+pub(crate) unsafe fn update_vao(va: u32) {
     gl::BindVertexArray(va);
     // position (of each vertex)
     gl::VertexAttribPointer(
@@ -23,7 +23,7 @@ pub (crate) unsafe fn update_vao(va: u32) {
         gl::FALSE,
         (8 * mem::size_of::<GLfloat>()) as GLsizei,
         ptr::null(),
-        );
+    );
     gl::EnableVertexAttribArray(0);
     // texture coord (of each vertex)
     gl::VertexAttribPointer(
@@ -33,7 +33,7 @@ pub (crate) unsafe fn update_vao(va: u32) {
         gl::FALSE,
         (8 * mem::size_of::<GLfloat>()) as GLsizei,
         (2 * mem::size_of::<GLfloat>()) as *const _,
-        );
+    );
     gl::EnableVertexAttribArray(1);
     // color (of each vertex)
     gl::VertexAttribPointer(
@@ -43,23 +43,23 @@ pub (crate) unsafe fn update_vao(va: u32) {
         gl::FALSE,
         (8 * mem::size_of::<GLfloat>()) as GLsizei,
         (4 * mem::size_of::<GLfloat>()) as *const _,
-        );
+    );
     gl::EnableVertexAttribArray(2);
 }
 
 /// Allocate more space for a VBO or create the VBO inside the glMemory.
-pub (crate) unsafe fn alloc_vbo(vb: u32, vertice: &[Vertex]) {
+pub(crate) unsafe fn alloc_vbo(vb: u32, vertice: &[Vertex]) {
     gl::BindBuffer(gl::ARRAY_BUFFER, vb);
     gl::BufferData(
         gl::ARRAY_BUFFER,
         (std::mem::size_of::<GLfloat>() * vertice.len() * 8) as GLsizeiptr,
         vertice.as_ptr() as *const GLvoid,
-        gl::STATIC_DRAW
+        gl::STATIC_DRAW,
     );
 }
 
 /// Fill the VBO with a new vertice.
-pub (crate) unsafe fn fill_vbo(vb: u32, vertice: &[Vertex]) {
+pub(crate) unsafe fn fill_vbo(vb: u32, vertice: &[Vertex]) {
     gl::BindBuffer(gl::ARRAY_BUFFER, vb);
     gl::BufferSubData(
         gl::ARRAY_BUFFER,
@@ -70,7 +70,7 @@ pub (crate) unsafe fn fill_vbo(vb: u32, vertice: &[Vertex]) {
 }
 
 /// Update the vbo by looking if it's size has changed and then updating it with the new Data.
-pub (crate) unsafe fn update_vbo(vb: u32, va: u32, vertice: &[Vertex], old_len: usize) {
+pub(crate) unsafe fn update_vbo(vb: u32, va: u32, vertice: &[Vertex], old_len: usize) {
     if old_len != vertice.len() {
         alloc_vbo(vb, vertice);
     } else {

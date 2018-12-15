@@ -83,6 +83,7 @@ pub mod draw;
 pub mod event;
 pub mod font;
 pub mod gl_error;
+mod gl_utils;
 pub mod rect;
 pub mod resources;
 pub mod shader;
@@ -96,8 +97,6 @@ pub mod vertex;
 pub mod vertex_buffer;
 pub mod view;
 pub mod window;
-mod gl_utils;
-
 
 pub mod prelude {
     pub use super::{Action, Coord, Key, MouseButtonLeft, MouseButtonRight, Point, Vector};

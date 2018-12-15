@@ -2,6 +2,7 @@
 //! Here you can create a drawable object easily with a VertexArray
 
 use crate::draw::{BlendMode, Context, Drawable, DrawableMut, Drawer, IDENTITY};
+use crate::gl_utils;
 use crate::resources::Resource;
 use crate::shader::*;
 use crate::texture::Texture;
@@ -40,7 +41,6 @@ use std::ops::{Index, IndexMut};
 pub struct VertexBuffer {
     id: u32,
     texture: Option<Resource<Texture>>,
-    array: VertexArray,
     primitive: GLenum,
     len: usize,
 }
@@ -96,62 +96,45 @@ impl VertexBuffer {
 
     /// Clear all data from VertexArray
     pub fn clear(&mut self) {
-        self.array.clear();
+        unsafe {
+            gl::DeleteBuffers(1, &[self.id] as *const _);
+            gl::GenBuffers(1, &mut self.id);
+        }
+        gl_utils::alloc_vbo(self.id, &[]);
     }
 
     /// Create new Vertex Buffer from vertices
-    pub fn new(t: Primitive, vertice: VertexArray) -> VertexBuffer {
+    pub fn new(t: Primitive, vertice: &[Vertex]) -> VertexBuffer {
         let mut buffer_id: u32 = 0;
-
+        let len = vertice.len();
         unsafe {
             gl::GenBuffers(1, &mut buffer_id);
-            // --------------------------------
-            // Buffers generations heere
-            // we create a vertexArray and a buffer.
-            // Then we Bind the VertexArray the buffer
-            // to the openGl state machine.
-            // After we put data inside the buffer.
-            // Then we cut the data inside the buffer in 3
-            // { 1.0, 1.0, 0.0, 1.0, 3.0, 3.0 }
-            // |   pos  | texCoord |  color  |
-            // |        |          |         |
-            // With the 3 VertexAttribPointer
-            // --------------------------------
 
-            vertice.bind();
             gl::BindBuffer(gl::ARRAY_BUFFER, buffer_id);
             // Put data inside
             gl::BufferData(
                 gl::ARRAY_BUFFER,
                 (std::mem::size_of::<GLfloat>() * vertice.len() * 8) as GLsizeiptr,
-                vertice.get_ptr(),
+                0 as *const GLvoid,
                 gl::STATIC_DRAW,
             );
-            vertice.active();
         };
 
-        let vertex_buffer = VertexBuffer {
+        VertexBuffer {
             id: buffer_id,
             texture: None,
             primitive: t.get_gl_type(),
-            len: vertice.len(),
-            array: vertice,
-        };
-        Self::clear_gl();
-
-        vertex_buffer
+            len,
+        }
     }
 
-    /// Append data to the actual VertexArray while be updated internaly.
-    pub fn append(&mut self, vertices: &[Vertex]) {
-        self.array.array_mut().append(&mut Vec::from(vertices));
-    }
-
+    #[inline]
     /// Get primitive type
     pub(crate) fn get_gl_type(&self) -> GLenum {
         self.primitive
     }
 
+    #[inline]
     fn set_texture(&mut self, texture: &Resource<Texture>) {
         self.texture = Some(Resource::clone(texture));
     }
@@ -168,26 +151,47 @@ impl VertexBuffer {
     }
 
     pub fn set_geometry(&mut self, vertice: &[Vertex]) {
-        self.array = VertexArray::from(vertice);
-    }
-
-    #[inline]
-    pub fn bind(&self) {
         unsafe {
-            self.array.bind();
-            gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
+            gl::DeleteBuffers(1, &[self.id] as *const _);
+            gl::GenBuffers(1, &mut self.id);
         }
+        gl_utils::alloc_vbo(self.id, vertice);
+        self.len = vertice.len();
     }
 
     #[inline]
+    /// Get the len of the vertexBuffer
     pub fn len(&self) -> usize {
         self.len
+    }
+
+    /// Get the data from the openGL backend.
+    pub fn get_data(&self) -> &[Vertex] {
+        let vertex: &[Vertex];
+        unsafe {
+            let ptr: *mut Vertex;
+            gl::GetBufferSubData(
+                gl::ARRAY_BUFFER,
+                0,
+                self.len as isize,
+                ptr as *mut std::ffi::c_void,
+            );
+            vertex = std::slice::from_raw_parts(ptr, self.len);
+        }
+        vertex
     }
 
     #[inline]
     pub fn unbind(&self) {
         unsafe {
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+        }
+    }
+
+    #[inline]
+    pub fn bind(&self) {
+        unsafe {
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
         }
     }
 }
@@ -233,49 +237,13 @@ impl Drawable for VertexBuffer {
     }
 
     fn update(&mut self) {
-        unsafe {
-            self.array.bind();
-            self.bind();
-
-            if self.len != self.array.len() {
-                gl::BufferData(
-                    gl::ARRAY_BUFFER,
-                    (std::mem::size_of::<GLfloat>() * self.array.len() * 8) as GLsizeiptr,
-                    self.array.get_ptr(),
-                    gl::STATIC_DRAW,
-                );
-                self.len = self.array.len();
-            }
-            gl::BufferSubData(
-                gl::ARRAY_BUFFER,
-                0,
-                (std::mem::size_of::<GLfloat>() * self.array.len() * 8) as GLsizeiptr,
-                self.array.get_ptr(),
-            );
-            self.array.active();
-            self.unbind();
-            self.array.unbind();
-        }
-    }
-}
-
-impl Index<usize> for VertexBuffer {
-    type Output = Vertex;
-
-    fn index(&self, vertex_index: usize) -> &Vertex {
-        &self.array[vertex_index]
-    }
-}
-
-impl IndexMut<usize> for VertexBuffer {
-    fn index_mut(&mut self, index: usize) -> &mut Vertex {
-        &mut self.array[index]
+        unimplemented!("Looking for an interest to implement it.");
     }
 }
 
 impl Default for VertexBuffer {
     fn default() -> Self {
-        VertexBuffer::new(Primitive::Triangles, VertexArray::new())
+        VertexBuffer::new(Primitive::Triangles, &[])
     }
 }
 

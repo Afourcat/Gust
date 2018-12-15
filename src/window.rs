@@ -45,6 +45,7 @@ pub struct Window {
     already_init: bool,
     view: View,
     fps_limit: u32,
+    vertex_array: u32,
 }
 
 lazy_static! {
@@ -85,6 +86,10 @@ impl<'a> Window {
 
         glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
 
+        let va;
+        gl::GenVertexArrays(1, &mut va);
+        crate::gl_utils::update_vao(va);
+
         Window {
             view: View::from(Rect::new(0.0, 0.0, width as f32, height as f32)),
             height,
@@ -94,7 +99,12 @@ impl<'a> Window {
             clear_color: Color::new(1.0, 1.0, 1.0),
             already_init: true,
             fps_limit: self::DEFAULT_FPS,
+            vertex_array: va,
         }
+    }
+
+    pub fn bind_vertex_array(&mut self) {
+        gl::BindVertexArray(self.vertex_array);
     }
 
     pub fn set_mouse_pos<T: nalgebra::Scalar + Into<f32>>(&mut self, vec: Vector<T>) {
@@ -293,9 +303,9 @@ impl Drawer for Window {
 
     fn draw_vertex_buffer(&self, vertex_buffer: &VertexBuffer, context: &mut draw::Context) {
         context.setup_draw();
+        self.bind_vertex_array();
         vertex_buffer.bind();
         gl::DrawArrays(vertex_buffer.get_gl_type(), 0, vertex_buffer.len() as i32);
-        vertex_buffer.unbind();
     }
 
     unsafe fn draw_from_raw(
@@ -386,6 +396,10 @@ impl Default for Window {
 
         gl::load_with(|s| win.get_proc_address(s) as *const _);
 
+        let vertex_array;
+        gl::GenVertexArrays(1, &mut vertex_array);
+        crate::gl_utils::update_vao(vertex_array);
+
         Window {
             view: View::from(Rect::new(
                 0.0,
@@ -400,6 +414,7 @@ impl Default for Window {
             clear_color: Color::new(1.0, 1.0, 1.0),
             already_init: true,
             fps_limit: self::DEFAULT_FPS,
+            vertex_array,
         }
     }
 }

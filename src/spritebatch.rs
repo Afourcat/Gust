@@ -6,12 +6,13 @@
 
 use crate::color::Color;
 use crate::draw::*;
+use crate::gl_utils;
 use crate::rect::Rect;
 use crate::shader::BATCH_SHADER;
 use crate::texture::Texture;
 use crate::transform::*;
 use crate::vertex::Vertex;
-use crate::vertex_buffer::{VertexBuffer, Primitive};
+use crate::vertex_buffer::{Primitive, VertexBuffer};
 use crate::{Point, Vector};
 use gl;
 use gl::types::*;
@@ -20,7 +21,6 @@ use nalgebra::{Scalar, Vector4};
 use std::mem;
 use std::ptr;
 use std::rc::Rc;
-use crate::gl_utils;
 
 pub enum BatchError {
     BadTextureRect,
@@ -503,7 +503,12 @@ impl Drawable for SpriteBatch {
         }
 
         if sprite_mod {
-            gl_utils::update_vbo(self.gl_objects.1, self.gl_objects.0, &self.vertice, self.len());
+            gl_utils::update_vbo(
+                self.gl_objects.1,
+                self.gl_objects.0,
+                &self.vertice,
+                self.len(),
+            );
         }
         if self.need_update {
             self.update_model();
@@ -558,7 +563,7 @@ impl From<&Rc<Texture>> for SpriteBatch {
             texture: Some(Rc::clone(what)),
             sprites: Vec::new(),
             vertice: Vec::new(),
-            gl_objects: gl_utils::create_vbo(),
+            gl_objects: gl_utils::create_vo(),
             glob_origin: Vector::new((width / 2) as f32, (height / 2) as f32),
             glob_pos: Vector::new(0.0, 0.0),
             glob_scale: Vector::new(1.0, 1.0),
