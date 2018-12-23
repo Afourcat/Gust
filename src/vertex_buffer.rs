@@ -26,9 +26,9 @@ use std::ops::{Index, IndexMut};
 /// fn main() {
 ///     let win = Window::default();
 ///     let vertice = &[
-///     Vertex::new(Vector::new(0.0, 0.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
-///     Vertex::new(Vector::new(1.0, 0.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
-///     Vertex::new(Vector::new(0.0, 1.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
+///         Vertex::new(Vector::new(0.0, 0.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
+///         Vertex::new(Vector::new(1.0, 0.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
+///         Vertex::new(Vector::new(0.0, 1.0), Vector::new(0.0, 0.0), Color::new(1.0, 0.0, 0.0)),
 ///     ];
 ///     let triangle = VertexBuffer::from(vertice);
 ///     while window.is_open() {
@@ -43,6 +43,24 @@ pub struct VertexBuffer {
     texture: Option<Resource<Texture>>,
     primitive: GLenum,
     len: usize,
+    buffer_type: BufferType
+}
+
+#[derive(Debug, Clone, PartialEq, Copy, Hash)]
+pub enum BufferType {
+    Static,
+    Dynamic,
+    Stream
+}
+
+impl BufferType {
+    fn as_gl(&self) -> GLenum {
+        match self {
+            BufferType::Static => gl::STATIC_DRAW,
+            BufferType::Dynamic => gl::DYNAMIC_DRAW,
+            BufferType::Stream => gl::STREAM_DRAW,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Copy, Hash)]
@@ -99,8 +117,33 @@ impl VertexBuffer {
         unsafe {
             gl::DeleteBuffers(1, &[self.id] as *const _);
             gl::GenBuffers(1, &mut self.id);
+            gl_utils::alloc_vbo(self.id, &[], self.buffer_type.as_gl());
         }
-        gl_utils::alloc_vbo(self.id, &[]);
+    }
+
+    pub fn new_typed(t: Primitive, vertice: &[Vertex], buffer_type: BufferType) -> VertexBuffer {
+        let mut buffer_id: u32 = 0;
+        let len = vertice.len();
+        unsafe {
+            gl::GenBuffers(1, &mut buffer_id);
+
+            gl::BindBuffer(gl::ARRAY_BUFFER, buffer_id);
+            // Put data inside
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                (std::mem::size_of::<GLfloat>() * vertice.len() * 8) as GLsizeiptr,
+                0 as *const GLvoid,
+                gl::DYNAMIC_DRAW
+            );
+        };
+
+        VertexBuffer {
+            id: buffer_id,
+            texture: None,
+            primitive: t.get_gl_type(),
+            len,
+            buffer_type: BufferType::Dynamic
+        }
     }
 
     /// Create new Vertex Buffer from vertices
@@ -125,6 +168,7 @@ impl VertexBuffer {
             texture: None,
             primitive: t.get_gl_type(),
             len,
+            buffer_type: BufferType::Static
         }
     }
 
@@ -135,7 +179,7 @@ impl VertexBuffer {
     }
 
     #[inline]
-    fn set_texture(&mut self, texture: &Resource<Texture>) {
+    pub fn set_texture(&mut self, texture: &Resource<Texture>) {
         self.texture = Some(Resource::clone(texture));
     }
 
@@ -154,8 +198,8 @@ impl VertexBuffer {
         unsafe {
             gl::DeleteBuffers(1, &[self.id] as *const _);
             gl::GenBuffers(1, &mut self.id);
+            gl_utils::alloc_vbo(self.id, vertice, self.buffer_type.as_gl());
         }
-        gl_utils::alloc_vbo(self.id, vertice);
         self.len = vertice.len();
     }
 
@@ -166,17 +210,18 @@ impl VertexBuffer {
     }
 
     /// Get the data from the openGL backend.
-    pub fn get_data(&self) -> &[Vertex] {
-        let vertex: &[Vertex];
+    pub fn get_data(&mut self) -> &mut [Vertex] {
+        let vertex: &mut [Vertex];
         unsafe {
-            let ptr: *mut Vertex;
+            let ptr: *mut Vertex = std::ptr::null_mut();
+
             gl::GetBufferSubData(
                 gl::ARRAY_BUFFER,
                 0,
                 self.len as isize,
                 ptr as *mut std::ffi::c_void,
             );
-            vertex = std::slice::from_raw_parts(ptr, self.len);
+            vertex = std::slice::from_raw_parts_mut(ptr, self.len);
         }
         vertex
     }
@@ -192,6 +237,30 @@ impl VertexBuffer {
     pub fn bind(&self) {
         unsafe {
             gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
+        }
+    }
+
+    #[inline]
+    pub fn texture(&self) -> Option<Resource<Texture>> {
+        if let Some(ref texture) = self.texture {
+            Some(Resource::clone(texture))
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    pub fn reserve(&self, len: usize) {
+        unsafe {
+            gl_utils::alloc_vbo(self.id, &[], self.buffer_type.as_gl());
+        }
+    }
+
+    pub fn extend(&mut self, vertice: &[Vertex]) {
+        let mut data = self.get_data().to_vec();
+        data.extend_from_slice(vertice);
+        unsafe {
+            gl_utils::alloc_vbo(self.id, &data, self.buffer_type.as_gl());
         }
     }
 }
@@ -216,6 +285,7 @@ impl Drawable for VertexBuffer {
             None
         };
 
+        let proj = target.projection();
         let mut context = Context::new(
             texture,
             if texture.is_none() {
@@ -225,7 +295,7 @@ impl Drawable for VertexBuffer {
             },
             vec![
                 ("transform".to_string(), &*IDENTITY),
-                ("projection".to_string(), &target.projection()),
+                ("projection".to_string(), &proj),
             ],
             BlendMode::Alpha,
         );
@@ -233,7 +303,7 @@ impl Drawable for VertexBuffer {
     }
 
     fn draw_with_context<T: Drawer>(&self, target: &mut T, context: &mut Context) {
-        target.draw_vertex_buffer(self, &mut context);
+        target.draw_vertex_buffer(self, context);
     }
 
     fn update(&mut self) {

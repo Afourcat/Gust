@@ -133,8 +133,8 @@ impl View {
     }
 
     /// Return projection Matrix4.
-    pub fn projection(&self) -> &Matrix4<f32> {
-        &self.projection
+    pub fn projection(&self) -> Matrix4<f32> {
+        self.projection
     }
 
     /// Return sizes in a Vector<f32>.

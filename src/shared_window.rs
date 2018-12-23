@@ -33,6 +33,10 @@ impl SharedWindow {
         self.context.swap_buffers();
     }
 
+    pub fn sizes(&self) -> Vector<f32> {
+        self.view.sizes()
+    }
+
     pub fn clear(&self, color: Color) {
         unsafe {
             gl::ClearColor(color.0, color.1, color.2, color.3);
@@ -88,14 +92,16 @@ impl Drawer for SharedWindow {
     }
 
     fn center(&self) -> Vector<f32> {
-        Self::center(self)
+        let view_sizes = self.view.sizes();
+        Vector::new(view_sizes.x / 2.0, view_sizes.y / 2.0)
     }
 
     fn sizes(&self) -> Vector<f32> {
-        Self::sizes(self)
+        let vec = SharedWindow::sizes(self);
+        Vector::new(vec.x as f32, vec.y as f32)
     }
 
     fn projection(&self) -> Matrix4<f32> {
-        Self::projection(self)
+        self.view.projection()
     }
 }

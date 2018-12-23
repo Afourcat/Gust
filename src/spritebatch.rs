@@ -12,7 +12,7 @@ use crate::shader::BATCH_SHADER;
 use crate::texture::Texture;
 use crate::transform::*;
 use crate::vertex::Vertex;
-use crate::vertex_buffer::{Primitive, VertexBuffer};
+use crate::vertex_buffer::{Primitive, VertexBuffer, BufferType};
 use crate::{Point, Vector};
 use gl;
 use gl::types::*;
@@ -194,9 +194,7 @@ impl Movable for SpriteData {
 /// The idea behind SpriteBatch is to limit draw calls. Even if your sprites havn't the same texture
 /// can pack textures. And give your Vertex text_coord the actual texture coordinate that you want to be drawn.
 pub struct SpriteBatch {
-    texture: Option<Rc<Texture>>,
     sprites: Vec<SpriteData>,
-    vertice: Vec<Vertex>,
     gl_objects: (u32, u32),
     glob_origin: Vector<f32>,
     glob_pos: Vector<f32>,
@@ -205,27 +203,29 @@ pub struct SpriteBatch {
     len: usize,
     need_update: bool,
     model: Matrix4<f32>,
+    vertice: VertexBuffer
 }
 
 // For maximum efficiency we will not use the previously implemented abstraction of VertexBuffer
 impl SpriteBatch {
-    /// Create a new empty spriteBatch
+
     pub fn new() -> SpriteBatch {
         SpriteBatch::default()
     }
 
     pub fn extend_from_slice(&mut self, slice: &mut [SpriteData]) {
         {
-            let vertice = &mut self.vertice;
+            let (w, h) = if let Some(texture) = self.vertice.texture() {
+                (texture.width() as f32, texture.height() as f32)
+            } else {
+                ((0.0, 0.0))
+            };
 
-            let (w, h) = self
-                .texture
-                .as_ref()
-                .map_or((0.0, 0.0), |x| (x.width() as f32, x.height() as f32));
+            let mut data = self.vertice.get_data().to_vec();
 
             for x in slice.iter_mut() {
                 x.need_update = true;
-                vertice.extend_from_slice(&[
+                data.extend_from_slice(&[
                     Vertex::new(
                         Vector::new(0.0, 0.0),
                         Vector::new(x.text_coord[0].x, x.text_coord[0].y),
@@ -248,6 +248,7 @@ impl SpriteBatch {
                     ),
                 ]);
             }
+            self.vertice.extend(&data);
         }
         self.sprites.extend_from_slice(slice);
         self.need_update = true;
@@ -287,13 +288,13 @@ impl SpriteBatch {
 
     pub fn push_sprite(&mut self, mut sprites: SpriteData) {
         sprites.need_update = true;
-        let (w, h) = if let Some(ref texture) = self.texture {
+        let (w, h) = if let Some(ref texture) = self.vertice.texture() {
             (texture.width() as f32, texture.height() as f32)
         } else {
             (0.0, 0.0)
         };
 
-        self.vertice.extend_from_slice(&[
+        self.vertice.extend(&[
             Vertex::new(
                 Vector::new(0.0, 0.0),
                 Vector::new(sprites.text_coord[0].x, sprites.text_coord[0].y),
@@ -316,13 +317,6 @@ impl SpriteBatch {
             ),
         ]);
         self.sprites.push(sprites);
-    }
-
-    /// Pop a sprite and return it's data.
-    pub fn pop_sprite(&mut self) -> Option<SpriteData> {
-        self.need_update = true;
-        self.vertice.truncate(self.len - 4);
-        self.sprites.pop()
     }
 
     fn update_model(&mut self) {
@@ -460,22 +454,20 @@ impl DrawableMut for SpriteBatch {
 
 impl Drawable for SpriteBatch {
     fn draw<T: Drawer>(&self, target: &mut T) {
-        let texture = if let Some(ref rc_texture) = self.texture {
-            Some(rc_texture.as_ref())
-        } else {
-            None
-        };
-
+        let texture = self.vertice
+            .texture()
+            .expect("Need texture.");
+        let projection = target.projection();
         let mut context = Context::new(
-            texture,
+            Some(&*texture),
             &*BATCH_SHADER,
             vec![
-                ("projection".to_string(), &target.projection()),
+                ("projection".to_string(), &projection),
                 ("glob_model".to_string(), &self.model),
             ],
             BlendMode::Alpha,
         );
-        target.draw_vertex_buffer(self.vertex_buffer, &mut context);
+        target.draw_vertex_buffer(&self.vertice, &mut context);
     }
 
     fn draw_with_context<T: Drawer>(&self, _target: &mut T, _context: &mut Context) {
@@ -491,7 +483,7 @@ impl Drawable for SpriteBatch {
             //let rex = Mutex::new(rec);
             let sprites = &mut self.sprites;
             //let vertices = Mutex::new(&mut self.vertice);
-            let vertices = &mut self.vertice;
+            let mut vertices = self.vertice.get_data();
 
             for (i, mut elem) in sprites.iter_mut().enumerate() {
                 if elem.need_update {
@@ -502,13 +494,18 @@ impl Drawable for SpriteBatch {
             }
         }
 
+        let len = self.len();
+        let data = self.vertice.get_data();
         if sprite_mod {
-            gl_utils::update_vbo(
-                self.gl_objects.1,
-                self.gl_objects.0,
-                &self.vertice,
-                self.len(),
-            );
+            unsafe {
+                gl_utils::update_vbo(
+                    self.gl_objects.1,
+                    self.gl_objects.0,
+                    data,
+                    len,
+                    gl::DYNAMIC_DRAW
+                );
+            }
         }
         if self.need_update {
             self.update_model();
@@ -539,10 +536,11 @@ fn update_sprite(data: &mut SpriteData, origin: Vector<f32>, vertice: &mut [Vert
 
 impl Default for SpriteBatch {
     fn default() -> Self {
+        let vertice = VertexBuffer::new_typed(Primitive::Triangles, &[], BufferType::Dynamic);
+
         SpriteBatch {
-            texture: None,
             sprites: Vec::new(),
-            vertice: Vec::new(),
+            vertice,
             gl_objects: gl_utils::create_vo(),
             glob_origin: Vector::new(0.0, 0.0),
             glob_pos: Vector::new(0.0, 0.0),
@@ -558,11 +556,12 @@ impl Default for SpriteBatch {
 impl From<&Rc<Texture>> for SpriteBatch {
     fn from(what: &Rc<Texture>) -> SpriteBatch {
         let (width, height) = (what.width(), what.height());
+        let mut vertice = VertexBuffer::new_typed(Primitive::Triangles, &[], BufferType::Dynamic);
+        vertice.set_texture(&Rc::clone(what));
 
         SpriteBatch {
-            texture: Some(Rc::clone(what)),
             sprites: Vec::new(),
-            vertice: Vec::new(),
+            vertice,
             gl_objects: gl_utils::create_vo(),
             glob_origin: Vector::new((width / 2) as f32, (height / 2) as f32),
             glob_pos: Vector::new(0.0, 0.0),

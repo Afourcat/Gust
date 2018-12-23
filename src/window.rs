@@ -86,9 +86,11 @@ impl<'a> Window {
 
         glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
 
-        let va;
-        gl::GenVertexArrays(1, &mut va);
-        crate::gl_utils::update_vao(va);
+        let mut va = 0;
+        unsafe {
+            gl::GenVertexArrays(1, &mut va);
+            crate::gl_utils::update_vao(va);
+        }
 
         Window {
             view: View::from(Rect::new(0.0, 0.0, width as f32, height as f32)),
@@ -103,8 +105,10 @@ impl<'a> Window {
         }
     }
 
-    pub fn bind_vertex_array(&mut self) {
-        gl::BindVertexArray(self.vertex_array);
+    pub fn bind_vertex_array(&self) {
+        unsafe {
+            gl::BindVertexArray(self.vertex_array);
+        }
     }
 
     pub fn set_mouse_pos<T: nalgebra::Scalar + Into<f32>>(&mut self, vec: Vector<T>) {
@@ -254,6 +258,10 @@ impl<'a> Window {
         self.fps_limit
     }
 
+    pub fn sizes(&self) -> Vector<u32> {
+        Vector::new(self.width, self.height)
+    }
+
     pub fn event(&self) -> &EventReceiver {
         &self.event
     }
@@ -305,7 +313,9 @@ impl Drawer for Window {
         context.setup_draw();
         self.bind_vertex_array();
         vertex_buffer.bind();
-        gl::DrawArrays(vertex_buffer.get_gl_type(), 0, vertex_buffer.len() as i32);
+        unsafe {
+            gl::DrawArrays(vertex_buffer.get_gl_type(), 0, vertex_buffer.len() as i32);
+        }
     }
 
     unsafe fn draw_from_raw(
@@ -318,15 +328,18 @@ impl Drawer for Window {
     }
 
     fn center(&self) -> Vector<f32> {
-        Self::center(self)
+        let view_sizes = self.view.sizes();
+        Vector::new(view_sizes.x / 2.0, view_sizes.y / 2.0)
     }
 
     fn sizes(&self) -> Vector<f32> {
-        Self::sizes(self)
+        let vec = Window::sizes(self);
+        Vector::new(vec.x as f32, vec.y as f32)
     }
 
+    /// Return projection.
     fn projection(&self) -> Matrix4<f32> {
-        Self::projection(self)
+        self.view.projection()
     }
 }
 
@@ -396,9 +409,11 @@ impl Default for Window {
 
         gl::load_with(|s| win.get_proc_address(s) as *const _);
 
-        let vertex_array;
-        gl::GenVertexArrays(1, &mut vertex_array);
-        crate::gl_utils::update_vao(vertex_array);
+        let mut vertex_array = 0;
+        unsafe {
+            gl::GenVertexArrays(1, &mut vertex_array);
+            crate::gl_utils::update_vao(vertex_array);
+        }
 
         Window {
             view: View::from(Rect::new(

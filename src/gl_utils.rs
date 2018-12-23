@@ -48,13 +48,13 @@ pub(crate) unsafe fn update_vao(va: u32) {
 }
 
 /// Allocate more space for a VBO or create the VBO inside the glMemory.
-pub(crate) unsafe fn alloc_vbo(vb: u32, vertice: &[Vertex]) {
+pub(crate) unsafe fn alloc_vbo(vb: u32, vertice: &[Vertex], buffer_type: GLenum) {
     gl::BindBuffer(gl::ARRAY_BUFFER, vb);
     gl::BufferData(
         gl::ARRAY_BUFFER,
         (std::mem::size_of::<GLfloat>() * vertice.len() * 8) as GLsizeiptr,
         vertice.as_ptr() as *const GLvoid,
-        gl::STATIC_DRAW,
+        buffer_type,
     );
 }
 
@@ -70,9 +70,9 @@ pub(crate) unsafe fn fill_vbo(vb: u32, vertice: &[Vertex]) {
 }
 
 /// Update the vbo by looking if it's size has changed and then updating it with the new Data.
-pub(crate) unsafe fn update_vbo(vb: u32, va: u32, vertice: &[Vertex], old_len: usize) {
+pub(crate) unsafe fn update_vbo(vb: u32, va: u32, vertice: &[Vertex], old_len: usize, buffer_type: GLenum) {
     if old_len != vertice.len() {
-        alloc_vbo(vb, vertice);
+        alloc_vbo(vb, vertice, buffer_type);
     } else {
         fill_vbo(vb, vertice);
     }
@@ -81,7 +81,7 @@ pub(crate) unsafe fn update_vbo(vb: u32, va: u32, vertice: &[Vertex], old_len: u
 
 /// Create vbo and vao.
 pub fn create_vo() -> (u32, u32) {
-    let (vao, vbo): (u32, u32);
+    let (mut vao, mut vbo): (u32, u32) = (0, 0);
     unsafe {
         gl::GenVertexArrays(1, &mut vao);
         gl::GenBuffers(1, &mut vbo);

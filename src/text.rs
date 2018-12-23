@@ -295,13 +295,14 @@ impl Drawable for Text {
         let font_ref = self.font.try_borrow().unwrap();
         let texture = font_ref.texture(self.actual_size).unwrap();
 
+        let proj = target.projection();
         // Create a new context with the Texture of the font
         let mut context = Context::new(
             Some(texture),
             &*shader::DEFAULT_SHADER,
             vec![
                 ("transform".to_string(), &*IDENTITY),
-                ("projection".to_string(), &target.projection()),
+                ("projection".to_string(), &proj),
             ],
             BlendMode::Alpha,
         );
@@ -311,7 +312,7 @@ impl Drawable for Text {
     }
 
     fn draw_with_context<T: Drawer>(&self, target: &mut T, context: &mut Context) {
-        target.draw_vertices(&self.vertices, crate::vertex_buffer::Primitive::Triangles, &mut context);
+        target.draw_vertices(&self.vertices, crate::vertex_buffer::Primitive::Triangles, context);
     }
 }
 
