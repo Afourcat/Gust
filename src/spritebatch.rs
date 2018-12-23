@@ -12,7 +12,7 @@ use crate::shader::BATCH_SHADER;
 use crate::texture::Texture;
 use crate::transform::*;
 use crate::vertex::Vertex;
-use crate::vertex_buffer::{Primitive, VertexBuffer, BufferType};
+use crate::vertex_buffer::{BufferType, Primitive, VertexBuffer};
 use crate::{Point, Vector};
 use gl;
 use gl::types::*;
@@ -203,12 +203,11 @@ pub struct SpriteBatch {
     len: usize,
     need_update: bool,
     model: Matrix4<f32>,
-    vertice: VertexBuffer
+    vertice: VertexBuffer,
 }
 
 // For maximum efficiency we will not use the previously implemented abstraction of VertexBuffer
 impl SpriteBatch {
-
     pub fn new() -> SpriteBatch {
         SpriteBatch::default()
     }
@@ -454,9 +453,7 @@ impl DrawableMut for SpriteBatch {
 
 impl Drawable for SpriteBatch {
     fn draw<T: Drawer>(&self, target: &mut T) {
-        let texture = self.vertice
-            .texture()
-            .expect("Need texture.");
+        let texture = self.vertice.texture().expect("Need texture.");
         let projection = target.projection();
         let mut context = Context::new(
             Some(&*texture),
@@ -503,7 +500,7 @@ impl Drawable for SpriteBatch {
                     self.gl_objects.0,
                     data,
                     len,
-                    gl::DYNAMIC_DRAW
+                    gl::DYNAMIC_DRAW,
                 );
             }
         }

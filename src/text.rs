@@ -308,11 +308,19 @@ impl Drawable for Text {
         );
 
         // Draw the vertex_buffer with context
-        target.draw_vertices(&self.vertices, crate::vertex_buffer::Primitive::Triangles, &mut context);
+        target.draw_vertices(
+            &self.vertices,
+            crate::vertex_buffer::Primitive::Triangles,
+            &mut context,
+        );
     }
 
     fn draw_with_context<T: Drawer>(&self, target: &mut T, context: &mut Context) {
-        target.draw_vertices(&self.vertices, crate::vertex_buffer::Primitive::Triangles, context);
+        target.draw_vertices(
+            &self.vertices,
+            crate::vertex_buffer::Primitive::Triangles,
+            context,
+        );
     }
 }
 

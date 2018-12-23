@@ -43,14 +43,14 @@ pub struct VertexBuffer {
     texture: Option<Resource<Texture>>,
     primitive: GLenum,
     len: usize,
-    buffer_type: BufferType
+    buffer_type: BufferType,
 }
 
 #[derive(Debug, Clone, PartialEq, Copy, Hash)]
 pub enum BufferType {
     Static,
     Dynamic,
-    Stream
+    Stream,
 }
 
 impl BufferType {
@@ -133,7 +133,7 @@ impl VertexBuffer {
                 gl::ARRAY_BUFFER,
                 (std::mem::size_of::<GLfloat>() * vertice.len() * 8) as GLsizeiptr,
                 0 as *const GLvoid,
-                gl::DYNAMIC_DRAW
+                gl::DYNAMIC_DRAW,
             );
         };
 
@@ -142,7 +142,7 @@ impl VertexBuffer {
             texture: None,
             primitive: t.get_gl_type(),
             len,
-            buffer_type: BufferType::Dynamic
+            buffer_type: BufferType::Dynamic,
         }
     }
 
@@ -168,7 +168,7 @@ impl VertexBuffer {
             texture: None,
             primitive: t.get_gl_type(),
             len,
-            buffer_type: BufferType::Static
+            buffer_type: BufferType::Static,
         }
     }
 

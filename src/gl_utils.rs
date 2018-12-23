@@ -70,7 +70,13 @@ pub(crate) unsafe fn fill_vbo(vb: u32, vertice: &[Vertex]) {
 }
 
 /// Update the vbo by looking if it's size has changed and then updating it with the new Data.
-pub(crate) unsafe fn update_vbo(vb: u32, va: u32, vertice: &[Vertex], old_len: usize, buffer_type: GLenum) {
+pub(crate) unsafe fn update_vbo(
+    vb: u32,
+    va: u32,
+    vertice: &[Vertex],
+    old_len: usize,
+    buffer_type: GLenum,
+) {
     if old_len != vertice.len() {
         alloc_vbo(vb, vertice, buffer_type);
     } else {
