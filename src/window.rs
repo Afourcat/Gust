@@ -302,10 +302,20 @@ impl Drawer for Window {
         primitive: Primitive,
         context: &mut draw::Context,
     ) {
-        unimplemented!("Draw vertices");
+        let mut tmp_buffer: u32 = 0;
+
+        unsafe {
+            gl::GenBuffers(1, &mut tmp_buffer);
+            crate::gl_utils::alloc_vbo(tmp_buffer, vertices, crate::vertex_buffer::BufferType::Static.as_gl());
+            self.bind_vertex_array();
+            gl::BindBuffer(gl::ARRAY_BUFFER, tmp_buffer);
+            context.setup_draw();
+            gl::DrawArrays(primitive.get_gl_type(), 0, vertices.len() as i32);
+            gl::DeleteBuffers(1, &[tmp_buffer] as *const _);
+        }
     }
 
-    fn draw_vertex_array(&self, vertices: &VertexArray, context: &mut draw::Context) {
+    fn draw_vertex_array(&self, _vertices: &VertexArray, _context: &mut draw::Context) {
         unimplemented!("Vertex Array");
     }
 
@@ -320,9 +330,9 @@ impl Drawer for Window {
 
     unsafe fn draw_from_raw(
         &self,
-        raw: *const std::ffi::c_void,
-        len: usize,
-        context: &mut draw::Context,
+        _raw: *const std::ffi::c_void,
+        _len: usize,
+        _context: &mut draw::Context,
     ) {
         unimplemented!("Raw");
     }

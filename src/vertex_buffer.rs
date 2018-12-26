@@ -54,7 +54,7 @@ pub enum BufferType {
 }
 
 impl BufferType {
-    fn as_gl(&self) -> GLenum {
+    pub fn as_gl(&self) -> GLenum {
         match self {
             BufferType::Static => gl::STATIC_DRAW,
             BufferType::Dynamic => gl::DYNAMIC_DRAW,
@@ -121,7 +121,7 @@ impl VertexBuffer {
         }
     }
 
-    pub fn new_typed(t: Primitive, vertice: &[Vertex], buffer_type: BufferType) -> VertexBuffer {
+    pub fn new_typed(t: Primitive, vertice: &[Vertex], _buffer_type: BufferType) -> VertexBuffer {
         let mut buffer_id: u32 = 0;
         let len = vertice.len();
         unsafe {
@@ -250,7 +250,7 @@ impl VertexBuffer {
     }
 
     #[inline]
-    pub fn reserve(&self, len: usize) {
+    pub fn reserve(&self, _len: usize) {
         unsafe {
             gl_utils::alloc_vbo(self.id, &[], self.buffer_type.as_gl());
         }

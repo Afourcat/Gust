@@ -480,7 +480,7 @@ impl Drawable for SpriteBatch {
             //let rex = Mutex::new(rec);
             let sprites = &mut self.sprites;
             //let vertices = Mutex::new(&mut self.vertice);
-            let mut vertices = self.vertice.get_data();
+            let vertices = self.vertice.get_data();
 
             for (i, mut elem) in sprites.iter_mut().enumerate() {
                 if elem.need_update {

@@ -70,23 +70,28 @@ impl Drawer for SharedWindow {
         drawable.draw_with_context_mut(self, context);
     }
 
-    fn draw_vertices(&self, vertices: &[Vertex], primitive: Primitive, context: &mut gustContext) {
+    fn draw_vertices(
+        &self,
+        _vertices: &[Vertex],
+        _primitive: Primitive,
+        _context: &mut gustContext,
+    ) {
         unimplemented!("Draw vertices");
     }
 
-    fn draw_vertex_array(&self, vertices: &VertexArray, context: &mut gustContext) {
+    fn draw_vertex_array(&self, _vertices: &VertexArray, _context: &mut gustContext) {
         unimplemented!("Vertex Array");
     }
 
-    fn draw_vertex_buffer(&self, vertex_buffer: &VertexBuffer, context: &mut gustContext) {
+    fn draw_vertex_buffer(&self, _vertex_buffer: &VertexBuffer, _context: &mut gustContext) {
         unimplemented!("VertexBuffer");
     }
 
     unsafe fn draw_from_raw(
         &self,
-        raw: *const std::ffi::c_void,
-        len: usize,
-        context: &mut gustContext,
+        _raw: *const std::ffi::c_void,
+        _len: usize,
+        _context: &mut gustContext,
     ) {
         unimplemented!("Raw");
     }
