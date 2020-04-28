@@ -1,6 +1,6 @@
 # Gust
 
-:warning: This project is no longer maintained, if you are interested by working with it contact, I will try to update it.
+:warning: This project is no longer maintained, if you are interested by working with it contact me, I will try to update it.
 
 Gust is a graphical library written in **pure** Rust from simple openGl binding and freetype-rs library.
 The purpose of Gust is to help me to understand simple computer graphic system (2D) and to let me handle the complexe language that is Rust.
